@@ -1194,12 +1194,15 @@
                 `;
                 
                 if(!subview || subview === 'dashboard') {
+                    const myName = user.name || 'Pacient';
+                    const myApps = (Array.isArray(appointments) ? appointments : []).filter(a => normalizePersonName(a.patient || '') === normalizePersonName(myName));
+
                     view.innerHTML = `
                         <div style="margin-bottom:20px;">
-                            <p style="color:var(--gray);">Mirësere, <b>${user.name || 'Pacient'}</b> 👋</p>
+                            <p style="color:var(--gray);">Mirësere, <b>${escapeHtml(myName)}</b> 👋</p>
                         </div>
                         <div class="grid-3">
-                            <div class="card metric-card"><h3>Terminet</h3><h2 style="color:var(--primary);">${appointments.length}</h2></div>
+                            <div class="card metric-card"><h3>Terminet</h3><h2 style="color:var(--primary);">${myApps.length}</h2></div>
                             <div class="card metric-card"><h3>Receta</h3><h2 style="color:var(--success);">--</h2></div>
                             <div class="card metric-card"><h3>Analiza</h3><h2 style="color:var(--warning);">--</h2></div>
                         </div>
@@ -1213,7 +1216,7 @@
                             <h3>📋 Terminet e Mia</h3>
                             <table>
                                 <thead><tr><th>Doktori</th><th>Data</th><th>Ora</th><th>Pritje</th><th>Statusi</th></tr></thead>
-                                <tbody>${appointments.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--gray);">Ska termine të regjistruar</td></tr>' : appointments.map(a => `<tr><td>${a.doc}</td><td>${a.date}</td><td>${a.time}</td><td>${a.wait || '~30 min'}</td><td><span class="status-pill status-waiting">${a.status}</span></td></tr>`).join('')}</tbody>
+                                <tbody>${myApps.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--gray);">Ska termine të regjistruar</td></tr>' : myApps.map(a => `<tr><td>${escapeHtml(a.doc || '')}</td><td>${escapeHtml(a.date || '')}</td><td>${escapeHtml(a.time || '')}</td><td>${escapeHtml(a.wait || '~30 min')}</td><td><span class="status-pill status-waiting">${escapeHtml(a.status || '')}</span></td></tr>`).join('')}</tbody>
                             </table>
                         </div>
                     `;
@@ -1335,6 +1338,7 @@
                 document.getElementById('dash-title').innerText = "Admin Panel";
                 sidebar.innerHTML = `
                     <div class="nav-link ${subview==='dashboard'?'active':''}" onclick="refreshView('admin', 'dashboard')"><i class="fas fa-shield-virus"></i> Logs & Security</div>
+                    <div class="nav-link ${subview==='health'?'active':''}" onclick="refreshView('admin', 'health')"><i class="fas fa-database"></i> Database Health</div>
                     <div class="nav-link ${subview==='app'?'active':''}" onclick="refreshView('admin', 'app')"><i class="fas fa-calendar-check"></i> Terminet</div>
                     <div class="nav-link ${subview==='docs'?'active':''}" onclick="refreshView('admin', 'docs')"><i class="fas fa-user-md"></i> Doktorët</div>
                     <div class="nav-link ${subview==='users'?'active':''}" onclick="refreshView('admin', 'users')"><i class="fas fa-users"></i> Userat</div>
@@ -1354,6 +1358,40 @@
                             </div>
                         </div>`;
                     fetchAdminStats();
+                } else if(subview === 'health') {
+                    view.innerHTML = `
+                        <div class="card">
+                            <h2><i class="fas fa-database"></i> Database Health</h2>
+                            <p style="color:var(--gray); margin-top:8px;">Gjendja e databazës (MongoDB) dhe e serverit.</p>
+
+                            <div style="margin-top:18px; display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:14px;">
+                                <div class="card" style="box-shadow:none; border:1px solid rgba(148, 163, 184, 0.18);">
+                                    <h3>Status</h3>
+                                    <h2 id="dbHealthOk" style="color:var(--primary);">—</h2>
+                                </div>
+                                <div class="card" style="box-shadow:none; border:1px solid rgba(148, 163, 184, 0.18);">
+                                    <h3>DB ReadyState</h3>
+                                    <h2 id="dbHealthReady" style="color:var(--primary);">—</h2>
+                                </div>
+                                <div class="card" style="box-shadow:none; border:1px solid rgba(148, 163, 184, 0.18);">
+                                    <h3>Uptime</h3>
+                                    <h2 id="dbHealthUptime" style="color:var(--primary);">—</h2>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:18px;">
+                                <table>
+                                    <thead><tr><th>Fusha</th><th>Vlera</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>DB Name</td><td id="dbHealthName">—</td></tr>
+                                        <tr><td>DB Host</td><td id="dbHealthHost">—</td></tr>
+                                        <tr><td>Timestamp</td><td id="dbHealthTs">—</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                    fetchDatabaseHealth();
                 } else if(subview === 'app') {
                     view.innerHTML = `<div class="card"><h3>Menaxho Terminet</h3>
                         <table><thead><tr><th>Pacienti</th><th>Doktori</th><th>Data</th><th>Statusi</th><th>Veprim</th></tr></thead>
@@ -1766,6 +1804,41 @@
                 if (a) a.innerText = String(data.appointments ?? 0);
             } catch (e) {
                 // Silent: dashboard can render even if stats fail.
+            }
+        }
+
+        async function fetchDatabaseHealth() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const response = await fetch('http://localhost:5500/api/admin/health', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) return;
+
+                const data = await response.json().catch(() => ({}));
+
+                const ok = document.getElementById('dbHealthOk');
+                const ready = document.getElementById('dbHealthReady');
+                const uptime = document.getElementById('dbHealthUptime');
+                const name = document.getElementById('dbHealthName');
+                const host = document.getElementById('dbHealthHost');
+                const ts = document.getElementById('dbHealthTs');
+
+                if (ok) ok.innerText = data.ok ? 'OK' : 'ERR';
+                if (ready) ready.innerText = String(data.db?.readyState ?? '—');
+                if (uptime) uptime.innerText = `${Math.round(Number(data.uptimeSec || 0))}s`;
+                if (name) name.innerText = escapeHtml(data.db?.name ?? '—');
+                if (host) host.innerText = escapeHtml(data.db?.host ?? '—');
+                if (ts) ts.innerText = escapeHtml(data.timestamp ?? '—');
+            } catch (e) {
+                // ignore
             }
         }
 

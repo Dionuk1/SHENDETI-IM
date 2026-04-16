@@ -133,11 +133,30 @@
 
         /* --- EMERGENCY MODE THEME (APPLIED ON TOGGLE) --- */
         body.emergency-mode {
+            /* Theme tokens (scoped) */
             --bg: #050b1a;
             --dark: #e5e7eb;
-            --gray: #93c5fd;
-            --white: #0b1224;
+            --gray: #a5b4fc;
+            --white: rgba(2, 6, 23, 0.72);
             --shadow: 0 18px 40px rgba(2, 6, 23, 0.55);
+
+            /* Extra tokens for emergency surfaces */
+            --em-surface: rgba(2, 6, 23, 0.72);
+            --em-surface-2: rgba(2, 6, 23, 0.55);
+            --em-border: rgba(148, 163, 184, 0.14);
+            --em-border-strong: rgba(59, 130, 246, 0.35);
+            --em-text: #e5e7eb;
+            --em-muted: #93c5fd;
+        }
+
+        body.emergency-mode {
+            background: var(--bg);
+            color: var(--em-text);
+        }
+
+        body.emergency-mode .glass {
+            background: rgba(2, 6, 23, 0.72);
+            border-color: var(--em-border);
         }
 
         body.emergency-mode nav.glass {
@@ -149,9 +168,65 @@
             background: radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.14) 0%, #050b1a 55%, #020617 100%);
         }
 
+        body.emergency-mode .app-shell {
+            background: transparent;
+        }
+
+        body.emergency-mode .sidebar {
+            background: rgba(2, 6, 23, 0.65);
+            border-right-color: var(--em-border);
+        }
+
+        body.emergency-mode .main-content {
+            background: transparent;
+        }
+
+        body.emergency-mode .nav-link {
+            color: rgba(229, 231, 235, 0.82);
+        }
+
+        body.emergency-mode .nav-link:hover {
+            background: rgba(59, 130, 246, 0.10);
+        }
+
+        body.emergency-mode .nav-link.active {
+            background: rgba(59, 130, 246, 0.22);
+            color: #e5e7eb;
+        }
+
         body.emergency-mode .card {
             background: rgba(2, 6, 23, 0.65);
-            border: 1px solid rgba(148, 163, 184, 0.12);
+            border: 1px solid var(--em-border);
+        }
+
+        body.emergency-mode .modal-box {
+            background: rgba(2, 6, 23, 0.86);
+            color: var(--em-text);
+            border: 1px solid var(--em-border);
+        }
+
+        body.emergency-mode .input {
+            background: rgba(2, 6, 23, 0.35);
+            color: var(--em-text);
+            border-color: var(--em-border);
+        }
+
+        body.emergency-mode .input:focus {
+            border-color: rgba(59, 130, 246, 0.65);
+        }
+
+        body.emergency-mode th {
+            color: rgba(147, 197, 253, 0.92);
+            border-bottom-color: rgba(148, 163, 184, 0.14);
+        }
+
+        body.emergency-mode td {
+            border-bottom-color: rgba(148, 163, 184, 0.08);
+        }
+
+        body.emergency-mode .chat-box {
+            background: rgba(2, 6, 23, 0.85);
+            border: 1px solid var(--em-border);
         }
 
         body.emergency-mode .chat-messages {
@@ -165,6 +240,24 @@
 
         body.emergency-mode a {
             color: #93c5fd;
+        }
+
+        body.emergency-mode p,
+        body.emergency-mode span,
+        body.emergency-mode h1,
+        body.emergency-mode h2,
+        body.emergency-mode h3 {
+            color: var(--em-text);
+        }
+
+        body.emergency-mode p {
+            color: rgba(229, 231, 235, 0.78);
+        }
+
+        body.emergency-mode .btn:not(.btn-primary):not(.btn-danger):not(.btn-success) {
+            background: rgba(2, 6, 23, 0.55) !important;
+            color: var(--em-text) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
         }
 
         /* --- LANDING --- */
@@ -685,41 +778,22 @@
             const emergencyToggle = document.querySelector('#emergency-toggle');
             const body = document.body;
 
+            // Clear any legacy inline styles from earlier emergency-mode versions
+            document.querySelectorAll('h1, h2, h3, p, span, button, a, div').forEach(el => {
+                if (el.style.color === '#3b82f6') el.style.color = '';
+            });
+            body.style.backgroundColor = '';
+            body.style.color = '';
+            body.style.filter = '';
+
             if (toggleSwitch) toggleSwitch.classList.toggle('emergency-on', emergencyMode);
             if (emergencyToggle) {
                 emergencyToggle.classList.toggle('emergency-on', emergencyMode);
                 emergencyToggle.setAttribute('aria-checked', String(emergencyMode));
             }
 
+            // Clean theme application across the whole UI is handled by CSS
             body.classList.toggle('emergency-mode', emergencyMode);
-            
-            if(emergencyMode) {
-                body.style.backgroundColor = '#0f172a';
-                body.style.color = '#3b82f6';
-                
-                // Apply blue text color to all elements for visibility
-                document.querySelectorAll('h1, h2, h3, p, span, button, a, div').forEach(el => {
-                    if(el.style.color === '' || el.style.color === 'var(--dark)' || el.style.color === 'var(--gray)') {
-                        el.style.color = '#3b82f6';
-                    }
-                });
-                
-                body.style.filter = 'brightness(1.2) contrast(1.3) saturate(1.1)';
-                alert('🚨 EMERGENCY MODE ACTIVATED - High Contrast Layout');
-            } else {
-                body.style.backgroundColor = '';
-                body.style.color = '';
-                
-                // Restore original colors
-                document.querySelectorAll('h1, h2, h3, p, span, button, a, div').forEach(el => {
-                    if(el.style.color === '#3b82f6') {
-                        el.style.color = '';
-                    }
-                });
-                
-                body.style.filter = 'brightness(1) contrast(1)';
-                alert('✅ Emergency mode disabled');
-            }
         }
 
         // ===== SYMPTOM QUICK-CHECK =====

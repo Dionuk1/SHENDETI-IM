@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
+const Doctor = require('../models/Doctor');
 
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/requireRole');
@@ -24,6 +25,25 @@ router.get('/health', async (req, res) => {
         memory: process.memoryUsage(),
         timestamp: new Date().toISOString(),
     });
+});
+
+router.get('/stats', async (req, res, next) => {
+    try {
+        const [users, doctors, appointments] = await Promise.all([
+            User.countDocuments({}),
+            Doctor.countDocuments({}),
+            Appointment.countDocuments({}),
+        ]);
+
+        res.json({
+            users,
+            doctors,
+            appointments,
+            timestamp: new Date().toISOString(),
+        });
+    } catch (e) {
+        next(e);
+    }
 });
 
 router.get('/users', async (req, res, next) => {

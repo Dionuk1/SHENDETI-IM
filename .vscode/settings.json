@@ -1,0 +1,8 @@
+{
+  // Avoid TypeScript/JavaScript project diagnostics for dependency tsconfig files in node_modules.
+  // These tsconfig.json files are for library authors, not for this app.
+  "typescript.tsserver.exclude": [
+    "**/node_modules/**"
+  ],
+  "typescript.tsserver.experimental.enableProjectDiagnostics": false
+}

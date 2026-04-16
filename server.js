@@ -23,13 +23,25 @@ const doctorRoutes = require('./src/routes/doctor');
 const doctorsAdminRoutes = require('./src/routes/doctors');
 const adminRoutes = require('./src/routes/admin');
 
+// ✨ AI FEATURES
+const aiRoutes = require('./src/routes/ai');
+const { fraudDetectionMiddleware } = require('./src/middleware/fraudDetection');
+
 const app = express();
 
 app.disable('x-powered-by');
 app.use(express.json({ limit: '1mb' }));
 
+// ✨ Fraud Detection Middleware (Early in chain)
+app.use(fraudDetectionMiddleware);
+
 // Serve static files (public folder + HealthFlow OS HTML)
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Silence browser favicon requests (avoids noisy 404s in console)
+app.get('/favicon.ico', (req, res) => {
+    res.status(204).end();
+});
 
 app.get('/', (req, res) => {
     // Serve the existing HealthFlow OS HTML
@@ -43,6 +55,7 @@ app.use('/api/patient', patientRoutes);
 app.use('/api/doctor', doctorRoutes);
 app.use('/api/admin/doctors', doctorsAdminRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/ai', aiRoutes); // ✨ AI Routes
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });

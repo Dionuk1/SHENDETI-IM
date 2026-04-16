@@ -23,7 +23,7 @@ function issueToken(user) {
 
 router.post('/register', async (req, res, next) => {
     try {
-        const { name, email, password } = req.body || {};
+        const { name, email, password, role } = req.body || {};
 
         if (!name || !email || !password) {
             return res.status(400).json({ error: 'Missing required fields' });
@@ -31,6 +31,11 @@ router.post('/register', async (req, res, next) => {
 
         if (String(password).length < 8) {
             return res.status(400).json({ error: 'Password must be at least 8 characters' });
+        }
+
+        const desiredRole = String(role || 'patient').toLowerCase();
+        if (!['patient', 'doctor'].includes(desiredRole)) {
+            return res.status(400).json({ error: 'Invalid role' });
         }
 
         const existing = await User.findOne({ email: String(email).toLowerCase().trim() });
@@ -43,7 +48,7 @@ router.post('/register', async (req, res, next) => {
             name: String(name).trim(),
             email: String(email).toLowerCase().trim(),
             passwordHash,
-            role: 'patient',
+            role: desiredRole,
         });
 
         const token = issueToken(user);
@@ -71,7 +76,7 @@ router.post('/login', async (req, res, next) => {
             return res.status(401).json({ error: 'Invalid credentials' });
         }
 
-        if (role && String(role) !== user.role) {
+        if (role && String(role).toLowerCase() !== String(user.role).toLowerCase()) {
             // Prevent logging in under a different role than the account.
             return res.status(403).json({ error: 'Role mismatch' });
         }

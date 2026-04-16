@@ -72,7 +72,13 @@ async function upsertDoctor({
 
     // Create base users
     const admin = await upsertUser({ name: 'Admin', email: adminEmail, password: adminPass, role: 'admin' });
-    const patient = await upsertUser({ name: 'Dion Ukshini', email: patientEmail, password: patientPass, role: 'patient' });
+
+    const patients = await Promise.all([
+        upsertUser({ name: 'Dion Ukshini', email: patientEmail, password: patientPass, role: 'patient' }),
+        upsertUser({ name: 'Arta Krasniqi', email: 'arta@healthflow.test', password: 'password123', role: 'patient' }),
+        upsertUser({ name: 'Besnik Dervishi', email: 'besnik@healthflow.test', password: 'password123', role: 'patient' }),
+        upsertUser({ name: 'Sara Gashi', email: 'sara@healthflow.test', password: 'password123', role: 'patient' }),
+    ]);
 
     // Create doctors with specializations
     const doctors = await Promise.all([
@@ -146,17 +152,92 @@ async function upsertDoctor({
             ],
             bio: 'Compassionate psychiatrist specializing in anxiety, depression, and therapy.',
         }),
+
+        // Extra doctors
+        upsertDoctor({
+            name: 'Dr. Luan Gashi',
+            email: 'luan@healthflow.test',
+            password: 'password123',
+            specialization: 'cardiology',
+            department: 'Cardiology Department',
+            experience: 9,
+            services: [
+                { name: 'Blood Pressure Review', durationMinutes: 20 },
+                { name: 'Cardiac Consultation', durationMinutes: 40 },
+                { name: 'Tele-visit', durationMinutes: 25 },
+            ],
+            bio: 'Cardiology specialist focused on hypertension and preventive care.',
+        }),
+        upsertDoctor({
+            name: 'Dr. Bora Kelmendi',
+            email: 'bora@healthflow.test',
+            password: 'password123',
+            specialization: 'neurology',
+            department: 'Neurology Department',
+            experience: 8,
+            services: [
+                { name: 'Neurological Exam', durationMinutes: 35 },
+                { name: 'Migraine Consultation', durationMinutes: 30 },
+                { name: 'Tele-visit', durationMinutes: 25 },
+            ],
+            bio: 'Neurologist focusing on migraines and sleep-related neurological issues.',
+        }),
+        upsertDoctor({
+            name: 'Dr. Ilir Hyseni',
+            email: 'ilir@healthflow.test',
+            password: 'password123',
+            specialization: 'orthopedics',
+            department: 'Orthopedics Department',
+            experience: 11,
+            services: [
+                { name: 'Injury Assessment', durationMinutes: 40 },
+                { name: 'Joint Pain Consultation', durationMinutes: 35 },
+                { name: 'X-ray Review', durationMinutes: 20 },
+            ],
+            bio: 'Orthopedist specializing in joint pain and rehabilitation plans.',
+        }),
+        upsertDoctor({
+            name: 'Dr. Vesa Shala',
+            email: 'vesa@healthflow.test',
+            password: 'password123',
+            specialization: 'general',
+            department: 'General Medicine',
+            experience: 7,
+            services: [
+                { name: 'General Consultation', durationMinutes: 25 },
+                { name: 'Health Check-up', durationMinutes: 40 },
+                { name: 'Tele-visit', durationMinutes: 20 },
+            ],
+            bio: 'General practitioner with focus on primary care and follow-ups.',
+        }),
+        upsertDoctor({
+            name: 'Dr. Erion Aliu',
+            email: 'erion@healthflow.test',
+            password: 'password123',
+            specialization: 'psychiatry',
+            department: 'Mental Health Department',
+            experience: 6,
+            services: [
+                { name: 'Mental Health Assessment', durationMinutes: 45 },
+                { name: 'Therapy Session', durationMinutes: 50 },
+                { name: 'Tele-visit', durationMinutes: 35 },
+            ],
+            bio: 'Psychiatry specialist focusing on stress management and therapy sessions.',
+        }),
     ]);
 
     console.log('✅ Seed complete');
     console.log('\n📋 Created Accounts:');
     console.log('─'.repeat(60));
     console.log(`👤 Admin: ${admin.email} / ${adminPass}`);
-    console.log(`👥 Patient: ${patient.email} / ${patientPass}`);
+    console.log('\n👥 Patients:');
+    patients.forEach((p) => {
+        console.log(`   • ${p.email} / password123`);
+    });
     console.log('\n👨‍⚕️ Doctors:');
     doctors.forEach((doc) => {
         console.log(
-            `   • Dr. ${doc.name} (${doc.specialization}) - ${doc.email} / password123`
+            `   • ${doc.name} (${doc.specialization}) - ${doc.email} / password123`
         );
     });
     console.log('─'.repeat(60));

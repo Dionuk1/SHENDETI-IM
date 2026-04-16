@@ -34,6 +34,77 @@
         .btn-success { background: var(--success); color: white; padding: 8px 12px; font-size: 0.8rem; }
         .card { background: white; border-radius: 20px; padding: 25px; box-shadow: var(--shadow); }
 
+        /* --- Segmented Tabs (Login Modal) --- */
+        .segmented {
+            --seg-count: 2;
+            --seg-idx: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px;
+            border-radius: 15px;
+            background: #f1f5f9;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .segmented::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            bottom: 5px;
+            left: 5px;
+            width: calc((100% - 10px) / var(--seg-count));
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 12px 26px rgba(15, 23, 42, 0.10);
+            transform: translateX(calc(var(--seg-idx) * 100%));
+            transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1), background 200ms ease, box-shadow 200ms ease;
+        }
+
+        .segmented .seg-btn {
+            flex: 1;
+            justify-content: center;
+            background: transparent;
+            color: var(--gray);
+            border: 1px solid transparent;
+            position: relative;
+            z-index: 1;
+            transition: transform 140ms ease, color 200ms ease;
+            user-select: none;
+        }
+
+        .segmented .seg-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .segmented .seg-btn.active {
+            color: var(--primary);
+        }
+
+        /* Emergency mode segmented visuals (dark blue) */
+        body.emergency-mode .segmented {
+            background: rgba(148, 163, 184, 0.10) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        body.emergency-mode .segmented::before {
+            background: linear-gradient(180deg, rgba(59, 130, 246, 0.35) 0%, rgba(37, 99, 235, 0.22) 100%) !important;
+            box-shadow:
+                0 14px 30px rgba(2, 6, 23, 0.55),
+                inset 0 0 0 1px rgba(96, 165, 250, 0.35);
+        }
+
+        body.emergency-mode .segmented .seg-btn {
+            background: transparent !important;
+            border-color: transparent !important;
+            color: rgba(229, 231, 235, 0.72) !important;
+        }
+
+        body.emergency-mode .segmented .seg-btn.active {
+            color: #e5e7eb !important;
+        }
+
         /* --- NAVIGATION --- */
         nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 8%; position: fixed; width: 100%; top: 0; z-index: 1000; transition: 0.3s; }
         nav.scrolled { background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
@@ -260,6 +331,85 @@
             border: 1px solid rgba(148, 163, 184, 0.18) !important;
         }
 
+        /* Fix: pickers/icons inside date/time inputs in dark mode */
+        body.emergency-mode input[type="date"]::-webkit-calendar-picker-indicator,
+        body.emergency-mode input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(1) brightness(1.6);
+            opacity: 0.85;
+            cursor: pointer;
+        }
+
+        body.emergency-mode input[type="date"]::-webkit-calendar-picker-indicator:hover,
+        body.emergency-mode input[type="time"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+
+        /* Fix: symptom checker / analysis result cards (inline light backgrounds) */
+        body.emergency-mode #symptomResult > div,
+        body.emergency-mode #analysisResult > div {
+            background: rgba(2, 6, 23, 0.55) !important;
+            color: var(--em-text) !important;
+            border: 1px solid rgba(148, 163, 184, 0.18) !important;
+        }
+
+        body.emergency-mode #symptomResult > div {
+            border-left: 4px solid rgba(59, 130, 246, 0.75) !important;
+        }
+
+        /* Ensure text stays readable inside result cards (override default emergency <p> color) */
+        body.emergency-mode #symptomResult [style*="background:#f0f7ff"] p,
+        body.emergency-mode #analysisResult [style*="background:#f0f7ff"] p,
+        body.emergency-mode #analysisResult [style*="background:#f0f7ff"] h3 {
+            color: var(--em-text) !important;
+        }
+
+        body.emergency-mode #analysisResult [style*="border-top"] {
+            border-top: 1px solid rgba(148, 163, 184, 0.18) !important;
+        }
+
+        body.emergency-mode #analysisResult [style*="border:1px solid #e2e8f0"],
+        body.emergency-mode #analysisResult [style*="border: 1px solid #e2e8f0"] {
+            border-color: rgba(148, 163, 184, 0.18) !important;
+            background: rgba(2, 6, 23, 0.35) !important;
+        }
+
+        /* Fix: status pills contrast in dark mode */
+        body.emergency-mode .status-pill {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+
+        body.emergency-mode .status-success {
+            background: rgba(16, 185, 129, 0.18);
+            color: #34d399;
+        }
+
+        body.emergency-mode .status-waiting {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fbbf24;
+        }
+
+        /* Fix: inline "light" surfaces inside cards (e.g., doctor messages, AI result chips) */
+        body.emergency-mode .card [style*="background:#f8fafc"],
+        body.emergency-mode .card [style*="background:#fafbfc"],
+        body.emergency-mode .card [style*="background:#f0f7ff"],
+        body.emergency-mode .card [style*="background:white"],
+        body.emergency-mode .card [style*="background: white"] {
+            background: rgba(2, 6, 23, 0.45) !important;
+            color: var(--em-text) !important;
+            border-color: rgba(148, 163, 184, 0.18) !important;
+        }
+
+        body.emergency-mode .card [style*="background:#f8fafc"] p,
+        body.emergency-mode .card [style*="background:#fafbfc"] p,
+        body.emergency-mode .card [style*="background:#f0f7ff"] p,
+        body.emergency-mode .card [style*="background:white"] p,
+        body.emergency-mode .card [style*="background: white"] p,
+        body.emergency-mode .card [style*="background:#f8fafc"] small,
+        body.emergency-mode .card [style*="background:#fafbfc"] small,
+        body.emergency-mode .card [style*="background:#f0f7ff"] small {
+            color: rgba(229, 231, 235, 0.78) !important;
+        }
+
         /* --- LANDING --- */
         .hero { min-height: 90vh; display: flex; align-items: center; padding: 0 8%; background: radial-gradient(circle at 70% 30%, #eef5ff 0%, #fff 100%); }
         .hero h1 { font-size: 4rem; line-height: 1.1; margin-bottom: 25px; }
@@ -351,16 +501,16 @@
             <h2 style="text-align:center; margin-bottom:20px;">Mirësevini përsëri</h2>
             
             <!-- Role Selection for Auth -->
-            <div style="display:flex; background:#f1f5f9; padding:5px; border-radius:15px; margin-bottom:25px;">
-                <div id="tab-user" class="btn" style="flex:1; justify-content:center; background:white; color:var(--primary);" onclick="setRole('user')">Pacient</div>
-                <div id="tab-doctor" class="btn" style="flex:1; justify-content:center; color:var(--gray);" onclick="setRole('doctor')">Doktor</div>
-                <div id="tab-admin" class="btn" style="flex:1; justify-content:center; color:var(--gray);" onclick="setRole('admin')">Admin</div>
+            <div class="segmented role-tabs" style="--seg-count:3; --seg-idx:0; margin-bottom:25px;">
+                <div id="tab-user" class="btn seg-btn active" onclick="setRole('user')">Pacient</div>
+                <div id="tab-doctor" class="btn seg-btn" onclick="setRole('doctor')">Doktor</div>
+                <div id="tab-admin" class="btn seg-btn" onclick="setRole('admin')">Admin</div>
             </div>
             
             <!-- Login/Register Tabs -->
-            <div style="display:flex; background:#f1f5f9; padding:5px; border-radius:15px; margin-bottom:25px;">
-                <div id="tab-login" class="btn" style="flex:1; justify-content:center; background:white; color:var(--primary);" onclick="switchAuthTab('login')">Hyr</div>
-                <div id="tab-register" class="btn" style="flex:1; justify-content:center; color:var(--gray);" onclick="switchAuthTab('register')">Regjistro</div>
+            <div class="segmented auth-tabs" style="--seg-count:2; --seg-idx:0; margin-bottom:25px;">
+                <div id="tab-login" class="btn seg-btn active" onclick="switchAuthTab('login')">Hyr</div>
+                <div id="tab-register" class="btn seg-btn" onclick="switchAuthTab('register')">Regjistro</div>
             </div>
             
             <!-- Login Form -->
@@ -467,6 +617,142 @@
         let users = [];
         let usersLoaded = false;
         let appointments = [];
+
+        function loadAppointmentsFromStorage() {
+            try {
+                const raw = localStorage.getItem('appointments');
+                const parsed = raw ? JSON.parse(raw) : [];
+                appointments = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                appointments = [];
+            }
+        }
+
+        function persistAppointmentsToStorage() {
+            try {
+                localStorage.setItem('appointments', JSON.stringify(Array.isArray(appointments) ? appointments : []));
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        loadAppointmentsFromStorage();
+
+        let directMessages = [];
+
+        function loadDirectMessagesFromStorage() {
+            try {
+                const raw = localStorage.getItem('directMessages');
+                const parsed = raw ? JSON.parse(raw) : [];
+                directMessages = Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                directMessages = [];
+            }
+        }
+
+        function persistDirectMessagesToStorage() {
+            try {
+                localStorage.setItem('directMessages', JSON.stringify(Array.isArray(directMessages) ? directMessages : []));
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        function normalizePersonName(name) {
+            return String(name || '')
+                .replace(/\s*\([^)]*\)\s*/g, ' ')
+                .replace(/^\s*(dr\.?|doktor)\s+/i, '')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function getCurrentUserSafe() {
+            try {
+                return JSON.parse(localStorage.getItem('user') || '{}') || {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function getCurrentUserId() {
+            const u = getCurrentUserSafe();
+            return String(u._id || u.id || '').trim();
+        }
+
+        function sendDirectMessage(payload) {
+            const msg = {
+                id: Date.now(),
+                at: new Date().toISOString(),
+                fromRole: payload?.fromRole || '',
+                fromName: payload?.fromName || '',
+                toRole: payload?.toRole || '',
+                toName: payload?.toName || '',
+                doctorId: payload?.doctorId || '',
+                doctorName: payload?.doctorName || '',
+                patientName: payload?.patientName || '',
+                text: String(payload?.text || '').trim(),
+            };
+
+            if (!msg.text) return false;
+
+            directMessages.unshift(msg);
+            persistDirectMessagesToStorage();
+            return true;
+        }
+
+        function getConversationMessages(doctorId, doctorName, patientName) {
+            const did = String(doctorId || '').trim();
+            const dname = normalizePersonName(doctorName);
+            const pname = normalizePersonName(patientName);
+
+            return (Array.isArray(directMessages) ? directMessages : []).filter(m => {
+                const mdid = String(m.doctorId || '').trim();
+                const mdname = normalizePersonName(m.doctorName);
+                const mpname = normalizePersonName(m.patientName);
+
+                const doctorOk = did ? mdid === did : (dname && mdname === dname);
+                const patientOk = pname ? mpname === pname : true;
+                return doctorOk && patientOk;
+            }).slice().reverse();
+        }
+
+        function getAppointmentDoctorDisplayName(doc) {
+            return String(doc || '')
+                .replace(/\s*\([^)]*\)\s*/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function isAppointmentForDoctor(app, doctorUser) {
+            const did = String(doctorUser?._id || doctorUser?.id || '').trim();
+            const doctorName = normalizePersonName(doctorUser?.name);
+
+            const appDoctorId = String(app?.doctorId || '').trim();
+            if (did && appDoctorId) return appDoctorId === did;
+
+            const appDoctorName = normalizePersonName(getAppointmentDoctorDisplayName(app?.doc));
+            return !!doctorName && appDoctorName === doctorName;
+        }
+
+        function getDoctorAppointments(doctorUser) {
+            return (Array.isArray(appointments) ? appointments : []).filter(a => isAppointmentForDoctor(a, doctorUser));
+        }
+
+        function getDoctorIncomingMessagesCount(doctorUser) {
+            const did = String(doctorUser?._id || doctorUser?.id || '').trim();
+            const dname = normalizePersonName(doctorUser?.name);
+
+            return (Array.isArray(directMessages) ? directMessages : []).filter(m => {
+                const mdid = String(m.doctorId || '').trim();
+                const mdname = normalizePersonName(m.doctorName);
+                const doctorOk = did ? mdid === did : (dname && mdname === dname);
+                return doctorOk && String(m.toRole || '') === 'doctor';
+            }).length;
+        }
+
+        loadDirectMessagesFromStorage();
+
         let logs = [
             { time: new Date().toLocaleTimeString(), action: 'Sistemi u inicializua', user: 'System' }
         ];
@@ -519,17 +805,24 @@
             document.getElementById(id).classList.toggle('hidden'); 
             if(id === 'loginModal' && !document.getElementById(id).classList.contains('hidden')) {
                 showLoginForm(); // Reset to login form when opening
+                setRole(role);
             }
         }
 
         function setRole(r) {
             role = r;
-            document.querySelectorAll('#loginModal .btn').forEach(b => {
-                b.style.background = 'transparent';
-                b.style.color = 'var(--gray)';
-            });
-            document.getElementById(`tab-${r}`).style.background = 'white';
-            document.getElementById(`tab-${r}`).style.color = 'var(--primary)';
+
+            const roleTabs = document.querySelectorAll('#loginModal .role-tabs .seg-btn');
+            roleTabs.forEach(b => b.classList.remove('active'));
+
+            const active = document.getElementById(`tab-${r}`);
+            if (active) active.classList.add('active');
+
+            const wrapper = document.querySelector('#loginModal .role-tabs');
+            if (wrapper) {
+                const idx = r === 'user' ? 0 : (r === 'doctor' ? 1 : 2);
+                wrapper.style.setProperty('--seg-idx', String(idx));
+            }
         }
 
         function showLoginForm() {
@@ -584,21 +877,22 @@
             const registerForm = document.getElementById('register-form');
             const tabLogin = document.getElementById('tab-login');
             const tabRegister = document.getElementById('tab-register');
-            
+
             if(tab === 'login') {
                 loginForm.classList.remove('hidden');
                 registerForm.classList.add('hidden');
-                tabLogin.style.background = 'white';
-                tabLogin.style.color = 'var(--primary)';
-                tabRegister.style.background = '';
-                tabRegister.style.color = 'var(--gray)';
+                tabLogin.classList.add('active');
+                tabRegister.classList.remove('active');
             } else {
                 loginForm.classList.add('hidden');
                 registerForm.classList.remove('hidden');
-                tabRegister.style.background = 'white';
-                tabRegister.style.color = 'var(--primary)';
-                tabLogin.style.background = '';
-                tabLogin.style.color = 'var(--gray)';
+                tabRegister.classList.add('active');
+                tabLogin.classList.remove('active');
+            }
+
+            const wrapper = document.querySelector('#loginModal .auth-tabs');
+            if (wrapper) {
+                wrapper.style.setProperty('--seg-idx', tab === 'login' ? '0' : '1');
             }
         }
 
@@ -702,7 +996,7 @@
                     const res = await fetch(`http://localhost:5500/api/appointments/doctors/${spec}`);
                     if(res.ok) {
                         const data = await res.json();
-                        allDoctors = allDoctors.concat(data.doctors || []);
+                        allDoctors = allDoctors.concat((data.doctors || []).map(doc => ({ ...doc, __specHint: spec })));
                     }
                 }
                 
@@ -725,8 +1019,8 @@
                     return {
                         id: d.id || d._id,
                         name: d.name || 'Unknown',
-                        spec: d.specialization || 'general',
-                        department: d.department || d.specialization,
+                        spec: d.specialization || d.spec || d.__specHint || 'general',
+                        department: d.department || d.specialization || d.spec || d.__specHint,
                         experience: d.experience || 5,
                         rating: d.avgRating || 4.5,
                         services: Array.isArray(d.services) ? d.services : [],
@@ -804,7 +1098,7 @@
                 const response = await fetch('http://localhost:5500/api/appointments/check-symptoms', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symptoms: symptomInput })
+                    body: JSON.stringify({ symptoms: normalizeSymptomsForApi(symptomInput) })
                 });
                 
                 if(!response.ok) throw new Error('Symptom check failed');
@@ -894,6 +1188,7 @@
                     <div class="nav-link active" onclick="refreshView('patient', 'dashboard')"><i class="fas fa-columns"></i> Dashboard</div>
                     <div class="nav-link" onclick="refreshView('patient', 'symptoms')"><i class="fas fa-heartbeat"></i> Symptoma</div>
                     <div class="nav-link" onclick="refreshView('patient', 'schedule')"><i class="fas fa-calendar"></i> Orari Im</div>
+                    <div class="nav-link" onclick="refreshView('patient', 'messages')"><i class="fas fa-envelope"></i> Mesazhet</div>
                     <div class="nav-link" onclick="refreshView('patient', 'prescriptions')"><i class="fas fa-pills"></i> Receptet</div>
                     <div class="nav-link" onclick="refreshView('patient', 'records')"><i class="fas fa-file-medical"></i> Analizat</div>
                 `;
@@ -935,14 +1230,74 @@
                     `;
                 }
                 else if(subview === 'schedule') {
+                    const myName = user.name || 'Pacient';
+                    const myApps = (Array.isArray(appointments) ? appointments : []).filter(a => normalizePersonName(a.patient || '') === normalizePersonName(myName));
+
                     view.innerHTML = `
                         <div class="card">
                             <h2>📅 Orari Im (My Schedule)</h2>
                             <button class="btn btn-primary" style="margin-bottom:15px;" onclick="toggleModal('bookModal')">+ Rezervo Vizitë të Re</button>
                             <table>
                                 <thead><tr><th>Doktori</th><th>Specialiteti</th><th>Data</th><th>Ora</th><th>Pritje</th><th>Statusi</th></tr></thead>
-                                <tbody>${appointments.length === 0 ? '<tr><td colspan="6" style="text-align:center; color:var(--gray);">Ska termine. Kliko "Rezervo Vizitë" për të marrë termin.</td></tr>' : appointments.map(a => `<tr><td>${a.doc}</td><td>${a.spec || 'N/A'}</td><td>${a.date}</td><td>${a.time}</td><td>${a.wait || '~30 min'}</td><td><span class="status-pill status-waiting">${a.status}</span></td></tr>`).join('')}</tbody>
+                                <tbody>${myApps.length === 0 ? '<tr><td colspan="6" style="text-align:center; color:var(--gray);">Ska termine. Kliko "Rezervo Vizitë" për të marrë termin.</td></tr>' : myApps.map(a => `<tr><td>${escapeHtml(a.doc || '')}</td><td>${escapeHtml(a.spec || 'N/A')}</td><td>${escapeHtml(a.date || '')}</td><td>${escapeHtml(a.time || '')}</td><td>${escapeHtml(a.wait || '~30 min')}</td><td><span class="status-pill status-waiting">${escapeHtml(a.status || 'Pritje')}</span></td></tr>`).join('')}</tbody>
                             </table>
+                        </div>
+                    `;
+                }
+                else if(subview === 'messages') {
+                    const myName = user.name || 'Pacient';
+                    const myNorm = normalizePersonName(myName);
+
+                    const myApps = (Array.isArray(appointments) ? appointments : []).filter(a => normalizePersonName(a.patient || '') === myNorm);
+                    const appDocs = myApps.map(a => getAppointmentDoctorDisplayName(a.doc)).filter(Boolean);
+
+                    const myMsgs = (Array.isArray(directMessages) ? directMessages : []).filter(m => normalizePersonName(m.patientName) === myNorm);
+                    const msgDocs = myMsgs.map(m => m.doctorName || (m.fromRole === 'doctor' ? m.fromName : m.toName) || '').filter(Boolean);
+
+                    const doctorsList = [...new Set([...appDocs, ...msgDocs])].filter(Boolean);
+                    const selected = (window.patientSelectedDoctor && String(window.patientSelectedDoctor).trim())
+                        ? String(window.patientSelectedDoctor).trim()
+                        : (doctorsList[0] || '');
+
+                    if (selected) window.patientSelectedDoctor = selected;
+
+                    const selectedNorm = normalizePersonName(selected);
+                    const inferredDoctorId = (myMsgs.find(m => normalizePersonName(m.doctorName) === selectedNorm && String(m.doctorId || '').trim())?.doctorId) || '';
+                    const knownDoctorId = String(inferredDoctorId || '').trim() || String((Array.isArray(doctors) ? doctors : []).find(d => normalizePersonName(d.name) === selectedNorm)?.id || '').trim();
+
+                    const convo = selected ? getConversationMessages(knownDoctorId || '', selected, myName) : [];
+
+                    view.innerHTML = `
+                        <div class="card">
+                            <h2>💬 Mesazhet</h2>
+
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 18px;">
+                                ${doctorsList.length === 0 ? '<p style="color:var(--gray);">Nuk keni biseda ende.</p>' : doctorsList.map(dn => `
+                                    <button class="btn" style="background:white; color:var(--dark); border:1px solid #ddd;" onclick="selectPatientDoctor('${encodeURIComponent(dn)}')">${escapeHtml(dn)}</button>
+                                `).join('')}
+                            </div>
+
+                            ${selected ? `
+                                <div style="border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:15px; background:#f8fafc;">
+                                    <p style="font-weight:700; margin-bottom:8px;">Doktori: ${escapeHtml(selected)}</p>
+                                    ${convo.length === 0 ? '<p style="color:var(--gray);">Nuk ka mesazhe ende.</p>' : convo.map(m => `
+                                        <div style="margin-bottom:10px;">
+                                            <p style="margin-bottom:4px; font-weight:700;">${m.fromRole === 'patient' ? 'Ju' : 'Doktori'}:</p>
+                                            <p style="color:var(--gray);">${escapeHtml(m.text || '')}</p>
+                                            <small style="color:#999;">${m.at ? new Date(m.at).toLocaleString() : ''}</small>
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                                    <button class="btn btn-primary" onclick="patientQuickReply('Në rregull, faleminderit.')">🙏 Faleminderit</button>
+                                    <button class="btn btn-primary" onclick="patientQuickReply('Në rregull, do t’ju njoftoj.')">✅ Do t’ju njoftoj</button>
+                                    <button class="btn btn-primary" onclick="patientQuickReply('OK, e kuptova. A ka diçka tjetër që duhet të bëj?')">❓ Pyetje</button>
+                                </div>
+
+                                <textarea id="patientReplyText" class="input" placeholder="Shkruaj mesazh..." style="min-height:100px;"></textarea>
+                                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="patientSendManualMessage()">Dërgo</button>
+                            ` : ''}
                         </div>
                     `;
                 }
@@ -1008,7 +1363,21 @@
                 } else if(subview === 'docs') {
                     view.innerHTML = `<div class="card"><button class="btn btn-primary" onclick="openAdminAdd('doc')">+ Shto Doktor</button>
                         <table><thead><tr><th>Emri</th><th>Spec</th><th>Veprim</th></tr></thead>
-                        <tbody>${doctors.map(d => `<tr><td>${d.name}</td><td>${d.spec}</td><td><button class="btn btn-danger" onclick="deleteDoc(${d.id})">Fshij</button></td></tr>`).join('')}</tbody>
+                        <tbody>${doctors.map(d => {
+                            const s = String(d.spec || 'general').toLowerCase();
+                            const label = ({
+                                cardiology: 'Cardiology',
+                                neurology: 'Neurology',
+                                orthopedics: 'Orthopedics',
+                                general: 'General Medicine',
+                                psychiatry: 'Psychiatry',
+                                pediatrics: 'Pediatrics',
+                                dermatology: 'Dermatology',
+                                gynecology: 'Gynecology',
+                                emergency: 'Emergency',
+                            }[s] || (s ? (s.charAt(0).toUpperCase() + s.slice(1)) : 'General Medicine'));
+                            return `<tr><td>${d.name}</td><td>${label}</td><td><button class="btn btn-danger" onclick="deleteDoc(${d.id})">Fshij</button></td></tr>`;
+                        }).join('')}</tbody>
                         </table></div>`;
                 } else if(subview === 'users') {
                     view.innerHTML = `<div class="card"><button class="btn btn-primary" onclick="openAdminAdd('user')">+ Shto User</button>
@@ -1034,15 +1403,30 @@
                 `;
                 
                 if(!subview || subview === 'dashboard') {
+                    const doctorApps = getDoctorAppointments(user);
+                    const msgCount = getDoctorIncomingMessagesCount(user);
+
                     view.innerHTML = `
                         <div class="grid-3">
-                            <div class="card"><h3>Termine Sot</h3><h2>${appointments.filter(a => a.doc === user.name).length}</h2></div>
-                            <div class="card"><h3>Pacientët e Regjistruar</h3><h2>${users.length}</h2></div>
-                            <div class="card"><h3>Mesazhet e Ardhur</h3><h2>5</h2></div>
+                            <div class="card"><h3>Termine</h3><h2>${doctorApps.length}</h2></div>
+                            <div class="card"><h3>Pacientët</h3><h2>${[...new Set(doctorApps.map(a => a.patient || 'Pacient'))].length}</h2></div>
+                            <div class="card"><h3>Mesazhe</h3><h2>${msgCount}</h2></div>
                         </div>
-                        <div class="card" style="margin-top:20px;"><h3>Terminet e Sotëm</h3>
-                            <table><thead><tr><th>Pacienti</th><th>Ora</th><th>Arsyeja</th><th>Veprim</th></tr></thead>
-                            <tbody>${appointments.filter(a => a.doc === user.name).length === 0 ? '<tr><td colspan="4" style="text-align:center; color:var(--gray);">Nuk ka termine për sot</td></tr>' : appointments.filter(a => a.doc === user.name).map(a => `<tr><td>${a.patient || 'Pacient'}</td><td>${a.time}</td><td>${a.reason || 'Kontrollim'}</td><td><button class="btn btn-success">Fillim Vizite</button></td></tr>`).join('')}</tbody>
+                        <div class="card" style="margin-top:20px;"><h3>Terminet e Mia</h3>
+                            <table>
+                                <thead><tr><th>Pacienti</th><th>Data</th><th>Ora</th><th>Statusi</th><th>Veprim</th></tr></thead>
+                                <tbody>${doctorApps.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--gray);">Nuk ka termine për këtë doktor</td></tr>' : doctorApps.map(a => `
+                                    <tr>
+                                        <td>${escapeHtml(a.patient || 'Pacient')}</td>
+                                        <td>${escapeHtml(a.date || '')}</td>
+                                        <td>${escapeHtml(a.time || '')}</td>
+                                        <td><span class="status-pill ${String(a.status || '').toLowerCase() === 'aprovuar' ? 'status-success' : 'status-waiting'}">${escapeHtml(a.status || 'Pritje')}</span></td>
+                                        <td>
+                                            <button class="btn btn-success" onclick="approveDoctorApp(${a.id})">Aprovo</button>
+                                            <button class="btn btn-primary" onclick="openDoctorMessages('${encodeURIComponent(a.patient || 'Pacient')}')">Mesazh</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}</tbody>
                             </table>
                         </div>
                     `;
@@ -1069,16 +1453,62 @@
                         </div>
                     `;
                 } else if(subview === 'messages') {
+                    const doctorId = String(user._id || user.id || '').trim();
+                    const doctorName = user.name || 'Doktor';
+
+                    const doctorApps = getDoctorAppointments(user);
+                    const appPatients = doctorApps.map(a => a.patient || 'Pacient');
+
+                    const msgPatients = (Array.isArray(directMessages) ? directMessages : [])
+                        .filter(m => {
+                            const mdid = String(m.doctorId || '').trim();
+                            const mdname = normalizePersonName(m.doctorName);
+                            const doctorOk = doctorId ? mdid === doctorId : (normalizePersonName(doctorName) && mdname === normalizePersonName(doctorName));
+                            return doctorOk;
+                        })
+                        .map(m => m.patientName || 'Pacient');
+
+                    const patients = [...new Set([...appPatients, ...msgPatients])].filter(Boolean);
+
+                    const selected = (window.doctorSelectedPatient && String(window.doctorSelectedPatient).trim())
+                        ? String(window.doctorSelectedPatient).trim()
+                        : (patients[0] || '');
+
+                    if (selected) window.doctorSelectedPatient = selected;
+
+                    const convo = selected ? getConversationMessages(doctorId, doctorName, selected) : [];
+
                     view.innerHTML = `
                         <div class="card">
                             <h2>📧 Mesazhet</h2>
-                            <div style="border:1px solid #eee; padding:15px; border-radius:12px; margin-bottom:15px; background:#f8fafc;">
-                                <p style="font-weight:700; margin-bottom:5px;">Pacienti: Dion Krasniqi</p>
-                                <p style="color:var(--gray);">Kam dhimbje në bark. Mund ta bëj vizitën nesër?</p>
-                                <small style="color:#999;">Para 2 orësh</small>
+
+                            <div style="display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 18px;">
+                                ${patients.length === 0 ? '<p style="color:var(--gray);">Nuk ka pacientë/mesazhe ende.</p>' : patients.map(p => `
+                                    <button class="btn" style="background:white; color:var(--dark); border:1px solid #ddd;" onclick="selectDoctorPatient('${encodeURIComponent(p)}')">${escapeHtml(p)}</button>
+                                `).join('')}
                             </div>
-                            <textarea class="input" placeholder="Përgjigjja..." style="min-height:100px;"></textarea>
-                            <button class="btn btn-primary" style="width:100%; margin-top:10px;">Dërgo Përgjigje</button>
+
+                            ${selected ? `
+                                <div style="border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:15px; background:#f8fafc;">
+                                    <p style="font-weight:700; margin-bottom:8px;">Pacienti: ${escapeHtml(selected)}</p>
+                                    ${convo.length === 0 ? '<p style="color:var(--gray);">Nuk ka bisedë ende.</p>' : convo.map(m => `
+                                        <div style="margin-bottom:10px;">
+                                            <p style="margin-bottom:4px; font-weight:700;">${m.fromRole === 'doctor' ? 'Ju' : 'Pacienti'}:</p>
+                                            <p style="color:var(--gray);">${escapeHtml(m.text || '')}</p>
+                                            <small style="color:#999;">${m.at ? new Date(m.at).toLocaleString() : ''}</small>
+                                        </div>
+                                    `).join('')}
+                                </div>
+
+                                <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                                    <button class="btn btn-primary" onclick="doctorQuickReply('Po, mundeni nesër. Ju lutem zgjidhni një orar që ju përshtatet.')">✅ Po, nesër</button>
+                                    <button class="btn btn-primary" onclick="doctorQuickReply('Ju lutem nëse keni dhimbje të forta, temperaturë ose përkeqësim, paraqituni menjëherë në urgjencë.')">⚠️ Urgjencë</button>
+                                    <button class="btn btn-primary" onclick="doctorQuickReply('Ju lutem më dërgoni më shumë detaje: sa kohë ka filluar dhimbja dhe a keni simptoma tjera?')">❓ Më shumë detaje</button>
+                                </div>
+
+                                <textarea id="doctorReplyText" class="input" placeholder="Shkruaj përgjigjen..." style="min-height:100px;"></textarea>
+                                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="doctorSendManualMessage()">Dërgo Përgjigje</button>
+                            ` : ''}
                         </div>
                     `;
                 } else if(subview === 'profile') {
@@ -1098,13 +1528,169 @@
             }
         }
 
+        function approveDoctorApp(id) {
+            const u = getCurrentUserSafe();
+            const a = (Array.isArray(appointments) ? appointments : []).find(x => x.id === id);
+            if (!a) return;
+
+            // Only allow the assigned doctor to approve
+            if (!isAppointmentForDoctor(a, u)) {
+                alert('❌ Nuk keni akses për ta aprovuar këtë termin.');
+                return;
+            }
+
+            a.status = 'Aprovuar';
+            persistAppointmentsToStorage();
+            refreshView('doctor', 'dashboard');
+        }
+
+        function openDoctorMessages(encodedPatientName) {
+            const p = decodeURIComponent(String(encodedPatientName || ''));
+            window.doctorSelectedPatient = p;
+            refreshView('doctor', 'messages');
+        }
+
+        function selectDoctorPatient(encodedPatientName) {
+            const p = decodeURIComponent(String(encodedPatientName || ''));
+            window.doctorSelectedPatient = p;
+            refreshView('doctor', 'messages');
+        }
+
+        function doctorQuickReply(text) {
+            const u = getCurrentUserSafe();
+            const doctorId = String(u._id || u.id || '').trim();
+            const doctorName = u.name || 'Doktor';
+            const patientName = String(window.doctorSelectedPatient || '').trim();
+            if (!patientName) return;
+
+            const ok = sendDirectMessage({
+                fromRole: 'doctor',
+                fromName: doctorName,
+                toRole: 'patient',
+                toName: patientName,
+                doctorId,
+                doctorName,
+                patientName,
+                text,
+            });
+
+            if (ok) refreshView('doctor', 'messages');
+        }
+
+        function doctorSendManualMessage() {
+            const u = getCurrentUserSafe();
+            const doctorId = String(u._id || u.id || '').trim();
+            const doctorName = u.name || 'Doktor';
+            const patientName = String(window.doctorSelectedPatient || '').trim();
+            const input = document.getElementById('doctorReplyText');
+            const text = String(input?.value || '').trim();
+
+            if (!patientName) return;
+            if (!text) return;
+
+            const ok = sendDirectMessage({
+                fromRole: 'doctor',
+                fromName: doctorName,
+                toRole: 'patient',
+                toName: patientName,
+                doctorId,
+                doctorName,
+                patientName,
+                text,
+            });
+
+            if (ok) {
+                if (input) input.value = '';
+                refreshView('doctor', 'messages');
+            }
+        }
+
+        function selectPatientDoctor(encodedDoctorName) {
+            const d = decodeURIComponent(String(encodedDoctorName || ''));
+            window.patientSelectedDoctor = d;
+            refreshView('patient', 'messages');
+        }
+
+        function resolveDoctorIdForPatient(doctorName, patientName) {
+            const dname = normalizePersonName(doctorName);
+            const pname = normalizePersonName(patientName);
+
+            const fromMsgs = (Array.isArray(directMessages) ? directMessages : []).find(m => {
+                return normalizePersonName(m.patientName) === pname
+                    && normalizePersonName(m.doctorName) === dname
+                    && String(m.doctorId || '').trim();
+            });
+
+            if (fromMsgs) return String(fromMsgs.doctorId || '').trim();
+
+            const fromList = (Array.isArray(doctors) ? doctors : []).find(d => normalizePersonName(d.name) === dname);
+            return String(fromList?.id || '').trim();
+        }
+
+        function patientQuickReply(text) {
+            const u = getCurrentUserSafe();
+            const patientName = u.name || 'Pacient';
+            const doctorName = String(window.patientSelectedDoctor || '').trim();
+            if (!doctorName) return;
+
+            const doctorId = resolveDoctorIdForPatient(doctorName, patientName);
+
+            const ok = sendDirectMessage({
+                fromRole: 'patient',
+                fromName: patientName,
+                toRole: 'doctor',
+                toName: doctorName,
+                doctorId,
+                doctorName,
+                patientName,
+                text,
+            });
+
+            if (ok) refreshView('patient', 'messages');
+        }
+
+        function patientSendManualMessage() {
+            const u = getCurrentUserSafe();
+            const patientName = u.name || 'Pacient';
+            const doctorName = String(window.patientSelectedDoctor || '').trim();
+            const input = document.getElementById('patientReplyText');
+            const text = String(input?.value || '').trim();
+
+            if (!doctorName) return;
+            if (!text) return;
+
+            const doctorId = resolveDoctorIdForPatient(doctorName, patientName);
+
+            const ok = sendDirectMessage({
+                fromRole: 'patient',
+                fromName: patientName,
+                toRole: 'doctor',
+                toName: doctorName,
+                doctorId,
+                doctorName,
+                patientName,
+                text,
+            });
+
+            if (ok) {
+                if (input) input.value = '';
+                refreshView('patient', 'messages');
+            }
+        }
+
         // ADMIN ACTIONS
         function approveApp(id) {
             const a = appointments.find(x => x.id === id);
-            if(a) { a.status = 'Aprovuar'; addLog('Aprovoi terminin', 'Admin'); refreshView('admin', 'app'); }
+            if(a) {
+                a.status = 'Aprovuar';
+                persistAppointmentsToStorage();
+                addLog('Aprovoi terminin', 'Admin');
+                refreshView('admin', 'app');
+            }
         }
         function deleteApp(id) {
             appointments = appointments.filter(x => x.id !== id);
+            persistAppointmentsToStorage();
             addLog('Fshiu terminin', 'Admin'); refreshView('admin', 'app');
         }
         function deleteDoc(id) {
@@ -1431,7 +2017,16 @@
             const date = document.getElementById('bookDate').value;
             const time = document.getElementById('bookTime').value;
             if(!date || !time) return alert('Plotësoni të dhënat!');
-            appointments.unshift({ id: Date.now(), doc, date, time, status: 'Pritje', patient: 'Dion Ukshini' });
+
+            const me = JSON.parse(localStorage.getItem('user') || '{}');
+            const patientName = me?.name || 'Pacient';
+
+            const docNameClean = String(doc || '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+            const match = (Array.isArray(doctors) ? doctors : []).find(d => normalizePersonName(d?.name) === normalizePersonName(docNameClean));
+            const doctorId = String(match?.id || match?._id || '').trim();
+
+            appointments.unshift({ id: Date.now(), doctorId, doc, date, time, status: 'Pritje', patient: patientName });
+            persistAppointmentsToStorage();
             alert('Termini u regjistrua në sistem!');
             toggleModal('bookModal');
             if(!document.getElementById('app-shell').classList.contains('hidden')) refreshView(role);
@@ -1495,6 +2090,88 @@
 
         // ===== PREMIUM FEATURES =====
 
+        function toSqUrgencyLabel(level) {
+            const k = (level || '').toString().trim().toLowerCase();
+            if (k === 'high') return 'I LARTË';
+            if (k === 'medium') return 'MESATAR';
+            if (k === 'low') return 'I ULËT';
+            return '';
+        }
+
+        function toSqDepartmentLabel(dept) {
+            const k = (dept || '').toString().trim().toLowerCase();
+            const map = {
+                cardiology: 'Kardiologji',
+                neurology: 'Neurologji',
+                dermatology: 'Dermatologji',
+                gastroenterology: 'Gastroenterologji',
+                orthopedics: 'Ortopedi',
+                pediatrics: 'Pediatri',
+                oncology: 'Onkologji',
+                urology: 'Urologji',
+                gynecology: 'Gjinekologji',
+                ophthalmology: 'Oftalmologji',
+                ent: 'ORL',
+                emergency: 'Urgjencë',
+                general: 'Mjekësi e Përgjithshme'
+            };
+            return map[k] || (dept || '');
+        }
+
+        function toSqRecommendedAction(text) {
+            const t = (text || '').toString().trim();
+            if (!t) return '';
+
+            // If it's already Albanian, keep it.
+            if (/\b(ju|lutem|kontaktoni|mjeku|urgjenc)\b/i.test(t)) return t;
+
+            const l = t.toLowerCase();
+            if (l.includes('go to emergency') || l.includes('go to the emergency') || l.includes('emergency')) {
+                return 'Ju lutem shkoni menjëherë te mjeku ose në urgjencë.';
+            }
+            if (l.includes('see a doctor') || l.includes('doctor immediately') || l.includes('seek medical attention')) {
+                return 'Ju lutem vizitoni një mjek sa më shpejt.';
+            }
+            if (l.includes('call') && l.includes('ambulance')) {
+                return 'Telefononi menjëherë ambulancën.';
+            }
+            return t;
+        }
+
+        function stripDiacritics(str) {
+            return (str || '').toString().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        }
+
+        function normalizeSymptomsForApi(input) {
+            const raw = (input || '').toString().trim();
+            if (!raw) return raw;
+
+            const s = stripDiacritics(raw).toLowerCase();
+            const found = [];
+            const add = (cond, term) => { if (cond) found.push(term); };
+
+            add(/\b(dhimbje|dhembje)\s+koke\b/.test(s), 'headache');
+            add(/\b(dhimbje|dhembje)\s+dhembi\b/.test(s), 'toothache');
+            add(/\b(dhimbje|dhembje)\s+(ne|n[eë])\s+(kraharor|gjoks)\b/.test(s), 'chest pain');
+            add(/\b(frymemarrje|frymarrje)\s+(e\s+)?veshtire\b/.test(s), 'shortness of breath');
+            add(/\b(ethet|ethe|temperature|temperatur)\b/.test(s), 'fever');
+            add(/\b(kolle|koll[eë])\b/.test(s), 'cough');
+            add(/\b(dhimbje|dhembje)\s+fyti\b/.test(s), 'sore throat');
+            add(/\b(hunde|hund[eë])\s+e\s+zen[eë]\b/.test(s), 'nasal congestion');
+            add(/\b(rrjedhje)\s+(hundesh|hund[eë]sh)\b/.test(s), 'runny nose');
+            add(/\b(marramendje)\b/.test(s), 'dizziness');
+            add(/\b(te\s+vjella|t[eë]\s+vjella|vjellje)\b/.test(s), 'vomiting');
+            add(/\b(diarre)\b/.test(s), 'diarrhea');
+            add(/\b(dhimbje|dhembje)\s+barku\b/.test(s), 'abdominal pain');
+            add(/\b(dhimbje|dhembje)\s+shpine\b/.test(s), 'back pain');
+            add(/\b(skuqje)\b/.test(s), 'rash');
+            add(/\b(kruarje)\b/.test(s), 'itching');
+            add(/\b(lodhje)\b/.test(s), 'fatigue');
+
+            const unique = [...new Set(found)];
+            return unique.length ? unique.join(', ') : raw;
+        }
+
         async function checkSymptoms() {
             const input = document.getElementById('symptomInput').value;
             if(!input) return alert('Shkruaj simptomat!');
@@ -1503,20 +2180,29 @@
                 const response = await fetch('http://localhost:5500/api/appointments/check-symptoms', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symptoms: input })
+                    body: JSON.stringify({ symptoms: normalizeSymptomsForApi(input) })
                 });
                 
                 if(!response.ok) throw new Error('Gabim në analizën e simptomave');
                 
                 const result = await response.json();
                 const resultDiv = document.getElementById('symptomResult');
-                
+
+                const urgencyKey = (result.urgencyLevel || '').toString().trim().toLowerCase();
+                const urgencyColor = urgencyKey === 'high' ? 'red' : urgencyKey === 'medium' ? 'orange' : 'green';
+                const urgencyLabel = toSqUrgencyLabel(urgencyKey) || (result.urgencyLevel ? result.urgencyLevel.toString().toUpperCase() : 'N/A');
+
+                const departmentLabelRaw = toSqDepartmentLabel(result.suggestedDepartment);
+                const departmentLabel = departmentLabelRaw ? departmentLabelRaw.toString().toUpperCase() : 'N/A';
+
+                const recommended = toSqRecommendedAction(result.recommendedAction) || 'Kontaktoni një specialist.';
+
                 resultDiv.innerHTML = `
                     <div style="background:#f0f7ff; padding:15px; border-radius:12px; border-left:4px solid var(--primary);">
-                        <p><b>🏥 Departamenti i Sugjeruar:</b> ${result.suggestedDepartment?.toUpperCase() || 'N/A'}</p>
-                        <p><b>⚠️ Niveli i Urgjencës:</b> <span style="color:${result.urgencyLevel === 'high' ? 'red' : result.urgencyLevel === 'medium' ? 'orange' : 'green'};">${result.urgencyLevel?.toUpperCase()}</span></p>
+                        <p><b>🏥 Departamenti i Sugjeruar:</b> ${departmentLabel}</p>
+                        <p><b>⚠️ Niveli i Urgjencës:</b> <span style="color:${urgencyColor};">${urgencyLabel}</span></p>
                         <p><b>📊 Besueshmëria:</b> ${result.confidence || 0}%</p>
-                        <p><b>💡 Rekomandim:</b> ${result.recommendedAction || 'Kontaktoni të specialist'}</p>
+                        <p><b>💡 Rekomandim:</b> ${recommended}</p>
                     </div>
                 `;
             } catch(err) {
@@ -1532,16 +2218,26 @@
                 const response = await fetch('http://localhost:5500/api/appointments/check-symptoms', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ symptoms: input })
+                    body: JSON.stringify({ symptoms: normalizeSymptomsForApi(input) })
                 });
                 
                 if(!response.ok) throw new Error('Gabim');
                 
                 const result = await response.json();
                 const token = localStorage.getItem('token');
+
+                const deptKey = (result.suggestedDepartment || '').toString();
+                const deptLabelRaw = toSqDepartmentLabel(deptKey);
+                const deptLabel = (deptLabelRaw || deptKey || 'N/A').toString().toUpperCase();
+
+                const urgencyKey = (result.urgencyLevel || '').toString().trim().toLowerCase();
+                const urgencyColor = urgencyKey === 'high' ? '#ef4444' : urgencyKey === 'medium' ? '#f59e0b' : '#10b981';
+                const urgencyLabel = toSqUrgencyLabel(urgencyKey) || (result.urgencyLevel ? result.urgencyLevel.toString().toUpperCase() : 'N/A');
+
+                const advice = toSqRecommendedAction(result.recommendedAction) || (result.recommendedAction || '');
                 
                 // Get recommended doctors
-                const docResponse = await fetch(`http://localhost:5500/api/appointments/doctors/${result.suggestedDepartment}`, {
+                const docResponse = await fetch(`http://localhost:5500/api/appointments/doctors/${encodeURIComponent(deptKey)}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 
@@ -1551,10 +2247,10 @@
                 resultDiv.innerHTML = `
                     <div style="background:#f0f7ff; padding:20px; border-radius:12px; margin-bottom:20px;">
                         <h3>📋 Rezultati i Analizës</h3>
-                        <p><b>Departamenti:</b> ${result.suggestedDepartment?.toUpperCase()}</p>
-                        <p><b>Urgjenca:</b> <span style="font-weight:bold; color:${result.urgencyLevel === 'high' ? '#ef4444' : result.urgencyLevel === 'medium' ? '#f59e0b' : '#10b981'};">${result.urgencyLevel?.toUpperCase()}</span></p>
+                        <p><b>Departamenti:</b> ${deptLabel}</p>
+                        <p><b>Urgjenca:</b> <span style="font-weight:bold; color:${urgencyColor};">${urgencyLabel}</span></p>
                         <p><b>Besueshmëria:</b> ${result.confidence}%</p>
-                        <p style="margin-top:15px; padding-top:15px; border-top:1px solid #e2e8f0;"><b>💡 Këshilla:</b> ${result.recommendedAction}</p>
+                        <p style="margin-top:15px; padding-top:15px; border-top:1px solid #e2e8f0;"><b>💡 Këshilla:</b> ${advice}</p>
                     </div>
                     <div style="background:#f8fafc; padding:20px; border-radius:12px;">
                         <h3>👨‍⚕️ Doktorë të Rekomanduar</h3>
@@ -1595,7 +2291,12 @@
             }).then(r => {
                 if(r.ok) {
                     alert('✅ Termini u rezervua me sukses!');
-                    appointments.unshift({ id: Date.now(), doc: doctorName, date, time, status: 'Pritje', wait: '~30 min' });
+
+                    const me = JSON.parse(localStorage.getItem('user') || '{}');
+                    const patientName = me?.name || 'Pacient';
+
+                    appointments.unshift({ id: Date.now(), doctorId, doc: doctorName, date, time, status: 'Pritje', wait: '~30 min', patient: patientName });
+                    persistAppointmentsToStorage();
                     refreshView('patient', 'schedule');
                 } else {
                     alert('❌ Gabim në rezervim');

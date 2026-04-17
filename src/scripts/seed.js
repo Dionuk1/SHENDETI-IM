@@ -226,6 +226,18 @@ async function upsertDoctor({
         }),
     ]);
 
+    // Ensure doctors can log in (auth uses the User collection)
+    await Promise.all(
+        doctors.map((doc) =>
+            upsertUser({
+                name: doc.name,
+                email: doc.email,
+                password: 'password123',
+                role: 'doctor',
+            })
+        )
+    );
+
     console.log('✅ Seed complete');
     console.log('\n📋 Created Accounts:');
     console.log('─'.repeat(60));
@@ -242,7 +254,7 @@ async function upsertDoctor({
     });
     console.log('─'.repeat(60));
     console.log('\nℹ️  Start the server with: npm start');
-    console.log('   Visit: http://localhost:3000');
+    console.log('   Visit: http://localhost:5500');
 
     process.exit(0);
 })().catch((e) => {

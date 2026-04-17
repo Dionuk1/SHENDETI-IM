@@ -490,9 +490,21 @@
         </header>
 
         <section id="doctors">
-            <h2 style="text-align:center; font-size:2.5rem; margin-bottom:40px;">Specialistët tanë</h2>
-            <div id="landing-doctor-grid" class="doctor-grid">
+            <div style="padding:0 140px; margin-bottom:18px;">
+                <h2 style="text-align:center; font-size:2.5rem;">Specialistët tanë</h2>
+
+                <div style="display:flex; justify-content:flex-end; margin-top:18px;">
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+                        <div id="landingDoctorsMoreLabel" style="font-weight:800; color:var(--gray); font-size:0.9rem;"></div>
+                        <button
+                            id="landingDoctorsToggleBtn"
+                            class="btn btn-primary"
+                            onclick="toggleLandingDoctorsShowAll()"
+                        >View all</button>
+                    </div>
                 </div>
+            </div>
+            <div id="landing-doctor-grid" class="doctor-grid"></div>
         </section>
     </div>
 
@@ -617,6 +629,79 @@
         let users = [];
         let usersLoaded = false;
         let appointments = [];
+        let landingDoctorsShowAll = false;
+
+        function renderLandingDoctorsGrid() {
+            const grid = document.getElementById('landing-doctor-grid');
+            if (!grid) return;
+
+            if (doctors.length === 0) {
+                grid.innerHTML = '<p style="text-align:center; color:var(--gray); grid-column: 1/-1;">Nuk ka doktorë të regjistruar. Ekskutoni npm run seed.</p>';
+                return;
+            }
+
+            const maxCards = 4;
+            const list = landingDoctorsShowAll ? doctors : doctors.slice(0, maxCards);
+
+            const cardsHtml = list.map(d => `
+                        <div class="card doc-card animate__animated animate__fadeInUp" style="position:relative;">
+                            <div style="position:absolute; top:10px; right:10px; font-size:0.75rem; background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:12px;">⏱ ~${d.waitTime} min</div>
+                            <div class="doc-img"><i class="fas fa-user-md"></i></div>
+                            <h3>${d.name}</h3>
+                            <p style="color:var(--primary); font-weight:600; margin-bottom:5px;">${d.spec.charAt(0).toUpperCase() + d.spec.slice(1)}</p>
+                            <p style="color:var(--gray); font-size:0.85rem; margin-bottom:10px;">⭐ ${d.rating}/5 | ${d.experience} yrs</p>
+                            <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:15px; font-size:0.8rem; color:var(--gray);">
+                                ${d.services.slice(0, 3).map(s => `<span style="display:inline-block; margin:2px; padding:4px 8px; background:white; border-radius:6px;">${s.name}</span>`).join('')}
+                            </div>
+                            <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="toggleModal('bookModal'); selectDoctor('${d.name}')">Rezervo Vizitë</button>
+                        </div>
+                    `).join('');
+
+            grid.innerHTML = cardsHtml;
+
+            const toggleBtn = document.getElementById('landingDoctorsToggleBtn');
+            const moreLabel = document.getElementById('landingDoctorsMoreLabel');
+
+            if (toggleBtn) {
+                const canToggle = doctors.length > maxCards;
+                toggleBtn.style.display = canToggle ? 'inline-flex' : 'none';
+                toggleBtn.textContent = landingDoctorsShowAll ? 'Show less' : 'View all';
+
+                if (landingDoctorsShowAll) {
+                    toggleBtn.className = 'btn';
+                    toggleBtn.style.background = 'white';
+                    toggleBtn.style.color = 'var(--dark)';
+                    toggleBtn.style.border = '1px solid #ddd';
+                } else {
+                    toggleBtn.className = 'btn btn-primary';
+                    toggleBtn.style.background = '';
+                    toggleBtn.style.color = '';
+                    toggleBtn.style.border = '';
+                }
+
+                if (moreLabel) {
+                    if (!canToggle || landingDoctorsShowAll) {
+                        moreLabel.textContent = '';
+                        moreLabel.style.display = 'none';
+                    } else {
+                        moreLabel.textContent = `+${doctors.length - maxCards} doktorë të tjerë`;
+                        moreLabel.style.display = 'block';
+                    }
+                }
+            } else if (moreLabel) {
+                moreLabel.textContent = '';
+                moreLabel.style.display = 'none';
+            }
+        }
+
+        function setLandingDoctorsShowAll(v) {
+            landingDoctorsShowAll = Boolean(v);
+            renderLandingDoctorsGrid();
+        }
+
+        function toggleLandingDoctorsShowAll() {
+            setLandingDoctorsShowAll(!landingDoctorsShowAll);
+        }
 
         function loadAppointmentsFromStorage() {
             try {
@@ -1036,28 +1121,9 @@
                 doctors = []; // Fallback to empty
             }
             
-            const grid = document.getElementById('landing-doctor-grid');
             const select = document.getElementById('bookDoc');
             
-            if(grid) {
-                if(doctors.length === 0) {
-                    grid.innerHTML = '<p style="text-align:center; color:var(--gray); grid-column: 1/-1;">Nuk ka doktorë të regjistruar. Ekskutoni npm run seed.</p>';
-                } else {
-                    grid.innerHTML = doctors.map(d => `
-                        <div class="card doc-card animate__animated animate__fadeInUp" style="position:relative;">
-                            <div style="position:absolute; top:10px; right:10px; font-size:0.75rem; background:#fef3c7; color:#92400e; padding:4px 10px; border-radius:12px;">⏱ ~${d.waitTime} min</div>
-                            <div class="doc-img"><i class="fas fa-user-md"></i></div>
-                            <h3>${d.name}</h3>
-                            <p style="color:var(--primary); font-weight:600; margin-bottom:5px;">${d.spec.charAt(0).toUpperCase() + d.spec.slice(1)}</p>
-                            <p style="color:var(--gray); font-size:0.85rem; margin-bottom:10px;">⭐ ${d.rating}/5 | ${d.experience} yrs</p>
-                            <div style="background:#f8fafc; padding:10px; border-radius:8px; margin-bottom:15px; font-size:0.8rem; color:var(--gray);">
-                                ${d.services.slice(0, 3).map(s => `<span style="display:inline-block; margin:2px; padding:4px 8px; background:white; border-radius:6px;">${s.name}</span>`).join('')}
-                            </div>
-                            <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="toggleModal('bookModal'); selectDoctor('${d.name}')">Rezervo Vizitë</button>
-                        </div>
-                    `).join('');
-                }
-            }
+            renderLandingDoctorsGrid();
             
             if(select) {
                 select.innerHTML = doctors.length === 0 ? '<option>Nuk ka doktorë</option>' : doctors.map(d => `<option>${d.name} (${d.spec})</option>`).join('');
@@ -1181,6 +1247,9 @@
             const sidebar = document.getElementById('sidebar-links');
             const view = document.getElementById('dash-view');
             const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+            stopAdminLiveUpdates();
+            stopDoctorLiveUpdates();
 
             if(type === 'user' || type === 'patient') {
                 document.getElementById('dash-title').innerText = "Shëndeti Im";
@@ -1357,7 +1426,7 @@
                                 ${logs.map(l => `<p>[${l.time}] <b>${l.user}</b>: ${l.action}</p>`).join('')}
                             </div>
                         </div>`;
-                    fetchAdminStats();
+                    startAdminLiveUpdates('dashboard');
                 } else if(subview === 'health') {
                     view.innerHTML = `
                         <div class="card">
@@ -1394,10 +1463,10 @@
                     fetchDatabaseHealth();
                 } else if(subview === 'app') {
                     view.innerHTML = `<div class="card"><h3>Menaxho Terminet</h3>
-                        <table><thead><tr><th>Pacienti</th><th>Doktori</th><th>Data</th><th>Statusi</th><th>Veprim</th></tr></thead>
-                        <tbody>${appointments.map(a => `<tr><td>${a.patient || 'Dion'}</td><td>${a.doc}</td><td>${a.date}</td><td>${a.status}</td>
-                        <td><button class="btn btn-success" onclick="approveApp(${a.id})">Aprovo</button> <button class="btn btn-danger" onclick="deleteApp(${a.id})">Fshij</button></td></tr>`).join('')}</tbody>
+                        <table><thead><tr><th>Pacienti</th><th>Doktori</th><th>Data/Koha</th><th>Shërbimi</th><th>Statusi</th><th>Veprim</th></tr></thead>
+                        <tbody id="adminAppointmentsBody"><tr><td colspan="6" style="text-align:center; color:var(--gray);">Duke kërkuar terminet...</td></tr></tbody>
                         </table></div>`;
+                    startAdminLiveUpdates('app');
                 } else if(subview === 'docs') {
                     view.innerHTML = `<div class="card"><button class="btn btn-primary" onclick="openAdminAdd('doc')">+ Shto Doktor</button>
                         <table><thead><tr><th>Emri</th><th>Spec</th><th>Veprim</th></tr></thead>
@@ -1422,12 +1491,8 @@
                         <table><thead><tr><th>Emri</th><th>Email</th><th>Roli</th><th>Veprim</th></tr></thead>
                         <tbody id="usersTableBody"><tr><td colspan="4" style="text-align:center; color:var(--gray);">Duke kërkuar përdoruesit...</td></tr></tbody>
                         </table></div>`;
-                    // Only fetch if not already loaded, otherwise display from local array
-                    if(!usersLoaded) {
-                        fetchAndDisplayUsers();
-                    } else {
-                        displayUsersFromArray();
-                    }
+                    // Always refetch so new seeded users appear immediately.
+                    fetchAndDisplayUsers();
                 }
             }
             else if(type === 'doctor') {
@@ -1441,42 +1506,32 @@
                 `;
                 
                 if(!subview || subview === 'dashboard') {
-                    const doctorApps = getDoctorAppointments(user);
                     const msgCount = getDoctorIncomingMessagesCount(user);
 
                     view.innerHTML = `
                         <div class="grid-3">
-                            <div class="card"><h3>Termine</h3><h2>${doctorApps.length}</h2></div>
-                            <div class="card"><h3>Pacientët</h3><h2>${[...new Set(doctorApps.map(a => a.patient || 'Pacient'))].length}</h2></div>
+                            <div class="card"><h3>Termine</h3><h2 id="doctorAppsCount">—</h2></div>
+                            <div class="card"><h3>Pacientët</h3><h2 id="doctorPatientsCount">—</h2></div>
                             <div class="card"><h3>Mesazhe</h3><h2>${msgCount}</h2></div>
                         </div>
                         <div class="card" style="margin-top:20px;"><h3>Terminet e Mia</h3>
                             <table>
                                 <thead><tr><th>Pacienti</th><th>Data</th><th>Ora</th><th>Statusi</th><th>Veprim</th></tr></thead>
-                                <tbody>${doctorApps.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--gray);">Nuk ka termine për këtë doktor</td></tr>' : doctorApps.map(a => `
-                                    <tr>
-                                        <td>${escapeHtml(a.patient || 'Pacient')}</td>
-                                        <td>${escapeHtml(a.date || '')}</td>
-                                        <td>${escapeHtml(a.time || '')}</td>
-                                        <td><span class="status-pill ${String(a.status || '').toLowerCase() === 'aprovuar' ? 'status-success' : 'status-waiting'}">${escapeHtml(a.status || 'Pritje')}</span></td>
-                                        <td>
-                                            <button class="btn btn-success" onclick="approveDoctorApp(${a.id})">Aprovo</button>
-                                            <button class="btn btn-primary" onclick="openDoctorMessages('${encodeURIComponent(a.patient || 'Pacient')}')">Mesazh</button>
-                                        </td>
-                                    </tr>
-                                `).join('')}</tbody>
+                                <tbody id="doctorAppointmentsBody"><tr><td colspan="5" style="text-align:center; color:var(--gray);">Duke kërkuar terminet...</td></tr></tbody>
                             </table>
                         </div>
                     `;
+                    startDoctorLiveUpdates('dashboard');
                 } else if(subview === 'patients') {
                     view.innerHTML = `
                         <div class="card">
                             <h2>👥 Pacientët e Mij</h2>
                             <table><thead><tr><th>Emri</th><th>Email</th><th>Telefon</th><th>Veprim</th></tr></thead>
-                            <tbody>${users.length === 0 ? '<tr><td colspan="4" style="text-align:center; color:var(--gray);">Nuk ka pacientë</td></tr>' : users.map(u => `<tr><td>${u.name}</td><td>${u.email}</td><td>${u.phone || 'N/A'}</td><td><button class="btn btn-primary">Shiko Historinë</button></td></tr>`).join('')}</tbody>
+                            <tbody id="doctorPatientsBody"><tr><td colspan="4" style="text-align:center; color:var(--gray);">Duke kërkuar pacientët...</td></tr></tbody>
                             </table>
                         </div>
                     `;
+                    startDoctorLiveUpdates('patients');
                 } else if(subview === 'schedule') {
                     view.innerHTML = `
                         <div class="card">
@@ -1566,9 +1621,36 @@
             }
         }
 
-        function approveDoctorApp(id) {
+        async function approveDoctorApp(id) {
+            const token = localStorage.getItem('token');
+
+            if (token && isMongoObjectId(id)) {
+                try {
+                    const response = await fetch(`http://localhost:5500/api/doctor/appointments/${encodeURIComponent(String(id))}`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ status: 'confirmed' }),
+                    });
+
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data?.error || `Gabim (${response.status})`);
+
+                    await fetchAndRenderDoctorAppointments();
+                    return;
+                } catch (e) {
+                    console.error('Doctor approve appointment error:', e);
+                    alert('⚠️ Gabim: ' + e.message);
+                    return;
+                }
+            }
+
+            // Fallback: localStorage appointments (legacy)
             const u = getCurrentUserSafe();
-            const a = (Array.isArray(appointments) ? appointments : []).find(x => x.id === id);
+            const sid = String(id);
+            const a = (Array.isArray(appointments) ? appointments : []).find(x => String(x.id) === sid);
             if (!a) return;
 
             // Only allow the assigned doctor to approve
@@ -1776,6 +1858,325 @@
 
         function isMongoObjectId(value) {
             return /^[a-f\d]{24}$/i.test(String(value || ''));
+        }
+
+        let adminLiveIntervalId = null;
+        let adminLiveSubview = '';
+
+        let doctorLiveIntervalId = null;
+        let doctorLiveSubview = '';
+
+        function stopAdminLiveUpdates() {
+            if (adminLiveIntervalId) {
+                clearInterval(adminLiveIntervalId);
+                adminLiveIntervalId = null;
+            }
+            adminLiveSubview = '';
+        }
+
+        function stopDoctorLiveUpdates() {
+            if (doctorLiveIntervalId) {
+                clearInterval(doctorLiveIntervalId);
+                doctorLiveIntervalId = null;
+            }
+            doctorLiveSubview = '';
+        }
+
+        function startDoctorLiveUpdates(subview) {
+            stopDoctorLiveUpdates();
+            doctorLiveSubview = String(subview || '');
+
+            if (doctorLiveSubview === 'patients') {
+                fetchAndRenderDoctorPatients();
+            } else if (doctorLiveSubview === 'dashboard') {
+                fetchAndRenderDoctorAppointments();
+            }
+
+            doctorLiveIntervalId = setInterval(() => {
+                if (doctorLiveSubview === 'patients') {
+                    if (!document.getElementById('doctorPatientsBody')) return stopDoctorLiveUpdates();
+                    fetchAndRenderDoctorPatients();
+                } else if (doctorLiveSubview === 'dashboard') {
+                    if (!document.getElementById('doctorAppointmentsBody')) return stopDoctorLiveUpdates();
+                    fetchAndRenderDoctorAppointments();
+                }
+            }, 5000);
+        }
+
+        async function fetchAndRenderDoctorPatients() {
+            const body = document.getElementById('doctorPatientsBody');
+            if (!body) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">❌ Nuk keni autentifikimi</td></tr>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5500/api/doctor/appointments', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data?.error || `Gabim (${response.status})`);
+                }
+
+                const apps = Array.isArray(data.appointments) ? data.appointments : [];
+                const map = new Map();
+
+                apps.forEach((a) => {
+                    const p = a.patient || null;
+                    if (!p) return;
+                    const key = String(p.id || p.email || '').trim();
+                    if (!key || map.has(key)) return;
+                    map.set(key, { name: p.name || 'Pacient', email: p.email || 'N/A' });
+                });
+
+                const patients = Array.from(map.values());
+                if (patients.length === 0) {
+                    body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray);">Nuk ka pacientë</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = patients
+                    .map((p) => `
+                        <tr>
+                            <td>${escapeHtml(p.name)}</td>
+                            <td>${escapeHtml(p.email)}</td>
+                            <td>N/A</td>
+                            <td><button class="btn btn-primary">Shiko Historinë</button></td>
+                        </tr>
+                    `)
+                    .join('');
+            } catch (e) {
+                console.error('Doctor patients fetch error:', e);
+                body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">⚠️ Gabim: ${escapeHtml(e.message)}</td></tr>`;
+            }
+        }
+
+        async function fetchAndRenderDoctorAppointments() {
+            const body = document.getElementById('doctorAppointmentsBody');
+            if (!body) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--danger);">❌ Nuk keni autentifikimi</td></tr>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5500/api/doctor/appointments', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data?.error || `Gabim (${response.status})`);
+                }
+
+                const apps = Array.isArray(data.appointments) ? data.appointments : [];
+
+                const appsCountEl = document.getElementById('doctorAppsCount');
+                const patientsCountEl = document.getElementById('doctorPatientsCount');
+                if (appsCountEl) appsCountEl.innerText = String(apps.length);
+                if (patientsCountEl) {
+                    const uniquePatients = new Set(apps.map(a => String(a?.patient?.id || a?.patient?.email || '').trim()).filter(Boolean));
+                    patientsCountEl.innerText = String(uniquePatients.size);
+                }
+
+                if (apps.length === 0) {
+                    body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--gray);">Nuk ka termine për këtë doktor</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = apps
+                    .map((a) => {
+                        const id = String(a.id || '');
+                        const patientName = a.patient?.name || 'Pacient';
+                        const when = a.scheduledAt ? new Date(a.scheduledAt) : null;
+                        const dateStr = when ? when.toLocaleDateString() : '';
+                        const timeStr = when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                        const statusLabel = toSqAppointmentStatus(a.status);
+                        const pill = String(a.status || '').toLowerCase() === 'confirmed' ? 'status-success' : 'status-waiting';
+
+                        const approveBtn = id
+                            ? `<button class="btn btn-success" onclick="approveDoctorApp('${id}')">Aprovo</button>`
+                            : `<button class="btn btn-success" disabled>Aprovo</button>`;
+
+                        const msgBtn = `<button class="btn btn-primary" onclick="openDoctorMessages('${encodeURIComponent(patientName)}')">Mesazh</button>`;
+
+                        return `
+                            <tr>
+                                <td>${escapeHtml(patientName)}</td>
+                                <td>${escapeHtml(dateStr)}</td>
+                                <td>${escapeHtml(timeStr)}</td>
+                                <td><span class="status-pill ${pill}">${escapeHtml(statusLabel || 'Pritje')}</span></td>
+                                <td>${approveBtn} ${msgBtn}</td>
+                            </tr>
+                        `;
+                    })
+                    .join('');
+            } catch (e) {
+                console.error('Doctor appointments fetch error:', e);
+                body.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--danger);">⚠️ Gabim: ${escapeHtml(e.message)}</td></tr>`;
+            }
+        }
+
+        function startAdminLiveUpdates(subview) {
+            stopAdminLiveUpdates();
+            adminLiveSubview = String(subview || '');
+
+            if (adminLiveSubview === 'dashboard') {
+                fetchAdminStats();
+            } else if (adminLiveSubview === 'app') {
+                fetchAndRenderAdminAppointments();
+            }
+
+            adminLiveIntervalId = setInterval(() => {
+                if (adminLiveSubview === 'dashboard') {
+                    if (!document.getElementById('statDoctors')) return stopAdminLiveUpdates();
+                    fetchAdminStats();
+                } else if (adminLiveSubview === 'app') {
+                    if (!document.getElementById('adminAppointmentsBody')) return stopAdminLiveUpdates();
+                    fetchAndRenderAdminAppointments();
+                }
+            }, 5000);
+        }
+
+        function toSqAppointmentStatus(status) {
+            const k = String(status || '').toLowerCase();
+            if (k === 'pending') return 'Pritje';
+            if (k === 'confirmed') return 'Aprovuar';
+            if (k === 'cancelled') return 'Anuluar';
+            if (k === 'completed') return 'Përfunduar';
+            return status || '';
+        }
+
+        async function adminSetAppointmentStatus(id, status) {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`http://localhost:5500/api/admin/appointments/${encodeURIComponent(String(id))}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ status }),
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data?.error || `Gabim (${response.status})`);
+
+                await fetchAndRenderAdminAppointments();
+                fetchAdminStats();
+            } catch (e) {
+                console.error('Update appointment error:', e);
+                alert('⚠️ Gabim: ' + e.message);
+            }
+        }
+
+        async function adminDeleteAppointmentDb(id) {
+            const ok = confirm('A jeni i sigurt që doni ta fshini këtë termin?');
+            if (!ok) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`http://localhost:5500/api/admin/appointments/${encodeURIComponent(String(id))}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data?.error || `Gabim (${response.status})`);
+
+                await fetchAndRenderAdminAppointments();
+                fetchAdminStats();
+            } catch (e) {
+                console.error('Delete appointment error:', e);
+                alert('⚠️ Gabim: ' + e.message);
+            }
+        }
+
+        async function fetchAndRenderAdminAppointments() {
+            const body = document.getElementById('adminAppointmentsBody');
+            if (!body) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--danger);">❌ Nuk keni autentifikimi</td></tr>';
+                return;
+            }
+
+            try {
+                const response = await fetch('http://localhost:5500/api/admin/appointments', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    throw new Error(data?.error || `Gabim (${response.status})`);
+                }
+
+                const list = Array.isArray(data.appointments) ? data.appointments : [];
+                if (list.length === 0) {
+                    body.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--gray);">Ska termine të regjistruar</td></tr>';
+                    return;
+                }
+
+                body.innerHTML = list
+                    .map((a) => {
+                        const id = String(a.id || '');
+                        const patientName = a.patient?.name || '—';
+                        const doctorName = a.doctor?.name || '—';
+                        const when = a.scheduledAt ? new Date(a.scheduledAt) : null;
+                        const dateStr = when ? when.toLocaleDateString() : '—';
+                        const timeStr = when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+                        const statusLabel = toSqAppointmentStatus(a.status);
+
+                        const approveBtn = id
+                            ? `<button class="btn btn-success" onclick="adminSetAppointmentStatus('${id}', 'confirmed')">Aprovo</button>`
+                            : `<button class="btn btn-success" disabled>Aprovo</button>`;
+
+                        const delBtn = id
+                            ? `<button class="btn btn-danger" onclick="adminDeleteAppointmentDb('${id}')">Fshij</button>`
+                            : `<button class="btn btn-danger" disabled>Fshij</button>`;
+
+                        return `
+                            <tr>
+                                <td>${escapeHtml(patientName)}</td>
+                                <td>${escapeHtml(doctorName)}</td>
+                                <td>${escapeHtml(dateStr)} ${escapeHtml(timeStr)}</td>
+                                <td>${escapeHtml(a.service || '—')}</td>
+                                <td>${escapeHtml(statusLabel || '—')}</td>
+                                <td>${approveBtn} ${delBtn}</td>
+                            </tr>
+                        `;
+                    })
+                    .join('');
+            } catch (e) {
+                console.error('Admin appointments fetch error:', e);
+                body.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--danger);">⚠️ Gabim: ${escapeHtml(e.message)}</td></tr>`;
+            }
         }
 
         async function fetchAdminStats() {
@@ -2085,22 +2486,72 @@
             renderUsersTableFromLocal();
         }
 
-        function saveBooking() {
+        async function saveBooking() {
             const doc = document.getElementById('bookDoc').value;
             const date = document.getElementById('bookDate').value;
             const time = document.getElementById('bookTime').value;
             if(!date || !time) return alert('Plotësoni të dhënat!');
 
+            const token = localStorage.getItem('token');
             const me = JSON.parse(localStorage.getItem('user') || '{}');
+            const meRole = String(me?.role || localStorage.getItem('role') || '').toLowerCase();
+
+            if (!token || (meRole && meRole !== 'patient')) {
+                alert('❌ Ju lutem kyçuni si Pacient për të rezervuar termin.');
+                return;
+            }
+
             const patientName = me?.name || 'Pacient';
 
             const docNameClean = String(doc || '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
             const match = (Array.isArray(doctors) ? doctors : []).find(d => normalizePersonName(d?.name) === normalizePersonName(docNameClean));
             const doctorId = String(match?.id || match?._id || '').trim();
 
-            appointments.unshift({ id: Date.now(), doctorId, doc, date, time, status: 'Pritje', patient: patientName });
-            persistAppointmentsToStorage();
-            alert('Termini u regjistrua në sistem!');
+            if (!doctorId) {
+                alert('❌ Doktori nuk u gjet. Rifreskoni faqen dhe provoni përsëri.');
+                return;
+            }
+
+            const whenLocal = new Date(`${date}T${time}`);
+            if (Number.isNaN(whenLocal.getTime()) || whenLocal <= new Date()) {
+                alert('❌ Zgjidhni një datë/orë në të ardhmen.');
+                return;
+            }
+
+            // Persist to backend so doctors/admin can see it in real-time.
+            try {
+                const scheduledAt = whenLocal.toISOString();
+                const response = await fetch('http://localhost:5500/api/appointments/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        doctorId,
+                        service: 'Konsultim',
+                        scheduledAt,
+                    }),
+                });
+
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    alert('❌ Gabim në rezervim: ' + (data?.error || `Gabim (${response.status})`));
+                    return;
+                }
+
+                const localApp = { id: Date.now(), doctorId, doc, date, time, status: 'Pritje', patient: patientName };
+                if (data?.appointment?.id) localApp.dbId = data.appointment.id;
+
+                appointments.unshift(localApp);
+                persistAppointmentsToStorage();
+            } catch (e) {
+                console.error('Create appointment (DB) failed:', e);
+                alert('⚠️ Gabim lidhje: ' + e.message + '\n\nSigurohuni se serveri funksionon në localhost:5500');
+                return;
+            }
+
+            alert('✅ Termini u regjistrua në sistem!');
             toggleModal('bookModal');
             if(!document.getElementById('app-shell').classList.contains('hidden')) refreshView(role);
         }
@@ -2346,14 +2797,28 @@
             if(!date) return;
             const time = prompt('Ndaj orën (HH:MM):');
             if(!time) return;
-            
+
             const token = localStorage.getItem('token');
+            const me = JSON.parse(localStorage.getItem('user') || '{}');
+            const meRole = String(me?.role || localStorage.getItem('role') || '').toLowerCase();
+
+            if (!token || (meRole && meRole !== 'patient')) {
+                alert('❌ Ju lutem kyçuni si Pacient për të rezervuar termin.');
+                return;
+            }
+
+            const whenLocal = new Date(`${date}T${time}`);
+            if (Number.isNaN(whenLocal.getTime()) || whenLocal <= new Date()) {
+                alert('❌ Zgjidhni një datë/orë në të ardhmen.');
+                return;
+            }
+
             const appointmentData = {
                 doctorId,
-                scheduledAt: `${date}T${time}:00Z`,
+                scheduledAt: whenLocal.toISOString(),
                 service: prompt('Shërbimi (p.sh. Konsultim):') || 'Konsultim'
             };
-            
+
             fetch('http://localhost:5500/api/appointments/create', {
                 method: 'POST',
                 headers: { 
@@ -2361,18 +2826,22 @@
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify(appointmentData)
-            }).then(r => {
+            }).then(async (r) => {
+                const data = await r.json().catch(() => ({}));
+
                 if(r.ok) {
                     alert('✅ Termini u rezervua me sukses!');
 
-                    const me = JSON.parse(localStorage.getItem('user') || '{}');
                     const patientName = me?.name || 'Pacient';
 
-                    appointments.unshift({ id: Date.now(), doctorId, doc: doctorName, date, time, status: 'Pritje', wait: '~30 min', patient: patientName });
+                    const localApp = { id: Date.now(), doctorId, doc: doctorName, date, time, status: 'Pritje', wait: '~30 min', patient: patientName };
+                    if (data?.appointment?.id) localApp.dbId = data.appointment.id;
+
+                    appointments.unshift(localApp);
                     persistAppointmentsToStorage();
                     refreshView('patient', 'schedule');
                 } else {
-                    alert('❌ Gabim në rezervim');
+                    alert('❌ Gabim në rezervim: ' + (data?.error || `Gabim (${r.status})`));
                 }
             }).catch(e => alert('⚠️ Gabim lidhje: ' + e.message));
         }

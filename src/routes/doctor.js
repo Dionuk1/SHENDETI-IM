@@ -3,6 +3,7 @@ const express = require('express');
 const Appointment = require('../models/Appointment');
 const Prescription = require('../models/Prescription');
 const User = require('../models/User');
+const Doctor = require('../models/Doctor');
 
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/requireRole');
@@ -14,7 +15,16 @@ router.use(requireAuth, requireRole('doctor'));
 
 router.get('/appointments', async (req, res, next) => {
     try {
-        const apps = await Appointment.find({ doctorId: req.user._id })
+        // Appointments are stored with doctorId pointing to the Doctor collection.
+        const doctor = await Doctor.findOne({ email: String(req.user.email || '').toLowerCase().trim() })
+            .select('_id')
+            .lean();
+
+        if (!doctor?._id) {
+            return res.json({ appointments: [] });
+        }
+
+        const apps = await Appointment.find({ doctorId: doctor._id })
             .populate('patientId', 'name email')
             .sort({ scheduledAt: 1 })
             .limit(200);
@@ -43,7 +53,15 @@ router.patch('/appointments/:id', async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid status' });
         }
 
-        const app = await Appointment.findOne({ _id: req.params.id, doctorId: req.user._id });
+        const doctor = await Doctor.findOne({ email: String(req.user.email || '').toLowerCase().trim() })
+            .select('_id')
+            .lean();
+
+        if (!doctor?._id) {
+            return res.status(404).json({ error: 'Not found' });
+        }
+
+        const app = await Appointment.findOne({ _id: req.params.id, doctorId: doctor._id });
         if (!app) {
             return res.status(404).json({ error: 'Not found' });
         }

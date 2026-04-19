@@ -19,7 +19,9 @@ const authRoutes = require('./src/routes/auth');
 const publicRoutes = require('./src/routes/public');
 const appointmentRoutes = require('./src/routes/appointment');
 const patientRoutes = require('./src/routes/patient');
+const patientsRoutes = require('./src/routes/patients');
 const doctorRoutes = require('./src/routes/doctor');
+const doctorsSelfRoutes = require('./src/routes/doctorsSelf');
 const doctorsAdminRoutes = require('./src/routes/doctors');
 const adminRoutes = require('./src/routes/admin');
 
@@ -52,7 +54,9 @@ app.use('/api', publicRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/patient', patientRoutes);
+app.use('/api/patients', patientsRoutes);
 app.use('/api/doctor', doctorRoutes);
+app.use('/api/doctors', doctorsSelfRoutes);
 app.use('/api/admin/doctors', doctorsAdminRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/ai', aiRoutes); // ✨ AI Routes

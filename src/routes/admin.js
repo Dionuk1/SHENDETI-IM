@@ -151,6 +151,8 @@ router.get('/appointments', async (req, res, next) => {
                 patient: a.patientId
                     ? { id: a.patientId._id.toString(), name: a.patientId.name, email: a.patientId.email }
                     : null,
+                // Provide both doctorId (preferred) and doctor (legacy) to keep the frontend flexible.
+                doctorId: a.doctorId ? { id: a.doctorId._id.toString(), name: a.doctorId.name } : null,
                 doctor: a.doctorId ? { id: a.doctorId._id.toString(), name: a.doctorId.name } : null,
                 service: a.service,
                 scheduledAt: a.scheduledAt,

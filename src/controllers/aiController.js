@@ -7,6 +7,9 @@ const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 const { analyzeSymptomWithGemini, chatWithGemini } = require('../services/geminiAI');
+const { chatWithLangChainRAG } = require('../services/langchainRag');
+const { suggestDepartmentFromSymptoms } = require('../services/symptomDepartment');
+const { predictQueueWaitTime: predictQueueWaitTimeService } = require('../services/queuePrediction');
 
 /**
  * AI Symptom Analysis
@@ -23,6 +26,9 @@ async function analyzeSymptoms(req, res, next) {
 
         // Use Gemini API for advanced analysis, with fallback to rule-based
         const geminiAnalysis = await analyzeSymptomWithGemini(symptoms, age, medicalHistory);
+
+        // Department suggestion (rule-based + optional Gemini refinement)
+        const deptSuggestion = await suggestDepartmentFromSymptoms(symptoms, age, medicalHistory);
         
         const analysis = {
             valid: true,
@@ -31,6 +37,7 @@ async function analyzeSymptoms(req, res, next) {
             analysis: {
                 primaryConcern: geminiAnalysis.primaryConcern || extractPrimaryConcern(symptoms),
                 recommendedDepartments: geminiAnalysis.recommendedDepartments || getRecommendedDepartments(symptoms),
+                suggestedDepartment: deptSuggestion?.suggestedDepartment,
                 urgencyLevel: geminiAnalysis.urgencyLevel || getUrgencyLevel(symptoms),
                 confidence: geminiAnalysis.confidence || Math.floor(Math.random() * 30 + 70),
                 recommendations: geminiAnalysis.recommendations || generateRecommendations(symptoms, age, medicalHistory),
@@ -41,6 +48,39 @@ async function analyzeSymptoms(req, res, next) {
         };
 
         res.json(analysis);
+    } catch (e) {
+        next(e);
+    }
+}
+
+/**
+ * Symptom → Department Suggestion (simple API)
+ * POST /api/ai/symptom-department
+ * Body: { symptoms: string, age?: number, medicalHistory?: string }
+ */
+async function suggestDepartment(req, res, next) {
+    try {
+        const { symptoms, age, medicalHistory } = req.body;
+
+        if (!symptoms) {
+            return res.status(400).json({ error: 'Symptoms required' });
+        }
+
+        const suggestion = await suggestDepartmentFromSymptoms(symptoms, age, medicalHistory);
+        return res.json({
+            valid: !!suggestion.valid,
+            symptoms,
+            suggestedDepartment: suggestion.suggestedDepartment,
+            urgencyLevel: suggestion.urgencyLevel,
+            confidence: suggestion.confidence,
+            matchedSymptoms: suggestion.matchedSymptoms,
+            alternativeDepartments: suggestion.alternativeDepartments,
+            recommendedAction: suggestion.recommendedAction,
+            usingGeminiAPI: suggestion.usingGeminiAPI,
+            error: suggestion.error,
+            suggestions: suggestion.suggestions,
+            timestamp: new Date(),
+        });
     } catch (e) {
         next(e);
     }
@@ -87,41 +127,7 @@ async function analyzeDocument(req, res, next) {
 async function predictQueueWaitTime(req, res, next) {
     try {
         const { doctorId, date } = req.params;
-
-        // Fetch doctor and their appointments for the given date
-        const doctor = await Doctor.findById(doctorId).select('name specialization avgDurationMins');
-        if (!doctor) {
-            return res.status(404).json({ error: 'Doctor not found' });
-        }
-
-        // Get appointments for this doctor on the given date
-        const startOfDay = new Date(date);
-        startOfDay.setHours(0, 0, 0, 0);
-        const endOfDay = new Date(date);
-        endOfDay.setHours(23, 59, 59, 999);
-
-        const appointments = await Appointment.find({
-            doctorId: doctorId,
-            scheduledAt: { $gte: startOfDay, $lte: endOfDay },
-            status: { $in: ['pending', 'confirmed'] }
-        });
-
-        // Calculate average appointment duration (default 30 mins)
-        const avgDuration = doctor.avgDurationMins || 30;
-        const totalWaitMinutes = appointments.length * avgDuration;
-
-        const prediction = {
-            doctorId: doctorId,
-            doctorName: doctor.name,
-            date: date,
-            activeAppointments: appointments.length,
-            estimatedWaitMinutes: totalWaitMinutes,
-            confidenceLevel: Math.min(95, 70 + appointments.length * 5),
-            busyLevel: totalWaitMinutes > 120 ? 'high' : totalWaitMinutes > 60 ? 'medium' : 'low',
-            optimalSlots: findOptimalSlots(appointments, avgDuration),
-            recommendation: generateQueueRecommendation(totalWaitMinutes, appointments.length)
-        };
-
+        const prediction = await predictQueueWaitTimeService({ doctorId, date });
         res.json(prediction);
     } catch (e) {
         next(e);
@@ -146,10 +152,18 @@ async function chatWithRAG(req, res, next) {
 
         // Generate response using Gemini API if available, otherwise use rule-based
         let aiResponse;
+        let usingLangChain = false;
         const usingGemini = process.env.GEMINI_API_KEY ? true : false;
         
         if (usingGemini) {
-            aiResponse = await chatWithGemini(message, retrievedData);
+            // Prefer LangChain pipeline when installed; fall back to direct Gemini.
+            const lcResponse = await chatWithLangChainRAG(message, retrievedData);
+            if (lcResponse) {
+                aiResponse = lcResponse;
+                usingLangChain = true;
+            } else {
+                aiResponse = await chatWithGemini(message, retrievedData);
+            }
         } else {
             aiResponse = generateChatResponse(message, retrievedData);
         }
@@ -161,6 +175,7 @@ async function chatWithRAG(req, res, next) {
             dataUsed: retrievedData.sources,
             conversationId: conversationId || new Date().getTime().toString(),
             usingGeminiAPI: usingGemini,
+            usingLangChain,
             timestamp: new Date()
         });
     } catch (e) {
@@ -262,17 +277,6 @@ function generateDocumentRecommendations(documentText) {
         'Consult your primary care physician regarding findings',
         'Follow up as recommended by the document issuer'
     ];
-}
-
-function findOptimalSlots(appointments, avgDuration) {
-    // Return earliest available time slots
-    return ['09:00', '13:00', '16:00'];
-}
-
-function generateQueueRecommendation(totalWait, appointmentCount) {
-    if (totalWait > 120) return 'Schedule for another time - queue is very busy';
-    if (totalWait > 60) return 'Moderate wait - consider afternoon appointments';
-    return 'Good time to schedule - minimal wait expected';
 }
 
 /**
@@ -418,6 +422,7 @@ function generateChatResponse(message, retrievedData) {
 
 module.exports = {
     analyzeSymptoms,
+    suggestDepartment,
     analyzeDocument,
     predictQueueWaitTime,
     chatWithRAG

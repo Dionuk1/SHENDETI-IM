@@ -9,6 +9,7 @@
 const requestLog = {};
 const blockedIPs = new Set();
 const suspiciousPatterns = {};
+let lastCleanupAt = 0;
 
 // Configuration
 const CONFIG = {
@@ -17,8 +18,27 @@ const CONFIG = {
     BAN_DURATION_MINUTES: 15,
     FAILED_LOGIN_WINDOW: 5 * 60 * 1000, // 5 minutes
     BULK_ACCESS_THRESHOLD: 50, // requests to /api/admin/users within 1 minute
+    // Soft protection for bursty public endpoints (avoid full IP ban)
+    DOCTORS_LIST_PREFIX: '/api/appointments/doctors',
+    DOCTORS_LIST_WINDOW_MS: 10 * 1000,
+    DOCTORS_LIST_MAX_IN_WINDOW: 12,
+    CLEANUP_INTERVAL_MS: 5 * 60 * 1000,
+    STALE_IP_TTL_MS: 30 * 60 * 1000,
     SUSPICIOUS_ENDPOINTS: ['/api/admin/users', '/api/patient/records', '/api/doctor/schedule']
 };
+
+function maybeCleanup(timestamp) {
+    if (timestamp - lastCleanupAt < CONFIG.CLEANUP_INTERVAL_MS) return;
+    lastCleanupAt = timestamp;
+
+    for (const ip of Object.keys(requestLog)) {
+        const lastSeen = requestLog[ip]?.lastSeen || 0;
+        if (timestamp - lastSeen > CONFIG.STALE_IP_TTL_MS) {
+            delete requestLog[ip];
+            if (suspiciousPatterns[ip]) delete suspiciousPatterns[ip];
+        }
+    }
+}
 
 /**
  * Main Fraud Detection Middleware
@@ -30,8 +50,11 @@ function fraudDetectionMiddleware(req, res, next) {
     const method = req.method;
     const timestamp = Date.now();
 
+    maybeCleanup(timestamp);
+
     // Check if IP is blocked
     if (blockedIPs.has(clientIP)) {
+        res.set('Retry-After', String(CONFIG.BAN_DURATION_MINUTES * 60));
         return res.status(429).json({
             error: 'Too many suspicious requests. Your IP has been temporarily blocked.',
             retryAfter: CONFIG.BAN_DURATION_MINUTES
@@ -43,9 +66,12 @@ function fraudDetectionMiddleware(req, res, next) {
         requestLog[clientIP] = {
             totalRequests: [],
             failedLogins: [],
-            suspiciousRequests: []
+            suspiciousRequests: [],
+            lastSeen: timestamp
         };
     }
+
+    requestLog[clientIP].lastSeen = timestamp;
 
     // Track request timestamp
     requestLog[clientIP].totalRequests.push(timestamp);
@@ -62,10 +88,36 @@ function fraudDetectionMiddleware(req, res, next) {
             endpoint: endpoint
         });
         blockIP(clientIP);
+        res.set('Retry-After', String(CONFIG.BAN_DURATION_MINUTES * 60));
         return res.status(429).json({
             error: 'Rate limit exceeded. Too many requests.',
             retryAfter: CONFIG.BAN_DURATION_MINUTES
         });
+    }
+
+    // 1b. Targeted soft limit for public doctors listing endpoint
+    if (method === 'GET' && endpoint.startsWith(CONFIG.DOCTORS_LIST_PREFIX)) {
+        if (!suspiciousPatterns[clientIP]) suspiciousPatterns[clientIP] = {};
+        if (!suspiciousPatterns[clientIP].doctorsList) suspiciousPatterns[clientIP].doctorsList = [];
+
+        suspiciousPatterns[clientIP].doctorsList.push(timestamp);
+        suspiciousPatterns[clientIP].doctorsList = suspiciousPatterns[clientIP].doctorsList.filter(
+            (t) => timestamp - t < CONFIG.DOCTORS_LIST_WINDOW_MS
+        );
+
+        if (suspiciousPatterns[clientIP].doctorsList.length > CONFIG.DOCTORS_LIST_MAX_IN_WINDOW) {
+            logSecurityEvent(clientIP, 'DOCTORS_LIST_BURST', {
+                endpoint,
+                requestCount: suspiciousPatterns[clientIP].doctorsList.length,
+                windowMs: CONFIG.DOCTORS_LIST_WINDOW_MS,
+            });
+            recordSuspiciousRequest(clientIP, timestamp);
+            res.set('Retry-After', String(Math.ceil(CONFIG.DOCTORS_LIST_WINDOW_MS / 1000)));
+            return res.status(429).json({
+                error: 'Too many requests to doctors listing endpoint. Please slow down.',
+                retryAfterSeconds: Math.ceil(CONFIG.DOCTORS_LIST_WINDOW_MS / 1000),
+            });
+        }
     }
 
     // 2. BULK DATA ACCESS DETECTION

@@ -90,6 +90,149 @@ function normalizeInput(text) {
     return String(text).toLowerCase().trim();
 }
 
+function stripDiacritics(str) {
+    return String(str || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+}
+
+function normalizeClinicText(text) {
+    return stripDiacritics(String(text || '')).toLowerCase().trim();
+}
+
+const CLINIC_DEPARTMENTS = {
+    Kardiologji: {
+        specializationKey: 'cardiology',
+        keywords: [
+            'zem',
+            'zemer',
+            'zëmër',
+            'kardi',
+            'rrahje',
+            'palpit',
+            'presion',
+            'tension',
+            'chest pain',
+            'chest',
+            'kraharor',
+            'gjoks',
+            'shortness of breath',
+            'difficulty breathing',
+            'frym',
+            'mungese ajri',
+            'manges',
+            'krahu',
+            'arm pain',
+            'left arm',
+        ],
+    },
+    Pediatri: {
+        specializationKey: 'pediatrics',
+        keywords: ['femije', 'fëmij', 'foshnje', 'bebe', 'beb', 'pediatric', 'child', 'kid'],
+    },
+    Dermatologji: {
+        specializationKey: 'dermatology',
+        keywords: ['lekure', 'lëkur', 'skuqje', 'rash', 'kruar', 'itch', 'akne', 'acne', 'pucrra', 'pucra'],
+    },
+    Pulmonologji: {
+        specializationKey: 'pulmonology',
+        keywords: [
+            'koll',
+            'cough',
+            'astm',
+            'wheeze',
+            'fishkellim',
+            'bronkit',
+            'pneumon',
+            'mushker',
+            'mushkri',
+            'lung',
+            'breath',
+            'frym',
+            'shortness of breath',
+        ],
+    },
+    Gjinekologji: {
+        specializationKey: 'gynecology',
+        keywords: [
+            'cikel',
+            'period',
+            'menstru',
+            'gjakderdh',
+            'shtatz',
+            'pregnan',
+            'vagin',
+            'sekrecion',
+            'dhimbje pelv',
+            'gjinek',
+        ],
+    },
+};
+
+function pickClinicDepartment(inputNorm) {
+    const matches = Object.entries(CLINIC_DEPARTMENTS)
+        .map(([name, cfg]) => {
+            const hits = (cfg.keywords || []).reduce((acc, kw) => (inputNorm.includes(normalizeClinicText(kw)) ? acc + 1 : acc), 0);
+            return { name, specializationKey: cfg.specializationKey, hits };
+        })
+        .sort((a, b) => b.hits - a.hits);
+
+    return matches[0] && matches[0].hits > 0 ? matches[0] : null;
+}
+
+function computeClinicUrgency(inputNorm) {
+    // High-urgency red flags
+    const hasChestPain = /\b(kraharor|gjoks|chest)\b/.test(inputNorm) || inputNorm.includes('chest pain');
+    const hasBreath =
+        inputNorm.includes('frym') ||
+        inputNorm.includes('mungese ajri') ||
+        inputNorm.includes('manges ajri') ||
+        inputNorm.includes('breath') ||
+        inputNorm.includes('shortness');
+    const hasArmPain = /\b(krah|krahu|arm)\b/.test(inputNorm);
+    const hasFainting = /\b(t[ei]\s*fiket|fik(et|je)|unconscious|faint)\b/.test(inputNorm);
+    const hasSevere = /\b(shume e forte|shum[eë]\s*e\s*forte|shum[eë]|severe|sudden)\b/.test(inputNorm);
+
+    if (
+        (hasChestPain && hasBreath) ||
+        (hasChestPain && hasArmPain) ||
+        (hasArmPain && hasBreath) ||
+        (hasBreath && hasSevere) ||
+        hasFainting
+    ) {
+        return 'high';
+    }
+
+    // Medium urgency indicators
+    const hasFever = /\b(ethe|ethet|temperature|temperatur|fever)\b/.test(inputNorm);
+    const hasPersistentPain = /\b(dhimbje|dhembje|pain)\b/.test(inputNorm);
+    const hasRash = /\b(skuqje|rash|iritim)\b/.test(inputNorm);
+    const hasBleeding = /\b(gjakderdh|bleeding)\b/.test(inputNorm);
+
+    if (hasBleeding) return 'high';
+    if (hasFever && (hasBreath || hasRash)) return 'medium';
+    if (hasBreath || (hasPersistentPain && hasSevere)) return 'medium';
+
+    return 'low';
+}
+
+function computeClinicConfidence(hitCount, urgency) {
+    const base = hitCount > 0 ? 55 : 28;
+    const urgencyBonus = urgency === 'high' ? 18 : urgency === 'medium' ? 10 : 0;
+    const hitBonus = Math.min(30, hitCount * 10);
+    return Math.max(10, Math.min(95, Math.round(base + hitBonus + urgencyBonus)));
+}
+
+function clinicRecommendedAction(urgency) {
+    if (urgency === 'high') {
+        return 'Nëse simptomat janë të forta ose po përkeqësohen, paraqituni menjëherë te urgjenca ose kontaktoni mjekun.';
+    }
+    if (urgency === 'medium') {
+        return 'Rekomandohet konsultë brenda 24-48 orëve. Nëse simptomat përkeqësohen, kontaktoni urgjencën.';
+    }
+    return 'Rekomandohet të caktoni një konsultë kur ju përshtatet dhe të monitoroni simptomat.';
+}
+
 function calculateRelevance(symptom, userInput) {
     const input = normalizeInput(userInput);
     const symptomLower = normalizeInput(symptom);
@@ -115,6 +258,7 @@ function calculateRelevance(symptom, userInput) {
 
 function checkSymptoms(userInput) {
     const input = normalizeInput(userInput);
+    const inputNorm = normalizeClinicText(userInput);
 
     if (!input || input.length < 2) {
         return {
@@ -123,6 +267,35 @@ function checkSymptoms(userInput) {
         };
     }
 
+    // 1) Clinic-first mapping (strict departments, Albanian labels)
+    const deptPick = pickClinicDepartment(inputNorm);
+    const urgencyLevel = computeClinicUrgency(inputNorm);
+
+    if (deptPick) {
+        const confidence = computeClinicConfidence(deptPick.hits, urgencyLevel);
+        return {
+            valid: true,
+            // UI uses this value directly for the /appointments/doctors/:specialization call.
+            // Keep it as an Albanian label (strict list) and map it server-side in /doctors.
+            suggestedDepartment: deptPick.name,
+            // Keep a machine key for other backends/scripts.
+            suggestedSpecialization: deptPick.specializationKey,
+            urgencyLevel,
+            confidence,
+            matchedSymptoms: [
+                {
+                    symptom: deptPick.name,
+                    department: deptPick.name,
+                    urgency: urgencyLevel,
+                    relevance: confidence,
+                },
+            ],
+            alternativeDepartments: [],
+            recommendedAction: clinicRecommendedAction(urgencyLevel),
+        };
+    }
+
+    // 2) Legacy scoring against the built-in database (fallback)
     // Score each symptom
     const scores = Object.keys(SYMPTOM_DATABASE)
         .map((symptom) => ({
@@ -134,10 +307,21 @@ function checkSymptoms(userInput) {
         .sort((a, b) => b.relevance - a.relevance);
 
     if (scores.length === 0) {
+        // Strict list fallback: return a safe, low-confidence triage instead of N/A.
+        const safeDept = 'Kardiologji';
+        const safeUrgency = urgencyLevel || 'low';
+        const confidence = computeClinicConfidence(0, safeUrgency);
+
         return {
-            valid: false,
-            error: 'Symptoms not recognized. Please describe your symptoms more clearly.',
-            suggestions: ['Try mentioning specific body parts', 'Describe what you feel', 'Use common health terms'],
+            valid: true,
+            suggestedDepartment: safeDept,
+            suggestedSpecialization: CLINIC_DEPARTMENTS[safeDept].specializationKey,
+            urgencyLevel: safeUrgency,
+            confidence,
+            matchedSymptoms: [],
+            alternativeDepartments: [],
+            recommendedAction:
+                'Nuk u kuptuan plotësisht simptomat. Ju lutem përshkruani më shumë detaje (p.sh. vendndodhja, kohëzgjatja, intensiteti).',
         };
     }
 
@@ -149,27 +333,37 @@ function checkSymptoms(userInput) {
     const urgencyLevels = scores.map((s) => s.urgency);
     const maxUrgency = ['high', 'medium', 'low'].find((u) => urgencyLevels.includes(u));
 
+    // Map legacy department keys into the strict clinic list
+    const legacyToClinic = {
+        cardiology: 'Kardiologji',
+        pediatrics: 'Pediatri',
+        dermatology: 'Dermatologji',
+        general: 'Pulmonologji',
+        emergency: 'Kardiologji',
+        neurology: 'Kardiologji',
+        orthopedics: 'Kardiologji',
+        psychiatry: 'Kardiologji',
+    };
+
+    const clinicDept = legacyToClinic[topMatch.department] || 'Kardiologji';
+    const clinicSpecKey = CLINIC_DEPARTMENTS[clinicDept]?.specializationKey || 'cardiology';
+
     return {
         valid: true,
-        suggestedDepartment: topMatch.department,
-        suggestedSpecialization: topMatch.department,
+        suggestedDepartment: clinicDept,
+        suggestedSpecialization: clinicSpecKey,
         urgencyLevel: topMatch.urgency,
-        confidence: Math.min(100, topMatch.relevance),
+        confidence: Math.max(10, Math.min(95, Math.round(topMatch.relevance))),
         matchedSymptoms: scores.slice(0, 3).map((s) => ({
             symptom: s.symptom,
-            department: s.department,
+            department: legacyToClinic[s.department] || clinicDept,
             urgency: s.urgency,
             relevance: s.relevance,
         })),
         alternativeDepartments: allDepartments
             .filter((d) => d !== topMatch.department)
             .slice(0, 2),
-        recommendedAction:
-            maxUrgency === 'high'
-                ? 'Please see a doctor immediately or go to emergency'
-                : maxUrgency === 'medium'
-                  ? 'Schedule an appointment within 24-48 hours'
-                  : 'Schedule an appointment at your convenience',
+        recommendedAction: clinicRecommendedAction(maxUrgency || topMatch.urgency || 'low'),
     };
 }
 

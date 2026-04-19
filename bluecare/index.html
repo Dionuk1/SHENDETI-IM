@@ -436,6 +436,14 @@
         /* --- MODALS --- */
         .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .modal-box { background: white; width: 480px; padding: 35px; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        .modal-box.modal-dark { background: var(--dark); color: white; border: 1px solid rgba(255, 255, 255, 0.10); }
+        .modal-box.modal-dark .input { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.12); color: white; }
+        .modal-box.modal-dark .input::placeholder { color: rgba(255, 255, 255, 0.55); }
+        .modal-box.modal-dark .input:focus { border-color: var(--primary); }
+        .modal-box.modal-dark label { display:block; font-size:0.9rem; font-weight:700; color: rgba(255, 255, 255, 0.80); margin: 10px 0 8px 0; }
+        .modal-box.modal-dark .modal-subtitle { color: rgba(255, 255, 255, 0.70); font-size: 0.9rem; margin-top: 6px; }
+        .modal-box.modal-dark .modal-row { display:flex; gap: 12px; }
+        .modal-box.modal-dark .modal-row > div { flex: 1; }
         .input { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #f1f5f9; margin-bottom: 15px; outline: none; transition: 0.3s; }
         .input:focus { border-color: var(--primary); }
 
@@ -599,7 +607,7 @@
         <aside class="sidebar">
             <div style="font-weight: 800; color: var(--primary); margin-bottom:25px; font-size:1.2rem;">HEALTHFLOW OS</div>
             <div id="sidebar-links"></div>
-            <div class="nav-link" style="margin-top:auto; color:var(--danger);" onclick="location.reload()"><i class="fas fa-sign-out-alt"></i> Dil</div>
+            <div id="logoutLink" class="nav-link" style="margin-top:auto; color:var(--danger);" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Dil</div>
         </aside>
         <main class="main-content">
             <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -630,6 +638,8 @@
         let usersLoaded = false;
         let appointments = [];
         let landingDoctorsShowAll = false;
+        let landingDoctorsLoaded = false;
+        let landingDoctorsLoadPromise = null;
 
         function renderLandingDoctorsGrid() {
             const grid = document.getElementById('landing-doctor-grid');
@@ -758,6 +768,160 @@
             } catch (e) {
                 return {};
             }
+        }
+
+        function decodeJwtPayloadSafe(token) {
+            try {
+                const raw = String(token || '');
+                if (!raw) return null;
+                const parts = raw.split('.');
+                if (parts.length < 2) return null;
+
+                const base64Url = parts[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const padded = base64 + '==='.slice((base64.length + 3) % 4);
+
+                const json = atob(padded)
+                    .split('')
+                    .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join('');
+                return JSON.parse(decodeURIComponent(json));
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function getLoggedInIdentityInfo() {
+            const token = localStorage.getItem('token') || '';
+            const user = getCurrentUserSafe();
+            const storedRole = localStorage.getItem('role') || '';
+
+            const payload = token ? decodeJwtPayloadSafe(token) : null;
+            const payloadRole = payload?.role || payload?.user?.role || payload?.data?.role || '';
+            const payloadName = payload?.name || payload?.user?.name || payload?.fullName || '';
+
+            let resolvedRole = String(user?.role || storedRole || payloadRole || '').toLowerCase().trim();
+            if (resolvedRole === 'user') resolvedRole = 'patient';
+            const resolvedName = String(user?.name || payloadName || '').trim();
+
+            return {
+                token: String(token || '').trim(),
+                role: resolvedRole,
+                name: resolvedName,
+            };
+        }
+
+        function ensureSidebarIdentityFooter() {
+            const sidebar = document.querySelector('#app-shell aside.sidebar');
+            if (!sidebar) return null;
+
+            const logoutLink = document.getElementById('logoutLink');
+            if (!logoutLink) return null;
+
+            let footer = document.getElementById('sidebarFooter');
+            if (!footer) {
+                footer = document.createElement('div');
+                footer.id = 'sidebarFooter';
+                footer.style.marginTop = 'auto';
+                footer.style.display = 'flex';
+                footer.style.flexDirection = 'column';
+                footer.style.gap = '8px';
+
+                // Insert footer before the logout link, then move logout into it.
+                sidebar.insertBefore(footer, logoutLink);
+                footer.appendChild(logoutLink);
+            }
+
+            // Ensure logout link doesn't push itself away inside the footer.
+            if (logoutLink && logoutLink.style) {
+                logoutLink.style.marginTop = '';
+            }
+
+            let identity = document.getElementById('globalIdentityDisplay');
+            if (!identity) {
+                identity = document.createElement('div');
+                identity.id = 'globalIdentityDisplay';
+                identity.className = 'nav-link hidden';
+                identity.style.cursor = 'default';
+                identity.style.background = 'transparent';
+                identity.style.color = 'var(--gray)';
+                identity.style.fontWeight = '700';
+                identity.style.fontSize = '0.85rem';
+                identity.style.padding = '10px 14px';
+                identity.style.opacity = '0.95';
+
+                footer.insertBefore(identity, logoutLink);
+            }
+
+            return identity;
+        }
+
+        function updateGlobalIdentityDisplay() {
+            const identityEl = ensureSidebarIdentityFooter();
+            if (!identityEl) return;
+
+            const info = getLoggedInIdentityInfo();
+            const hasSession = !!(info?.token && info?.role);
+
+            if (!hasSession) {
+                identityEl.classList.add('hidden');
+                identityEl.textContent = '';
+                return;
+            }
+
+            let text = '';
+            let icon = 'fa-user';
+
+            if (info.role === 'admin') {
+                text = 'Kyçur si Admin';
+                icon = 'fa-user-shield';
+            } else if (info.role === 'doctor') {
+                text = `Kyçur si Doktor: ${escapeHtml(info.name || 'Doktor')}`;
+                icon = 'fa-user-md';
+            } else {
+                text = `Kyçur si Pacient: ${escapeHtml(info.name || 'Pacient')}`;
+                icon = 'fa-user';
+            }
+
+            identityEl.classList.remove('hidden');
+            identityEl.innerHTML = `<i class="fas ${icon}"></i> ${text}`;
+        }
+
+        function logout() {
+            try {
+                // Session cleanup (requested: token + user)
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+            } catch (e) {
+                // ignore
+            }
+
+            // Stop live polling to avoid background updates
+            stopAdminLiveUpdates();
+            stopDoctorLiveUpdates();
+
+            // Clear identity immediately
+            updateGlobalIdentityDisplay();
+
+            // Smooth redirect to landing without reloading assets
+            const landing = document.getElementById('landing-page');
+            const appShell = document.getElementById('app-shell');
+            const topNav = document.querySelector('nav');
+            const loginModal = document.getElementById('loginModal');
+            const bookModal = document.getElementById('bookModal');
+
+            if (loginModal) loginModal.classList.add('hidden');
+            if (bookModal) bookModal.classList.add('hidden');
+
+            if (appShell) appShell.classList.add('hidden');
+            if (landing) landing.classList.remove('hidden');
+            if (topNav) topNav.classList.remove('hidden');
+
+            // Ensure we're at the top of the landing view
+            try { window.scrollTo(0, 0); } catch (e) {}
+
+            // Optional: normalize URL to root without reloading
+            try { history.pushState({}, '', '/'); } catch (e) {}
         }
 
         function getCurrentUserId() {
@@ -951,6 +1115,7 @@
                 // Redirect based on user's role from database
                 const userRole = data.user.role || (role === 'user' ? 'patient' : role);
                 renderDashboard(userRole);
+                updateGlobalIdentityDisplay();
                 addLog(`${userRole} u identifikua`, email);
             } catch(err) {
                 alert('⚠️ Gabim lidhje: ' + err.message + '\n\nSigurohuni se serveri funksionon në localhost:5500');
@@ -1071,62 +1236,179 @@
             logs.unshift({ time: new Date().toLocaleTimeString(), action, user });
         }
 
-        async function updateLandingDoctors() {
+        // ===== API FRIENDLY MODE (CACHE + DEDUPE) =====
+        const API_TTL_QUEUE_STATUS_MS = 30000;
+        const API_TTL_DOCTORS_MS = 60000;
+
+        const apiCache = {
+            queueStatus: new Map(),
+            doctorsBySpec: new Map(),
+        };
+
+        function normalizeApiKey(value) {
             try {
-                // Fetch all doctors from all specializations
-                const specs = ['cardiology', 'neurology', 'orthopedics', 'general', 'psychiatry'];
-                let allDoctors = [];
-                
-                for(const spec of specs) {
-                    const res = await fetch(`http://localhost:5500/api/appointments/doctors/${spec}`);
-                    if(res.ok) {
-                        const data = await res.json();
-                        allDoctors = allDoctors.concat((data.doctors || []).map(doc => ({ ...doc, __specHint: spec })));
+                return String(value || '')
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .trim();
+            } catch {
+                return String(value || '').toLowerCase().trim();
+            }
+        }
+
+        async function cachedFetchJson(cacheMap, key, ttlMs, fetcher) {
+            const now = Date.now();
+            const entry = cacheMap.get(key);
+
+            if (entry && entry.data && now - entry.at < ttlMs) {
+                return entry.data;
+            }
+
+            if (entry && entry.promise) {
+                return entry.promise;
+            }
+
+            const promise = (async () => {
+                try {
+                    const data = await fetcher();
+                    cacheMap.set(key, { at: Date.now(), data });
+                    return data;
+                } finally {
+                    const cur = cacheMap.get(key);
+                    if (cur && cur.promise) {
+                        cacheMap.set(key, { at: cur.at || Date.now(), data: cur.data });
                     }
                 }
-                
-                // Map with full doctor data including services and queue info
-                doctors = await Promise.all(allDoctors.map(async (d) => {
-                    // Get queue info for this doctor
-                    let queueInfo = { estimatedWaitMinutes: 15, activeAppointments: 0, busyLevel: 'low' };
-                    try {
-                        const doctorId = d.id || d._id; // Handle both id formats
-                        const qRes = await fetch(`http://localhost:5500/api/appointments/queue-status/${doctorId}`);
-                        if(qRes.ok) {
-                            const data = await qRes.json();
-                            // Backend returns { doctor, queue }
-                            queueInfo = data.queue || data;
-                        }
-                    } catch(e) { 
-                        console.error('Queue error for doctor', d.name, ':', e); 
-                    }
-                    
-                    return {
-                        id: d.id || d._id,
-                        name: d.name || 'Unknown',
-                        spec: d.specialization || d.spec || d.__specHint || 'general',
-                        department: d.department || d.specialization || d.spec || d.__specHint,
-                        experience: d.experience || 5,
-                        rating: d.avgRating || 4.5,
-                        services: Array.isArray(d.services) ? d.services : [],
-                        bio: d.bio || 'Specialist doctor',
-                        waitTime: queueInfo.estimatedWaitMinutes || 15,
-                        queue: queueInfo.activeAppointments || 0,
-                        busyLevel: queueInfo.busyLevel || 'low'
-                    };
-                }));
-                
-            } catch(err) {
-                console.error('Gabim gjatë kërkimit të doktorëve:', err);
-                doctors = []; // Fallback to empty
+            })();
+
+            cacheMap.set(key, { at: entry?.at || now, data: entry?.data, promise });
+            return promise;
+        }
+
+        async function fetchDoctorsBySpecCached(spec) {
+            const specKey = normalizeApiKey(spec);
+            if (!specKey) return [];
+
+            const url = `http://localhost:5500/api/appointments/doctors/${encodeURIComponent(spec)}`;
+            const key = `doctors:${specKey}`;
+
+            const payload = await cachedFetchJson(apiCache.doctorsBySpec, key, API_TTL_DOCTORS_MS, async () => {
+                const res = await fetch(url);
+                if (!res.ok) return { doctors: [] };
+                return await res.json();
+            });
+
+            return Array.isArray(payload?.doctors) ? payload.doctors : [];
+        }
+
+        async function fetchQueueStatusCached(doctorId) {
+            const id = String(doctorId || '').trim();
+            if (!id) return { estimatedWaitMinutes: 15, activeAppointments: 0, busyLevel: 'low' };
+
+            const key = `queue:${id}`;
+            const url = `http://localhost:5500/api/appointments/queue-status/${encodeURIComponent(id)}`;
+
+            const payload = await cachedFetchJson(apiCache.queueStatus, key, API_TTL_QUEUE_STATUS_MS, async () => {
+                const res = await fetch(url);
+                if (!res.ok) return { queue: { estimatedWaitMinutes: 15, activeAppointments: 0, busyLevel: 'low' } };
+                return await res.json();
+            });
+
+            return payload?.queue || payload || { estimatedWaitMinutes: 15, activeAppointments: 0, busyLevel: 'low' };
+        }
+
+        async function mapLimit(items, limit, mapper) {
+            const list = Array.isArray(items) ? items : [];
+            const n = Math.max(1, Number(limit) || 1);
+            const results = new Array(list.length);
+            let idx = 0;
+
+            const workers = Array.from({ length: Math.min(n, list.length) }, async () => {
+                while (idx < list.length) {
+                    const cur = idx++;
+                    results[cur] = await mapper(list[cur], cur);
+                }
+            });
+
+            await Promise.all(workers);
+            return results;
+        }
+
+        async function updateLandingDoctors(force) {
+            // Guard: prevent accidental loops spamming the doctors endpoints.
+            const shouldForce = force === true || (force && force.force === true);
+
+            // Debounce repeated runs (even if called many times)
+            const now = Date.now();
+            if (window.__landingDoctorsLastRunAt && now - window.__landingDoctorsLastRunAt < 30_000) {
+                if (!shouldForce) return;
             }
-            
-            const select = document.getElementById('bookDoc');
-            
-            renderLandingDoctorsGrid();
-            
-            if(select) {
-                select.innerHTML = doctors.length === 0 ? '<option>Nuk ka doktorë</option>' : doctors.map(d => `<option>${d.name} (${d.spec})</option>`).join('');
+            window.__landingDoctorsLastRunAt = now;
+
+            if (!shouldForce) {
+                if (landingDoctorsLoaded) return;
+                if (landingDoctorsLoadPromise) return landingDoctorsLoadPromise;
+            }
+
+            if (landingDoctorsLoadPromise) return landingDoctorsLoadPromise;
+
+            landingDoctorsLoadPromise = (async () => {
+                try {
+                    // Fetch all doctors from all specializations
+                    const specs = ['cardiology', 'neurology', 'orthopedics', 'general', 'psychiatry'];
+                    let allDoctors = [];
+
+                    for(const spec of specs) {
+                        const docs = await fetchDoctorsBySpecCached(spec);
+                        allDoctors = allDoctors.concat((docs || []).map(doc => ({ ...doc, __specHint: spec })));
+                    }
+
+                    // Map with full doctor data including services and queue info
+                    // Queue-status can be expensive: limit concurrency + cache per doctor (TTL 30s)
+                    doctors = await mapLimit(allDoctors, 4, async (d) => {
+                        const doctorId = d.id || d._id;
+                        let queueInfo = { estimatedWaitMinutes: 15, activeAppointments: 0, busyLevel: 'low' };
+                        try {
+                            queueInfo = await fetchQueueStatusCached(doctorId);
+                        } catch (e) {
+                            console.error('Queue error for doctor', d.name, ':', e);
+                        }
+
+                        return {
+                            id: d.id || d._id,
+                            name: d.name || 'Unknown',
+                            spec: d.specialization || d.spec || d.__specHint || 'general',
+                            department: d.department || d.specialization || d.spec || d.__specHint,
+                            experience: d.experience || 5,
+                            rating: d.avgRating || 4.5,
+                            services: Array.isArray(d.services) ? d.services : [],
+                            bio: d.bio || 'Specialist doctor',
+                            waitTime: queueInfo.estimatedWaitMinutes || 15,
+                            queue: queueInfo.activeAppointments || 0,
+                            busyLevel: queueInfo.busyLevel || 'low'
+                        };
+                    });
+
+                    landingDoctorsLoaded = true;
+                } catch(err) {
+                    console.error('Gabim gjatë kërkimit të doktorëve:', err);
+                    doctors = []; // Fallback to empty
+                }
+
+                const select = document.getElementById('bookDoc');
+
+                renderLandingDoctorsGrid();
+
+                if(select) {
+                    select.innerHTML = doctors.length === 0 ? '<option>Nuk ka doktorë</option>' : doctors.map(d => `<option>${d.name} (${d.spec})</option>`).join('');
+                }
+            })();
+
+            try {
+                await landingDoctorsLoadPromise;
+            } finally {
+                landingDoctorsLoadPromise = null;
             }
         }
 
@@ -1192,10 +1474,7 @@
         // ===== SMART QUEUE DISPLAY  =====
         async function getQueueInfo(doctorId) {
             try {
-                const response = await fetch(`http://localhost:5500/api/appointments/queue-status/${doctorId}`);
-                if(response.ok) {
-                    return await response.json();
-                }
+                return await fetchQueueStatusCached(doctorId);
             } catch(err) {
                 console.error('Queue error:', err);
             }
@@ -1241,6 +1520,7 @@
 
             const sidebar = document.getElementById('sidebar-links');
             refreshView(type);
+            updateGlobalIdentityDisplay();
         }
 
         function refreshView(type, subview = 'dashboard') {
@@ -1619,7 +1899,22 @@
                     `;
                 }
             }
+
+            updateGlobalIdentityDisplay();
         }
+
+        // Keep identity text in sync across tabs / updates
+        window.addEventListener('storage', (e) => {
+            if (!e || !e.key) return;
+            if (e.key === 'token' || e.key === 'user' || e.key === 'role') {
+                updateGlobalIdentityDisplay();
+            }
+        });
+
+        // Initial render (in case a session exists)
+        document.addEventListener('DOMContentLoaded', () => {
+            updateGlobalIdentityDisplay();
+        });
 
         async function approveDoctorApp(id) {
             const token = localStorage.getItem('token');
@@ -1815,7 +2110,7 @@
         }
         function deleteDoc(id) {
             doctors = doctors.filter(x => x.id !== id);
-            addLog('Fshiu doktorin', 'Admin'); updateLandingDoctors(); refreshView('admin', 'docs');
+            addLog('Fshiu doktorin', 'Admin'); updateLandingDoctors(true); refreshView('admin', 'docs');
         }
 
         function openAdminAdd(type) {
@@ -1838,7 +2133,7 @@
             if(window.currentAdminAdd === 'doc') {
                 doctors.push({ id: Date.now(), name: v1, spec: v2 });
                 addLog('Shtoi doktor: ' + v1, 'Admin');
-                updateLandingDoctors(); refreshView('admin', 'docs');
+                updateLandingDoctors(true); refreshView('admin', 'docs');
             } else {
                 users.push({ id: Date.now(), name: v1, email: v2, role: 'patient' });
                 addLog('Shtoi user: ' + v1, 'Admin');
@@ -2043,6 +2338,8 @@
             }
 
             adminLiveIntervalId = setInterval(() => {
+                // Friendly polling: don't hammer the server when the tab is in the background.
+                if (document.hidden) return;
                 if (adminLiveSubview === 'dashboard') {
                     if (!document.getElementById('statDoctors')) return stopAdminLiveUpdates();
                     fetchAdminStats();
@@ -2050,7 +2347,7 @@
                     if (!document.getElementById('adminAppointmentsBody')) return stopAdminLiveUpdates();
                     fetchAndRenderAdminAppointments();
                 }
-            }, 5000);
+            }, 30000);
         }
 
         function toSqAppointmentStatus(status) {
@@ -2147,7 +2444,7 @@
                     .map((a) => {
                         const id = String(a.id || '');
                         const patientName = a.patient?.name || '—';
-                        const doctorName = a.doctor?.name || '—';
+                        const doctorName = a.doctorId?.name || a.doctor?.name || 'Doktor i paemëruar';
                         const when = a.scheduledAt ? new Date(a.scheduledAt) : null;
                         const dateStr = when ? when.toLocaleDateString() : '—';
                         const timeStr = when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
@@ -2736,7 +3033,7 @@
 
         async function analyzeSymptoms() {
             const input = document.getElementById('symptomsText').value;
-            if(!input) return alert('Shkruaj simptomat!');
+            if(!input) return;
             
             try {
                 const response = await fetch('http://localhost:5500/api/appointments/check-symptoms', {
@@ -2761,89 +3058,278 @@
                 const advice = toSqRecommendedAction(result.recommendedAction) || (result.recommendedAction || '');
                 
                 // Get recommended doctors
-                const docResponse = await fetch(`http://localhost:5500/api/appointments/doctors/${encodeURIComponent(deptKey)}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                const docData = docResponse.ok ? await docResponse.json() : { doctors: [] };
+                const doctorsForDept = await fetchDoctorsBySpecCached(deptKey);
+                const docData = { doctors: doctorsForDept };
                 
                 const resultDiv = document.getElementById('analysisResult');
+
+                const urgencyVar = urgencyKey === 'high' ? 'var(--danger)' : urgencyKey === 'medium' ? 'var(--warning)' : 'var(--success)';
+
                 resultDiv.innerHTML = `
-                    <div style="background:#f0f7ff; padding:20px; border-radius:12px; margin-bottom:20px;">
-                        <h3>📋 Rezultati i Analizës</h3>
-                        <p><b>Departamenti:</b> ${deptLabel}</p>
-                        <p><b>Urgjenca:</b> <span style="font-weight:bold; color:${urgencyColor};">${urgencyLabel}</span></p>
-                        <p><b>Besueshmëria:</b> ${result.confidence}%</p>
-                        <p style="margin-top:15px; padding-top:15px; border-top:1px solid #e2e8f0;"><b>💡 Këshilla:</b> ${advice}</p>
+                    <div class="card" style="box-shadow:none; border:1px solid rgba(148, 163, 184, 0.18);">
+                        <h3 style="margin-top:0;">📋 Rezultati i Analizës</h3>
+                        <p><b>Departamenti:</b> ${escapeHtml(deptLabel)}</p>
+                        <p><b>Urgjenca:</b> <span style="font-weight:800; color:${urgencyVar};">${escapeHtml(urgencyLabel)}</span></p>
+                        <p><b>Besueshmëria:</b> ${escapeHtml(String(result.confidence ?? '0'))}%</p>
+                        <p style="margin-top:12px; padding-top:12px; border-top:1px solid rgba(148, 163, 184, 0.18);"><b>💡 Këshilla:</b> ${escapeHtml(advice || '')}</p>
                     </div>
-                    <div style="background:#f8fafc; padding:20px; border-radius:12px;">
-                        <h3>👨‍⚕️ Doktorë të Rekomanduar</h3>
-                        ${docData.doctors && docData.doctors.length > 0 ? docData.doctors.map(d => `
-                            <div style="padding:15px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px;">
-                                <p><b>${d.name}</b> - ${d.specialization}</p>
-                                <p style="color:var(--gray); font-size:0.9rem;">Përvojë: ${d.experience} vite | Rating: ${d.avgRating || 'N/A'}/5</p>
-                                <button class="btn btn-primary" onclick="bookDoctorAppointment('${d._id}', '${d.name}')">Rezervo me këtë Doktor</button>
-                            </div>
-                        `).join('') : '<p style="color:var(--gray);">Nuk ka doktorë të disponueshëm për këtë departament</p>'}
+
+                    <div class="card" style="margin-top:14px; box-shadow:none; border:1px solid rgba(148, 163, 184, 0.18);">
+                        <div id="analysisBookingNotice" style="display:none; margin-bottom:12px;"></div>
+                        <h3 style="margin-top:0;">👨‍⚕️ Doktorë të Rekomanduar</h3>
+                        ${docData.doctors && docData.doctors.length > 0 ? docData.doctors.map(d => {
+                            const docId = d.id || d._id || '';
+                            const spec = d.specialization || deptKey || '';
+                            const specLabel = toSqDepartmentLabel(spec) || (spec ? (String(spec).charAt(0).toUpperCase() + String(spec).slice(1)) : '—');
+                            const exp = (d.experience ?? '—');
+                            const rating = (d.avgRating ?? 'N/A');
+
+                            return `
+                                <div style="padding:14px; border:1px solid rgba(148, 163, 184, 0.18); border-radius:12px; margin-bottom:10px;">
+                                    <p style="margin:0 0 6px 0;"><b>${escapeHtml(d.name || 'Doktor')}</b> - ${escapeHtml(String(specLabel))}</p>
+                                    <p style="color:var(--gray); font-size:0.9rem; margin:0 0 10px 0;">Përvojë: ${escapeHtml(String(exp))} vite | Rating: ${escapeHtml(String(rating))}/5</p>
+                                    <button class="btn btn-primary" onclick="openSymptomBookingModal('${escapeHtml(String(docId))}', '${escapeHtml(String(d.name || 'Doktor'))}')">Rezervo me këtë Doktor</button>
+                                </div>
+                            `;
+                        }).join('') : '<p style="color:var(--gray);">Nuk ka doktorë të disponueshëm për këtë departament</p>'}
                     </div>
                 `;
             } catch(err) {
-                alert('❌ Gabim: ' + err.message);
+                const resultDiv = document.getElementById('analysisResult');
+                if (resultDiv) {
+                    resultDiv.innerHTML = `<div class="card" style="box-shadow:none; border:1px solid rgba(148, 163, 184, 0.18); color:var(--danger);">⚠️ Gabim: ${escapeHtml(err.message)}</div>`;
+                }
             }
         }
 
-        function bookDoctorAppointment(doctorId, doctorName) {
-            const date = prompt('Ndaj datën (YYYY-MM-DD):');
-            if(!date) return;
-            const time = prompt('Ndaj orën (HH:MM):');
-            if(!time) return;
+        // ===== SYMPTOM CHECKER BOOKING MODAL (NO BROWSER PROMPTS) =====
+        const symptomBookingState = {
+            doctorId: '',
+            doctorName: ''
+        };
+
+        function ensureSymptomBookingModal() {
+            if (document.getElementById('symptomBookingModal')) return;
+
+            const modal = document.createElement('div');
+            modal.id = 'symptomBookingModal';
+            modal.className = 'modal hidden';
+            modal.setAttribute('role', 'dialog');
+            modal.setAttribute('aria-modal', 'true');
+            modal.innerHTML = `
+                <div class="modal-box modal-dark" style="width:520px; max-width: calc(100vw - 40px);">
+                    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
+                        <div>
+                            <h3 style="margin:0;">📅 Rezervo Termin</h3>
+                            <div class="modal-subtitle" id="symptomBookingDoctorLabel">Zgjidh datën dhe orën</div>
+                        </div>
+                        <button class="btn btn-danger" style="padding:8px 12px;" type="button" onclick="closeSymptomBookingModal()">Mbyll</button>
+                    </div>
+
+                    <div style="margin-top:18px;">
+                        <label for="symptomBookingDate">Data</label>
+                        <input id="symptomBookingDate" class="input" type="date" />
+
+                        <div class="modal-row">
+                            <div>
+                                <label for="symptomBookingTime">Ora</label>
+                                <input id="symptomBookingTime" class="input" type="time" value="09:00" />
+                            </div>
+                            <div>
+                                <label for="symptomBookingService">Shërbimi</label>
+                                <input id="symptomBookingService" class="input" type="text" placeholder="p.sh. Konsultim" value="Konsultim" />
+                            </div>
+                        </div>
+
+                        <div style="display:flex; gap:12px; justify-content:flex-end; margin-top:6px;">
+                            <button class="btn" style="background:rgba(255,255,255,0.08); color:white; border:1px solid rgba(255,255,255,0.14);" type="button" onclick="closeSymptomBookingModal()">Anulo</button>
+                            <button class="btn btn-primary" type="button" onclick="confirmSymptomBooking()">Konfirmo</button>
+                        </div>
+
+                        <div id="symptomBookingInlineError" style="display:none; margin-top:14px; padding:12px; border:1px solid rgba(255,255,255,0.14); border-radius:12px; background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.9);"></div>
+                    </div>
+                </div>
+            `;
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeSymptomBookingModal();
+            });
+
+            document.body.appendChild(modal);
+        }
+
+        function showSymptomBookingInlineError(message) {
+            const el = document.getElementById('symptomBookingInlineError');
+            if (!el) return;
+            const msg = String(message || '').trim();
+            if (!msg) {
+                el.style.display = 'none';
+                el.textContent = '';
+                return;
+            }
+            el.style.display = 'block';
+            el.textContent = msg;
+        }
+
+        function openSymptomBookingModal(doctorId, doctorName) {
+            const token = localStorage.getItem('token');
+            const me = JSON.parse(localStorage.getItem('user') || '{}');
+            const meRole = String(me?.role || localStorage.getItem('role') || '').toLowerCase();
+
+            if (!token || (meRole && meRole !== 'patient')) {
+                showAnalysisBookingNotice('error', 'Ju lutem kyçuni si Pacient për të rezervuar termin.');
+                return;
+            }
+
+            ensureSymptomBookingModal();
+            symptomBookingState.doctorId = String(doctorId || '').trim();
+            symptomBookingState.doctorName = String(doctorName || 'Doktor').trim();
+
+            const modal = document.getElementById('symptomBookingModal');
+            const label = document.getElementById('symptomBookingDoctorLabel');
+            const dateInput = document.getElementById('symptomBookingDate');
+            const timeInput = document.getElementById('symptomBookingTime');
+            const serviceInput = document.getElementById('symptomBookingService');
+
+            if (label) label.textContent = `Doktor: ${symptomBookingState.doctorName}`;
+
+            // Set min date = today (local)
+            if (dateInput) {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const today = `${yyyy}-${mm}-${dd}`;
+                dateInput.min = today;
+                if (!dateInput.value) dateInput.value = today;
+            }
+            if (timeInput && !timeInput.value) timeInput.value = '09:00';
+            if (serviceInput && !serviceInput.value) serviceInput.value = 'Konsultim';
+
+            showSymptomBookingInlineError('');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeSymptomBookingModal() {
+            const modal = document.getElementById('symptomBookingModal');
+            if (modal) modal.classList.add('hidden');
+            showSymptomBookingInlineError('');
+        }
+
+        function showAnalysisBookingNotice(type, message) {
+            const el = document.getElementById('analysisBookingNotice');
+            if (!el) return;
+            const color = type === 'success' ? 'var(--success)' : type === 'warn' ? 'var(--warning)' : 'var(--danger)';
+            el.style.display = 'block';
+            el.innerHTML = `
+                <div style="padding:12px; border:1px solid rgba(148, 163, 184, 0.18); border-radius:12px; background:white;">
+                    <b style="color:${color};">${type === 'success' ? '✅' : type === 'warn' ? '⚠️' : '❌'}</b>
+                    <span style="margin-left:8px;">${escapeHtml(message || '')}</span>
+                </div>
+            `;
+        }
+
+        function confirmSymptomBooking() {
+            const normalizedDoctorId = String(symptomBookingState.doctorId || '').trim();
+            if (!normalizedDoctorId) {
+                showSymptomBookingInlineError('Nuk u gjet ID e doktorit.');
+                return;
+            }
+
+            const date = (document.getElementById('symptomBookingDate')?.value || '').trim();
+            const time = (document.getElementById('symptomBookingTime')?.value || '').trim();
+            const service = (document.getElementById('symptomBookingService')?.value || 'Konsultim').trim() || 'Konsultim';
+
+            if (!date) {
+                showSymptomBookingInlineError('Ju lutem zgjidhni datën.');
+                return;
+            }
+
+            const chosenTime = time || '09:00';
+            const whenLocal = new Date(`${date}T${chosenTime}`);
+            if (Number.isNaN(whenLocal.getTime()) || whenLocal <= new Date()) {
+                showSymptomBookingInlineError('Zgjidhni një datë/orë në të ardhmen.');
+                return;
+            }
+
+            closeSymptomBookingModal();
+            submitSymptomBooking({
+                doctorId: normalizedDoctorId,
+                doctorName: symptomBookingState.doctorName,
+                scheduledAtIso: whenLocal.toISOString(),
+                service,
+                date,
+                time: chosenTime,
+            });
+        }
+
+        function submitSymptomBooking({ doctorId, doctorName, scheduledAtIso, service, date, time }) {
+            const normalizedDoctorId = String(doctorId || '').trim();
+            if (!normalizedDoctorId) {
+                showAnalysisBookingNotice('error', 'Nuk u gjet ID e doktorit. Ju lutem provoni përsëri.');
+                return;
+            }
 
             const token = localStorage.getItem('token');
             const me = JSON.parse(localStorage.getItem('user') || '{}');
             const meRole = String(me?.role || localStorage.getItem('role') || '').toLowerCase();
 
             if (!token || (meRole && meRole !== 'patient')) {
-                alert('❌ Ju lutem kyçuni si Pacient për të rezervuar termin.');
-                return;
-            }
-
-            const whenLocal = new Date(`${date}T${time}`);
-            if (Number.isNaN(whenLocal.getTime()) || whenLocal <= new Date()) {
-                alert('❌ Zgjidhni një datë/orë në të ardhmen.');
+                showAnalysisBookingNotice('error', 'Ju lutem kyçuni si Pacient për të rezervuar termin.');
                 return;
             }
 
             const appointmentData = {
-                doctorId,
-                scheduledAt: whenLocal.toISOString(),
-                service: prompt('Shërbimi (p.sh. Konsultim):') || 'Konsultim'
+                doctorId: normalizedDoctorId,
+                scheduledAt: String(scheduledAtIso || ''),
+                service: String(service || 'Konsultim')
             };
 
-            fetch('http://localhost:5500/api/appointments/create', {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(appointmentData)
-            }).then(async (r) => {
-                const data = await r.json().catch(() => ({}));
+            // Real-time availability/queue check from MongoDB
+            showAnalysisBookingNotice('warn', 'Po kontrolloj disponueshmërinë...');
 
-                if(r.ok) {
-                    alert('✅ Termini u rezervua me sukses!');
+            Promise.resolve(fetchQueueStatusCached(normalizedDoctorId))
+                .then(async (queueInfo) => {
+                    const active = queueInfo?.activeAppointments;
+                    const mins = queueInfo?.estimatedWaitMinutes;
+                    const info = (typeof active === 'number' && typeof mins === 'number')
+                        ? `Radhë aktuale: ${active} | Pritje e vlerësuar: ~${mins} min.`
+                        : 'Disponueshmëria u verifikua.';
+                    showAnalysisBookingNotice('warn', info + ' Po rezervoj...');
+
+                    return fetch('http://localhost:5500/api/appointments/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(appointmentData)
+                    });
+                })
+                .then(async (r) => {
+                    const data = await r.json().catch(() => ({}));
+                    if (!r.ok) {
+                        throw new Error(data?.error || `Gabim (${r.status})`);
+                    }
 
                     const patientName = me?.name || 'Pacient';
-
-                    const localApp = { id: Date.now(), doctorId, doc: doctorName, date, time, status: 'Pritje', wait: '~30 min', patient: patientName };
+                    const localApp = { id: Date.now(), doctorId: normalizedDoctorId, doc: doctorName, date, time, status: 'Pritje', wait: '~30 min', patient: patientName };
                     if (data?.appointment?.id) localApp.dbId = data.appointment.id;
 
                     appointments.unshift(localApp);
                     persistAppointmentsToStorage();
-                    refreshView('patient', 'schedule');
-                } else {
-                    alert('❌ Gabim në rezervim: ' + (data?.error || `Gabim (${r.status})`));
-                }
-            }).catch(e => alert('⚠️ Gabim lidhje: ' + e.message));
+
+                    showAnalysisBookingNotice('success', 'Termini u rezervua me sukses! Po ju ridrejtoj te “Orari Im”...');
+                    setTimeout(() => refreshView('patient', 'schedule'), 900);
+                })
+                .catch((e) => {
+                    showAnalysisBookingNotice('error', `Gabim në rezervim: ${e.message}`);
+                });
+        }
+
+        // Back-compat: any old callers now open the modal.
+        function bookDoctorAppointment(doctorId, doctorName) {
+            openSymptomBookingModal(doctorId, doctorName);
         }
 
         async function loadPrescriptions() {

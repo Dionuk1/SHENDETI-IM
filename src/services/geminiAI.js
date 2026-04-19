@@ -324,6 +324,75 @@ function getPrimaryConcern(symptoms) {
 }
 
 /**
+ * Clinic Symptom Triage (Strict)
+ * Returns only these departments: Kardiologji, Pediatri, Dermatologji, Pulmonologji, Gjinekologji
+ * Output is Albanian and JSON only.
+ */
+async function classifyClinicSymptomsWithGemini(symptoms) {
+    if (!geminiClient || !geminiAvailable) return null;
+
+    const allowed = ['Kardiologji', 'Pediatri', 'Dermatologji', 'Pulmonologji', 'Gjinekologji'];
+    const safeText = String(symptoms || '').trim();
+    if (!safeText) return null;
+
+    try {
+        const modelName = await resolveGeminiModelName();
+        const model = geminiClient.getGenerativeModel({ model: modelName || GEMINI_MODEL_FALLBACK });
+
+        const prompt = `
+Je një asistent mjekësor triage për BlueCare Clinic.
+
+Detyrë: Klasifiko simptomat në NJË (dhe vetëm një) departament nga kjo listë e mbyllur:
+${allowed.map((d) => `- ${d}`).join('\n')}
+
+Rregulla STRICT:
+1) Nëse simptomat lidhen me zemrën (p.sh. dhimbje gjoksi/kraharori, rrahje të çrregullta, dhimbje krahu e majtë), kthe gjithmonë "Kardiologji".
+2) Jep gjithmonë "confidence" 0-100 (numër i plotë).
+3) Jep gjithmonë "urgencyLevel" vetëm: low | medium | high.
+4) Vendos urgjencë "high" kur ka kombinime si: (dhimbje krahu + frymëmarrje e vështirë) ose (dhimbje gjoksi + frymëmarrje e vështirë) ose (të fikët).
+5) Përgjigju në shqip. Mos shto asnjë tekst jashtë JSON.
+
+Simptomat e pacientit:
+"""${safeText}"""
+
+Kthe VETËM këtë JSON:
+{
+  "suggestedDepartment": "${allowed.join(' | ')}",
+  "urgencyLevel": "low|medium|high",
+  "confidence": 0,
+  "recommendedAction": "string"
+}
+`;
+
+        const result = await model.generateContent(prompt);
+        const responseText = await result.response.text();
+
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return null;
+
+        const parsed = JSON.parse(jsonMatch[0]);
+        const dept = String(parsed?.suggestedDepartment || '').trim();
+        const urgency = String(parsed?.urgencyLevel || '').trim().toLowerCase();
+        const confidence = Number(parsed?.confidence);
+        const recommendedAction = String(parsed?.recommendedAction || '').trim();
+
+        if (!allowed.includes(dept)) return null;
+        if (!['low', 'medium', 'high'].includes(urgency)) return null;
+        if (!Number.isFinite(confidence)) return null;
+
+        return {
+            suggestedDepartment: dept,
+            urgencyLevel: urgency,
+            confidence: Math.max(0, Math.min(100, Math.round(confidence))),
+            recommendedAction,
+        };
+    } catch (e) {
+        console.warn('⚠️  Clinic triage Gemini error:', e?.message || e);
+        return null;
+    }
+}
+
+/**
  * Check if Gemini API is available and working
  */
 function isGeminiAvailable() {
@@ -332,6 +401,7 @@ function isGeminiAvailable() {
 
 module.exports = {
     analyzeSymptomWithGemini,
+    classifyClinicSymptomsWithGemini,
     chatWithGemini,
     isGeminiAvailable,
     generateRuleBasedAnalysis,

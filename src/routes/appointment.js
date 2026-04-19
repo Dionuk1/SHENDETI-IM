@@ -17,6 +17,7 @@ const {
     invalidateQueueCache,
 } = require('../utils/queueManager');
 const { checkSymptoms } = require('../utils/symptomChecker');
+const { classifyClinicSymptomsWithGemini, isGeminiAvailable } = require('../services/geminiAI');
 
 const router = express.Router();
 
@@ -30,18 +31,56 @@ const router = express.Router();
  * Body: { symptoms: "chest pain and shortness of breath" }
  */
 router.post('/check-symptoms', (req, res) => {
-    try {
-        const { symptoms } = req.body || {};
+    (async () => {
+        try {
+            const { symptoms } = req.body || {};
 
-        if (!symptoms) {
-            return res.status(400).json({ error: 'Please describe your symptoms' });
+            if (!symptoms) {
+                return res.status(400).json({ error: 'Please describe your symptoms' });
+            }
+
+            const base = checkSymptoms(symptoms);
+
+            // Optional clinic-specific AI triage (Gemini). Always fall back safely.
+            let usingGeminiAPI = false;
+            let merged = { ...base };
+
+            if (isGeminiAvailable && isGeminiAvailable()) {
+                const ai = await classifyClinicSymptomsWithGemini(symptoms);
+                if (ai && ai.suggestedDepartment) {
+                    usingGeminiAPI = true;
+                    const dept = String(ai.suggestedDepartment || '').trim();
+                    const specByDept = {
+                        Kardiologji: 'cardiology',
+                        Pediatri: 'pediatrics',
+                        Dermatologji: 'dermatology',
+                        Pulmonologji: 'pulmonology',
+                        Gjinekologji: 'gynecology',
+                    };
+
+                    merged = {
+                        ...merged,
+                        valid: true,
+                        suggestedDepartment: dept,
+                        suggestedSpecialization: specByDept[dept] || merged.suggestedSpecialization,
+                        urgencyLevel: ai.urgencyLevel || merged.urgencyLevel,
+                        confidence:
+                            typeof ai.confidence === 'number'
+                                ? ai.confidence
+                                : merged.confidence,
+                        recommendedAction: ai.recommendedAction || merged.recommendedAction,
+                    };
+                }
+            }
+
+            res.json({
+                ...merged,
+                usingGeminiAPI,
+            });
+        } catch (e) {
+            res.status(500).json({ error: 'Failed to check symptoms' });
         }
-
-        const result = checkSymptoms(symptoms);
-        res.json(result);
-    } catch (e) {
-        res.status(500).json({ error: 'Failed to check symptoms' });
-    }
+    })();
 });
 
 /**
@@ -54,6 +93,42 @@ router.get('/doctors/:specialization', async (req, res, next) => {
         const { specialization } = req.params;
         const { urgency, format } = req.query;
 
+        const stripDiacritics = (s) =>
+            String(s || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '');
+
+        const normalize = (s) => stripDiacritics(String(s || '')).toLowerCase().trim();
+
+        const clinicSpecMap = {
+            // Albanian labels (and common variants) -> specialization keys
+            kardiologji: 'cardiology',
+            kardiologjia: 'cardiology',
+            cardiology: 'cardiology',
+            pediatri: 'pediatrics',
+            pediatria: 'pediatrics',
+            pediatrics: 'pediatrics',
+            dermatologji: 'dermatology',
+            dermatologjia: 'dermatology',
+            dermatology: 'dermatology',
+            pulmonologji: 'pulmonology',
+            pulmonologjia: 'pulmonology',
+            pulmonology: 'pulmonology',
+            gjinekologji: 'gynecology',
+            gjinekologjia: 'gynecology',
+            gynecology: 'gynecology',
+
+            // Keep legacy keys working
+            neurology: 'neurology',
+            orthopedics: 'orthopedics',
+            general: 'general',
+            psychiatry: 'psychiatry',
+            emergency: 'emergency',
+        };
+
+        const specNorm = normalize(specialization);
+        const resolvedSpecialization = clinicSpecMap[specNorm] || null;
+
         const validSpecializations = [
             'cardiology',
             'neurology',
@@ -63,15 +138,28 @@ router.get('/doctors/:specialization', async (req, res, next) => {
             'psychiatry',
             'dermatology',
             'emergency',
+            // Clinic expansions (string field; enum may not include them yet)
+            'pulmonology',
+            'gynecology',
         ];
 
-        if (!validSpecializations.includes(specialization)) {
+        if (!resolvedSpecialization || !validSpecializations.includes(resolvedSpecialization)) {
             return res.status(400).json({ error: 'Invalid specialization' });
         }
 
-        const doctors = await Doctor.find({ specialization, isActive: true })
-            .select(format === 'full' ? '' : '_id name avgRating experience services')
+        let doctors = await Doctor.find({ specialization: resolvedSpecialization, isActive: true })
+            .select(format === 'full' ? '' : '_id name specialization avgRating experience services')
             .limit(20);
+
+        // Fallback: if clinic department has no matching doctors in DB, return general doctors
+        if (
+            (!doctors || doctors.length === 0) &&
+            (resolvedSpecialization === 'pulmonology' || resolvedSpecialization === 'gynecology')
+        ) {
+            doctors = await Doctor.find({ specialization: 'general', isActive: true })
+                .select(format === 'full' ? '' : '_id name specialization avgRating experience services')
+                .limit(20);
+        }
 
         if (format === 'full') {
             const docsWithQueues = await Promise.all(
@@ -268,6 +356,22 @@ router.post('/create', async (req, res, next) => {
         const when = new Date(scheduledAt);
         if (Number.isNaN(when.getTime()) || when <= new Date()) {
             return res.status(400).json({ error: 'Invalid or past appointment time' });
+        }
+
+        // Real-time availability check (MongoDB): prevent overlapping bookings for the same doctor.
+        // Use doctor's average duration as the collision window (default 30 mins).
+        const slotMinutes = Number(doctor.avgDurationMins) > 0 ? Number(doctor.avgDurationMins) : 30;
+        const windowMs = Math.max(5, slotMinutes - 1) * 60 * 1000;
+        const conflict = await Appointment.findOne({
+            doctorId: doctor._id,
+            scheduledAt: { $gte: new Date(when.getTime() - windowMs), $lte: new Date(when.getTime() + windowMs) },
+            status: { $in: ['pending', 'confirmed'] },
+        }).select('_id scheduledAt status');
+
+        if (conflict) {
+            return res.status(409).json({
+                error: 'Doctor is not available at the selected time. Please choose another slot.',
+            });
         }
 
         // Create appointment

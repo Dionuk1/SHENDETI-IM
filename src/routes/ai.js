@@ -18,6 +18,13 @@ const router = express.Router();
 router.post('/analyze-symptoms', requireAuth, aiController.analyzeSymptoms);
 
 /**
+ * Symptom → Department suggestion (lightweight)
+ * POST /api/ai/symptom-department
+ * Body: { symptoms: string, age?: number, medicalHistory?: string }
+ */
+router.post('/symptom-department', requireAuth, aiController.suggestDepartment);
+
+/**
  * AI Document Analysis
  * POST /api/ai/analyze-document
  * Body: { documentText: string, documentType: string }

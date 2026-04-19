@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="sq">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BlueCare Medical Center</title>
+  <meta name="description" content="BlueCare Medical Center — modern, simple, blue & white UI with smooth animations." />
+
+  <style>
+    :root{
+      --bg: #f6fbff;
+      --card: rgba(255,255,255,.75);
+      --card2: rgba(255,255,255,.55);
+      --text: #0a2540;
+      --muted: rgba(10,37,64,.70);
+      --line: rgba(10,37,64,.10);
+
+      --blue-900:#062a4d;
+      --blue-700:#0b5ed7;
+      --blue-600:#1a73e8;
+      --blue-500:#2b8cff;
+      --blue-200:#cfe7ff;
+
+      --shadow: 0 16px 40px rgba(6,42,77,.12);
+      --shadow2: 0 10px 30px rgba(6,42,77,.10);
+
+      --radius: 18px;
+      --radius2: 26px;
+
+      --speed: 420ms;
+      --ease: cubic-bezier(.2,.9,.2,1);
+
+      --max: 1120px;
+    }
+
+    *{ box-sizing: border-box; }
+    html,body{ height: 100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--text);
+      background:
+        radial-gradient(1000px 500px at 15% 0%, rgba(43,140,255,.20), transparent 60%),
+        radial-gradient(900px 500px at 85% 10%, rgba(11,94,215,.18), transparent 55%),
+        radial-gradient(900px 600px at 50% 100%, rgba(207,231,255,.55), transparent 60%),
+        var(--bg);
+      overflow-x: hidden;
+    }
+
+    a{ color: inherit; text-decoration: none; }
+    button, input, select{ font: inherit; }
+
+    .wrap{ max-width: var(--max); margin: 0 auto; padding: 22px 18px 80px; }
+
+    /* Top nav */
+    .nav{
+      position: sticky;
+      top: 14px;
+      z-index: 30;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 14px;
+
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.55);
+      border-radius: 999px;
+      background: linear-gradient(180deg, rgba(255,255,255,.80), rgba(255,255,255,.55));
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(6,42,77,.08);
+    }
+
+    .brand{
+      display:flex; align-items:center; gap: 10px;
+      padding-left: 6px;
+      min-width: 210px;
+    }
+    .logo{
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,.2) 40%, transparent 60%),
+                  linear-gradient(135deg, var(--blue-600), var(--blue-500));
+      box-shadow: 0 12px 22px rgba(11,94,215,.25);
+      position: relative;
+      overflow: hidden;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent);
+      transform: rotate(22deg);
+      animation: sheen 3.2s var(--ease) infinite;
+    }
+    @keyframes sheen{
+      0%{ transform: translateX(-40%) rotate(22deg); opacity:.0; }
+      10%{ opacity:.8; }
+      50%{ opacity:.9; }
+      100%{ transform: translateX(40%) rotate(22deg); opacity:0; }
+    }
+    .brand h1{
+      margin:0;
+      font-size: 14px;
+      line-height: 1.1;
+      letter-spacing: .2px;
+    }
+    .brand small{
+      display:block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: .3px;
+    }
+
+    .navlinks{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content:center;
+    }
+    .navlinks a{
+      padding: 10px 12px;
+      border-radius: 999px;
+      color: rgba(10,37,64,.80);
+      font-weight: 650;
+      transition: transform var(--speed) var(--ease), background var(--speed) var(--ease);
+    }
+    .navlinks a:hover{
+      background: rgba(43,140,255,.10);
+      transform: translateY(-1px);
+    }
+
+    .ctaRow{ display:flex; align-items:center; gap: 10px; }
+    .btn{
+      border: 0;
+      cursor:pointer;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 760;
+      letter-spacing: .2px;
+      transition: transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease), background var(--speed) var(--ease);
+      user-select: none;
+      white-space: nowrap;
+    }
+    .btn.primary{
+      color: white;
+      background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+      box-shadow: 0 14px 28px rgba(11,94,215,.25);
+    }
+    .btn.primary:hover{ transform: translateY(-2px); box-shadow: 0 18px 34px rgba(11,94,215,.32); }
+    .btn.ghost{
+      background: rgba(255,255,255,.6);
+      border: 1px solid rgba(10,37,64,.10);
+      color: rgba(10,37,64,.85);
+    }
+    .btn.ghost:hover{ transform: translateY(-2px); background: rgba(255,255,255,.85); }
+
+    /* Hero */
+    .hero{
+      margin-top: 26px;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .glass{
+      border-radius: var(--radius2);
+      background: linear-gradient(180deg, rgba(255,255,255,.78), rgba(255,255,255,.52));
+      border: 1px solid rgba(255,255,255,.55);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .heroMain{ padding: 26px 22px; }
+    .kicker{
+      display:inline-flex;
+      gap: 10px;
+      align-items:center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(11,94,215,.18);
+      background: rgba(43,140,255,.08);
+      color: rgba(10,37,64,.82);
+      font-weight: 720;
+      letter-spacing:.2px;
+      font-size: 13px;
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 99px;
+      background: var(--blue-600);
+      box-shadow: 0 0 0 6px rgba(26,115,232,.15);
+    }
+
+    .heroTitle{
+      margin: 14px 0 10px;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.05;
+      letter-spacing: -0.8px;
+    }
+    .heroTitle span{
+      background: linear-gradient(135deg, var(--blue-700), var(--blue-500));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .heroDesc{
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 15.5px;
+      line-height: 1.6;
+      max-width: 62ch;
+    }
+
+    .heroActions{ display:flex; flex-wrap: wrap; gap: 10px; margin: 16px 0 10px; }
+
+    .stats{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 10px;
+    }
+    .stat{
+      padding: 14px 14px;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(10,37,64,.08);
+      box-shadow: 0 10px 20px rgba(6,42,77,.06);
+      transition: transform var(--speed) var(--ease);
+    }
+    .stat:hover{ transform: translateY(-2px); }
+    .stat b{ display:block; font-size: 18px; }
+    .stat small{ color: var(--muted); font-weight: 650; }
+
+    /* Right panel */
+    .heroSide{ padding: 18px; display:flex; flex-direction: column; gap: 12px; }
+    .panelTitle{
+      display:flex; align-items:center; justify-content: space-between; gap: 10px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(10,37,64,.10);
+      background: rgba(255,255,255,.55);
+    }
+    .panelTitle b{ font-size: 14px; }
+    .badge{
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing:.2px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      color: rgba(10,37,64,.85);
+      background: rgba(207,231,255,.7);
+      border: 1px solid rgba(11,94,215,.15);
+    }
+
+    .card{
+      border-radius: var(--radius2);
+      border: 1px solid rgba(10,37,64,.10);
+      background: rgba(255,255,255,.6);
+      box-shadow: var(--shadow2);
+      overflow: hidden;
+    }
+    .cardInner{ padding: 14px; }
+
+    .field{ display:flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+    .field label{ font-size: 12.5px; font-weight: 800; color: rgba(10,37,64,.72); letter-spacing:.2px; }
+    .select, .input{
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(10,37,64,.12);
+      background: rgba(255,255,255,.85);
+      outline: none;
+      transition: border var(--speed) var(--ease), transform var(--speed) var(--ease), box-shadow var(--speed) var(--ease);
+    }
+    .select:focus, .input:focus{
+      border-color: rgba(26,115,232,.45);
+      box-shadow: 0 0 0 6px rgba(26,115,232,.12);
+      transform: translateY(-1px);
+    }
+
+    .row{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .hint{ color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+
+    .result{
+      margin-top: 10px;
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px dashed rgba(11,94,215,.35);
+      background: rgba(207,231,255,.42);
+      display:flex;
+      align-items:flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 56px;
+    }
+    .result b{ display:block; }
+    .result small{ color: rgba(10,37,64,.74); font-weight: 650; }
+
+    /* Sections */
+    section{ margin-top: 18px; }
+    .grid3{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px;
+    }
+    .feature{
+      padding: 16px;
+      border-radius: var(--radius2);
+      border: 1px solid rgba(10,37,64,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.70), rgba(255,255,255,.52));
+      box-shadow: 0 14px 28px rgba(6,42,77,.08);
+      position: relative;
+      overflow: hidden;
+      transition: transform var(--speed) var(--ease);
+    }
+    .feature:hover{ transform: translateY(-3px); }
+    .icon{
+      width: 42px; height: 42px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, rgba(11,94,215,.16), rgba(43,140,255,.10));
+      border: 1px solid rgba(11,94,215,.18);
+      display:grid; place-items:center;
+      margin-bottom: 10px;
+    }
+    .feature h3{ margin: 0 0 8px; font-size: 16px; letter-spacing: -.2px; }
+    .feature p{ margin: 0; color: var(--muted); line-height: 1.6; font-size: 14px; }
+
+    /* Doctors */
+    .doctors{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .doc{
+      border-radius: var(--radius2);
+      border: 1px solid rgba(10,37,64,.10);
+      background: rgba(255,255,255,.62);
+      box-shadow: 0 14px 28px rgba(6,42,77,.08);
+      overflow:hidden;
+      position: relative;
+      transition: transform var(--speed) var(--ease);
+    }
+    .doc:hover{ transform: translateY(-3px); }
+    .docTop{
+      height: 78px;
+      background:
+        radial-gradient(180px 90px at 20% 20%, rgba(255,255,255,.85), rgba(255,255,255,.12) 55%, transparent 70%),
+        linear-gradient(135deg, rgba(11,94,215,.95), rgba(43,140,255,.85));
+      position: relative;
+    }
+    .avatar{
+      width: 56px; height: 56px;
+      border-radius: 20px;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.85), rgba(255,255,255,.15) 45%, transparent 65%),
+                  linear-gradient(135deg, rgba(255,255,255,.35), rgba(255,255,255,.10));
+      border: 1px solid rgba(255,255,255,.55);
+      position:absolute;
+      left: 14px; bottom: -28px;
+      box-shadow: 0 18px 30px rgba(6,42,77,.22);
+    }
+    .docBody{ padding: 36px 14px 14px; }
+    .docBody b{ display:block; }
+    .pillRow{ display:flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .pill{
+      font-size: 12px; font-weight: 800;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(10,37,64,.10);
+      background: rgba(255,255,255,.70);
+      color: rgba(10,37,64,.82);
+    }
+
+    /* Emergency mode */
+    .emergency{
+      margin-top: 12px;
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px;
+      border-radius: var(--radius2);
+      border: 1px solid rgba(255,255,255,.55);
+      background: linear-gradient(180deg, rgba(255,255,255,.70), rgba(255,255,255,.50));
+      box-shadow: 0 16px 40px rgba(6,42,77,.10);
+    }
+    .toggle{
+      display:flex; align-items:center; gap: 10px;
+      user-select:none;
+      font-weight: 800;
+      color: rgba(10,37,64,.8);
+    }
+    .switch{
+      width: 52px; height: 30px;
+      border-radius: 999px;
+      background: rgba(10,37,64,.14);
+      border: 1px solid rgba(10,37,64,.14);
+      padding: 3px;
+      position: relative;
+      transition: background var(--speed) var(--ease);
+    }
+    .knob{
+      width: 24px; height: 24px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.95);
+      box-shadow: 0 12px 18px rgba(6,42,77,.18);
+      transform: translateX(0);
+      transition: transform var(--speed) var(--ease);
+    }
+    .switch.on{ background: rgba(26,115,232,.35); border-color: rgba(26,115,232,.35); }
+    .switch.on .knob{ transform: translateX(22px); }
+
+    /* Reveal on scroll */
+    .reveal{
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 700ms var(--ease), transform 700ms var(--ease);
+    }
+    .reveal.in{
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Footer */
+    footer{
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: var(--radius2);
+      border: 1px solid rgba(10,37,64,.10);
+      background: rgba(255,255,255,.55);
+      color: rgba(10,37,64,.78);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    footer small{ color: var(--muted); font-weight: 650; }
+
+    /* High-contrast emergency mode */
+    body.emergency-mode{
+      background: #061a2e;
+      color: #f2f7ff;
+    }
+    body.emergency-mode .nav,
+    body.emergency-mode .glass,
+    body.emergency-mode .card,
+    body.emergency-mode .feature,
+    body.emergency-mode .doc,
+    body.emergency-mode footer,
+    body.emergency-mode .emergency{
+      background: rgba(7, 23, 40, .78);
+      border-color: rgba(255,255,255,.12);
+      color: #f2f7ff;
+    }
+    body.emergency-mode .heroDesc,
+    body.emergency-mode .hint,
+    body.emergency-mode .feature p,
+    body.emergency-mode footer small{
+      color: rgba(242,247,255,.78);
+    }
+    body.emergency-mode .btn.ghost{
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.16);
+      color: rgba(255,255,255,.92);
+    }
+    body.emergency-mode .select,
+    body.emergency-mode .input{
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.16);
+      color: rgba(255,255,255,.92);
+    }
+    body.emergency-mode .result{
+      background: rgba(43,140,255,.12);
+      border-color: rgba(43,140,255,.35);
+    }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero{ grid-template-columns: 1fr; }
+      .brand{ min-width: 0; }
+      .grid3{ grid-template-columns: 1fr; }
+      .doctors{ grid-template-columns: 1fr; }
+      .stats{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="nav">
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>BlueCare <span style="font-weight:900">Medical Center</span></h1>
+          <small>Simple • Modern • Blue/White UI</small>
+        </div>
+      </div>
+
+      <nav class="navlinks" aria-label="Primary">
+        <a href="#features">Features</a>
+        <a href="#doctors">Doctors</a>
+        <a href="#check">Quick-Check</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <div class="ctaRow">
+        <button class="btn ghost" id="btnCall">Call Now</button>
+        <button class="btn primary" id="btnBook">Book Visit</button>
+      </div>
+    </header>
+
+    <main class="hero">
+      <section class="glass heroMain reveal in">
+        <div class="kicker"><span class="dot"></span> New: Smart Queue + Symptom Quick-Check (demo UI)</div>
+
+        <h2 class="heroTitle">
+          A <span>medical center</span> UI that feels premium & fast.
+        </h2>
+
+        <p class="heroDesc">
+          Landing page me animacione të buta, blue/white estetikë, dhe ide “të reja” si Quick‑Check për simptoma
+          + pritje e parashikuar (Smart Queue). Kjo është vetëm front-end — perfekte për ta zgjeruar pastaj me backend.
+        </p>
+
+        <div class="heroActions">
+          <button class="btn primary" id="btnExplore">Explore Services</button>
+          <button class="btn ghost" id="btnLocation">Get Location</button>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <b id="statWait">~ 12 min</b>
+            <small>Estimated wait</small>
+          </div>
+          <div class="stat">
+            <b>24/7</b>
+            <small>Emergency support</small>
+          </div>
+          <div class="stat">
+            <b>BlueCare+</b>
+            <small>Digital check‑in</small>
+          </div>
+        </div>
+
+        <div class="emergency" style="margin-top:16px">
+          <div>
+            <b style="display:block">Emergency Mode</b>
+            <small class="hint">High-contrast layout + faster access to urgent actions.</small>
+          </div>
+
+          <div class="toggle">
+            <span>Off</span>
+            <div class="switch" id="emSwitch" role="switch" aria-checked="false" tabindex="0">
+              <div class="knob" aria-hidden="true"></div>
+            </div>
+            <span>On</span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="glass heroSide reveal in" id="check">
+        <div class="panelTitle">
+          <b>Symptom Quick‑Check</b>
+          <span class="badge">UI Demo</span>
+        </div>
+
+        <div class="card">
+          <div class="cardInner">
+            <div class="field">
+              <label for="symptom">Main symptom</label>
+              <select class="select" id="symptom">
+                <option value="">Select…</option>
+                <option value="chest">Chest pain / pressure</option>
+                <option value="fever">Fever + fatigue</option>
+                <option value="cough">Cough + sore throat</option>
+                <option value="stomach">Stomach pain / nausea</option>
+                <option value="skin">Rash / allergy</option>
+                <option value="injury">Injury / sprain</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <div class="field">
+                <label for="age">Age</label>
+                <input class="input" id="age" placeholder="e.g. 28" inputmode="numeric" />
+              </div>
+              <div class="field">
+                <label for="priority">Urgency</label>
+                <select class="select" id="priority">
+                  <option value="low">Low</option>
+                  <option value="med" selected>Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn primary" style="width:100%; margin-top:10px" id="btnCheck">
+              Get suggestion
+            </button>
+
+            <div class="result" id="result">
+              <div>
+                <b>Suggestion</b>
+                <small class="hint">Pick a symptom to see department + next steps.</small>
+              </div>
+              <span class="badge" id="riskBadge">—</span>
+            </div>
+
+            <p class="hint" style="margin:10px 2px 0">
+              Disclaimer: kjo është demo UI dhe nuk zëvendëson këshillën mjekësore.
+            </p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="cardInner">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+              <b style="font-size:14px;">Smart Queue</b>
+              <span class="badge" id="queueBadge">Updating…</span>
+            </div>
+            <p class="hint" style="margin:8px 0 0">
+              Animim i thjeshtë për “estimated wait”. Mund të lidhet më vonë me API reale.
+            </p>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <section id="features" class="reveal">
+      <div class="glass" style="padding:18px;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0 0 6px; letter-spacing:-.4px;">Features that feel “different”</h2>
+            <p class="hint" style="margin:0;">Simple, fast, and interactive without feeling heavy.</p>
+          </div>
+          <span class="badge">Blue & White</span>
+        </div>
+
+        <div class="grid3" style="margin-top:12px;">
+          <article class="feature">
+            <div class="icon" aria-hidden="true">⏱️</div>
+            <h3>Smart Queue Prediction</h3>
+            <p>Shfaq pritje të parashikuar me mikro‑animacione dhe update automatik (perfect për demo).</p>
+          </article>
+
+          <article class="feature">
+            <div class="icon" aria-hidden="true">🧭</div>
+            <h3>Symptom → Department Mapping</h3>
+            <p>Përdoruesi zgjedh simptoma dhe UI sugjeron departamentin + “next steps”.</p>
+          </article>
+
+          <article class="feature">
+            <div class="icon" aria-hidden="true">🧠</div>
+            <h3>Emergency Mode</h3>
+            <p>High‑contrast switch për accessibility + CTA emergjence (ide ndryshe për landing page).</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="doctors" class="reveal">
+      <div class="glass" style="padding:18px;">
+        <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+          <div>
+            <h2 style="margin:0 0 6px; letter-spacing:-.4px;">Doctors (UI Cards)</h2>
+            <p class="hint" style="margin:0;">Placeholders — later i lidhim me data reale.</p>
+          </div>
+          <button class="btn ghost" id="btnViewAll">View all</button>
+        </div>
+
+        <div class="doctors" style="margin-top:12px;">
+          <div class="doc">
+            <div class="docTop">
+              <div class="avatar" aria-hidden="true"></div>
+            </div>
+            <div class="docBody">
+              <b>Dr. Arta K.</b>
+              <small class="hint">Cardiology • 8y exp</small>
+              <div class="pillRow">
+                <span class="pill">ECG</span>
+                <span class="pill">Stress test</span>
+                <span class="pill">Tele‑visit</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="doc">
+            <div class="docTop">
+              <div class="avatar" aria-hidden="true"></div>
+            </div>
+            <div class="docBody">
+              <b>Dr. Luan M.</b>
+              <small class="hint">General Practice • 10y exp</small>
+              <div class="pillRow">
+                <span class="pill">Check‑up</span>
+                <span class="pill">Vaccines</span>
+                <span class="pill">Digital forms</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="doc">
+            <div class="docTop">
+              <div class="avatar" aria-hidden="true"></div>
+            </div>
+            <div class="docBody">
+              <b>Dr. Elira S.</b>
+              <small class="hint">Dermatology • 6y exp</small>
+              <div class="pillRow">
+                <span class="pill">Allergy</span>
+                <span class="pill">Skin check</span>
+                <span class="pill">Care plan</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="reveal">
+      <div class="glass" style="padding:18px;">
+        <h2 style="margin:0 0 6px; letter-spacing:-.4px;">Contact</h2>
+        <p class="hint" style="margin:0 0 12px;">Placeholder contact info (ndërroje kur të duash).</p>
+
+        <div class="grid3">
+          <div class="feature">
+            <div class="icon" aria-hidden="true">📍</div>
+            <h3>Location</h3>
+            <p>Prishtinë / Tirana (demo). Integrim i hartës më vonë.</p>
+          </div>
+          <div class="feature">
+            <div class="icon" aria-hidden="true">📞</div>
+            <h3>Phone</h3>
+            <p>+383 44 000 000 (demo). Butoni “Call Now” është gati.</p>
+          </div>
+          <div class="feature">
+            <div class="icon" aria-hidden="true">🕒</div>
+            <h3>Hours</h3>
+            <p>Mon–Sun • 08:00–20:00 (demo). Emergency 24/7.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="reveal">
+      <div>
+        <b>BlueCare Medical Center</b>
+        <small style="display:block; margin-top:4px;">© <span id="year"></span> • Built as a simple animated UI template</small>
+      </div>
+      <small>Next step: multi-language + backend booking.</small>
+    </footer>
+  </div>
+
+  <script>
+    // Small helpers
+    const $ = (s) => document.querySelector(s);
+
+    // Buttons (demo actions)
+    $("#btnCall").addEventListener("click", () => alert("Demo: Call center (replace with real phone link)."));
+    $("#btnBook").addEventListener("click", () => alert("Demo: Booking modal (next step)."));
+    $("#btnExplore").addEventListener("click", () => location.hash = "#features");
+    $("#btnLocation").addEventListener("click", () => alert("Demo: Open map (later integrate Google Maps / Mapbox)."));
+    $("#btnViewAll").addEventListener("click", () => alert("Demo: Doctors page (later)."));
+
+    // Emergency mode toggle
+    const emSwitch = $("#emSwitch");
+    const setEmergency = (on) => {
+      document.body.classList.toggle("emergency-mode", on);
+      emSwitch.classList.toggle("on", on);
+      emSwitch.setAttribute("aria-checked", on ? "true" : "false");
+    };
+    emSwitch.addEventListener("click", () => setEmergency(!document.body.classList.contains("emergency-mode")));
+    emSwitch.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setEmergency(!document.body.classList.contains("emergency-mode")); }
+    });
+
+    // Quick check logic (UI suggestion)
+    function riskFrom(priority, symptom){
+      let score = 0;
+      if (priority === "high") score += 2;
+      if (priority === "med") score += 1;
+      if (symptom === "chest") score += 2;
+      if (symptom === "injury") score += 1;
+      return score >= 3 ? "High" : score === 2 ? "Medium" : "Low";
+    }
+
+    const map = {
+      chest:   { dept: "Emergency / Cardiology", next: "If severe or sudden, call emergency services." },
+      fever:   { dept: "Internal Medicine",      next: "Hydrate, check temperature, consider lab tests." },
+      cough:   { dept: "ENT / Pulmonology",      next: "Consider throat exam + respiratory assessment." },
+      stomach: { dept: "Gastroenterology",       next: "Diet review + abdominal exam if persistent." },
+      skin:    { dept: "Dermatology",            next: "Allergy check + topical plan." },
+      injury:  { dept: "Orthopedics",            next: "Ice, immobilize, consider imaging if swelling." }
+    };
+
+    $("#btnCheck").addEventListener("click", () => {
+      const symptom = $("#symptom").value;
+      const age = ($("#age").value || "").trim();
+      const priority = $("#priority").value;
+
+      const box = $("#result");
+      const badge = $("#riskBadge");
+
+      if (!symptom){
+        box.querySelector("b").textContent = "Suggestion";
+        box.querySelector("small").textContent = "Please select a symptom first.";
+        badge.textContent = "—";
+        return;
+      }
+
+      const r = riskFrom(priority, symptom);
+      const dept = map[symptom]?.dept || "General Practice";
+      const next = map[symptom]?.next || "Book a visit for assessment.";
+
+      box.querySelector("b").textContent = dept;
+      box.querySelector("small").textContent =
+        `${next}${age ? " (Age: " + age + ")" : ""} • Urgency: ${priority.toUpperCase()}`;
+
+      badge.textContent = r;
+      badge.style.background = r === "High" ? "rgba(255, 87, 87, .18)" :
+                               r === "Medium" ? "rgba(255, 193, 7, .20)" :
+                               "rgba(76, 175, 80, .18)";
+      badge.style.borderColor = r === "High" ? "rgba(255, 87, 87, .35)" :
+                              r === "Medium" ? "rgba(255, 193, 7, .35)" :
+                              "rgba(76, 175, 80, .35)";
+    });
+
+    // Smart Queue animation (demo)
+    let wait = 12;
+    function tickQueue(){
+      const drift = (Math.random() * 4 - 2); // -2..+2
+      wait = Math.max(3, Math.min(35, Math.round(wait + drift)));
+      $("#statWait").textContent = `~ ${wait} min`;
+      $("#queueBadge").textContent = `Now: ~${wait} min`;
+    }
+    tickQueue();
+    setInterval(tickQueue, 4500);
+
+    // Footer year
+    $("#year").textContent = new Date().getFullYear();
+
+    // Reveal on scroll
+    const observer = new IntersectionObserver((entries) => {
+      for (const e of entries){
+        if (e.isIntersecting) e.target.classList.add("in");
+      }
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+  </script>
+</body>
+</html>

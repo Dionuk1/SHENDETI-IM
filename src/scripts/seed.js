@@ -1,6 +1,7 @@
 require('dotenv').config();
 
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const { connectDb } = require('../config/db');
 const User = require('../models/User');
@@ -61,23 +62,26 @@ async function upsertDoctor({
 (async () => {
     await connectDb();
 
+    const generatedDefaultPassword = crypto.randomBytes(12).toString('hex');
+    const defaultPassword = process.env.SEED_DEFAULT_PASSWORD || generatedDefaultPassword;
+
     const adminEmail = process.env.SEED_ADMIN_EMAIL || 'admin@healthflow.test';
-    const adminPass = process.env.SEED_ADMIN_PASSWORD || 'password123';
+    const adminPass = process.env.SEED_ADMIN_PASSWORD || defaultPassword;
 
     const doctorEmail = process.env.SEED_DOCTOR_EMAIL || 'doctor@healthflow.test';
-    const doctorPass = process.env.SEED_DOCTOR_PASSWORD || 'password123';
+    const doctorPass = process.env.SEED_DOCTOR_PASSWORD || defaultPassword;
 
     const patientEmail = process.env.SEED_PATIENT_EMAIL || 'patient@healthflow.test';
-    const patientPass = process.env.SEED_PATIENT_PASSWORD || 'password123';
+    const patientPass = process.env.SEED_PATIENT_PASSWORD || defaultPassword;
 
     // Create base users
     const admin = await upsertUser({ name: 'Admin', email: adminEmail, password: adminPass, role: 'admin' });
 
     const patients = await Promise.all([
         upsertUser({ name: 'Dion Ukshini', email: patientEmail, password: patientPass, role: 'patient' }),
-        upsertUser({ name: 'Arta Krasniqi', email: 'arta@healthflow.test', password: 'password123', role: 'patient' }),
-        upsertUser({ name: 'Besnik Dervishi', email: 'besnik@healthflow.test', password: 'password123', role: 'patient' }),
-        upsertUser({ name: 'Sara Gashi', email: 'sara@healthflow.test', password: 'password123', role: 'patient' }),
+        upsertUser({ name: 'Arta Krasniqi', email: 'arta@healthflow.test', password: defaultPassword, role: 'patient' }),
+        upsertUser({ name: 'Besnik Dervishi', email: 'besnik@healthflow.test', password: defaultPassword, role: 'patient' }),
+        upsertUser({ name: 'Sara Gashi', email: 'sara@healthflow.test', password: defaultPassword, role: 'patient' }),
     ]);
 
     // Create doctors with specializations
@@ -85,7 +89,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Agon Berisha',
             email: 'agon@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'cardiology',
             department: 'Cardiology Department',
             experience: 15,
@@ -99,7 +103,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Elena Hoxha',
             email: 'elena@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'neurology',
             department: 'Neurology Department',
             experience: 12,
@@ -113,7 +117,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Arben Krasniqi',
             email: 'arben@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'orthopedics',
             department: 'Orthopedics Department',
             experience: 18,
@@ -127,7 +131,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Nura Rama',
             email: 'nura@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'general',
             department: 'General Medicine',
             experience: 10,
@@ -141,7 +145,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Mirela Duka',
             email: 'mirela@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'psychiatry',
             department: 'Mental Health Department',
             experience: 14,
@@ -157,7 +161,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Luan Gashi',
             email: 'luan@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'cardiology',
             department: 'Cardiology Department',
             experience: 9,
@@ -171,7 +175,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Bora Kelmendi',
             email: 'bora@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'neurology',
             department: 'Neurology Department',
             experience: 8,
@@ -185,7 +189,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Ilir Hyseni',
             email: 'ilir@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'orthopedics',
             department: 'Orthopedics Department',
             experience: 11,
@@ -199,7 +203,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Vesa Shala',
             email: 'vesa@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'general',
             department: 'General Medicine',
             experience: 7,
@@ -213,7 +217,7 @@ async function upsertDoctor({
         upsertDoctor({
             name: 'Dr. Erion Aliu',
             email: 'erion@healthflow.test',
-            password: 'password123',
+            password: defaultPassword,
             specialization: 'psychiatry',
             department: 'Mental Health Department',
             experience: 6,
@@ -232,24 +236,29 @@ async function upsertDoctor({
             upsertUser({
                 name: doc.name,
                 email: doc.email,
-                password: 'password123',
+                password: defaultPassword,
                 role: 'doctor',
             })
         )
     );
 
     console.log('✅ Seed complete');
+    if (!process.env.SEED_DEFAULT_PASSWORD) {
+        console.log('\n🔐 Seed password was generated for this run (set SEED_DEFAULT_PASSWORD in .env to keep it stable):');
+        console.log(`   SEED_DEFAULT_PASSWORD=${defaultPassword}`);
+    }
     console.log('\n📋 Created Accounts:');
     console.log('─'.repeat(60));
     console.log(`👤 Admin: ${admin.email} / ${adminPass}`);
     console.log('\n👥 Patients:');
     patients.forEach((p) => {
-        console.log(`   • ${p.email} / password123`);
+        const pass = p.email === String(patientEmail).toLowerCase().trim() ? patientPass : defaultPassword;
+        console.log(`   • ${p.email} / ${pass}`);
     });
     console.log('\n👨‍⚕️ Doctors:');
     doctors.forEach((doc) => {
         console.log(
-            `   • ${doc.name} (${doc.specialization}) - ${doc.email} / password123`
+            `   • ${doc.name} (${doc.specialization}) - ${doc.email} / ${defaultPassword}`
         );
     });
     console.log('─'.repeat(60));

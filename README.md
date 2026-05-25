@@ -2,6 +2,8 @@
 
 A comprehensive healthcare web application featuring AI-powered smart queue management, intelligent symptom checking, and advanced doctor scheduling.
 
+![image alt] https://github.com/Dionuk1/HealthFlowOS/blob/6824890e99cc359b5518c9c4620c8762cbfb2821/image.png
+
 ## ðŸš€ **PREMIUM FEATURES NOW ACTIVE** âœ…
 
 ### âœ¨ **All Features Connected to Backend:**

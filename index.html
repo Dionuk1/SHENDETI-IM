@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="sq">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SHËNDETI IM — Së shpejti</title>
+  <meta name="description" content="SHËNDETI IM është një platformë moderne digjitale shëndetësore që po përgatitet për publikim.">
+  <meta name="theme-color" content="#f5fbff">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="sq_AL">
+  <meta property="og:title" content="SHËNDETI IM — Së shpejti">
+  <meta property="og:description" content="Diçka e re për shëndetin tuaj po vjen së shpejti.">
+  <meta property="og:url" content="https://shendeti-im.me/">
+  <meta property="og:site_name" content="SHËNDETI IM">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #092a4a;
+      --muted: #56718d;
+      --blue: #1677f2;
+      --cyan: #20cfda;
+      --line: rgba(46, 154, 237, .22);
+      --panel: rgba(255, 255, 255, .74);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-height: 100%; scroll-behavior: smooth; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 14% 16%, rgba(64, 172, 255, .13), transparent 27rem),
+        radial-gradient(circle at 86% 25%, rgba(36, 211, 219, .12), transparent 24rem),
+        linear-gradient(145deg, #fff 0%, #f5fbff 52%, #edf9ff 100%);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: -2;
+      content: "";
+      opacity: .34;
+      background-image: radial-gradient(circle, rgba(18, 119, 242, .24) 1px, transparent 1px);
+      background-size: 26px 26px;
+      mask-image: linear-gradient(to bottom, #000, transparent 72%);
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 20;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--ink);
+      transform: translateY(-160%);
+    }
+
+    .skip-link:focus { transform: translateY(0); }
+    :focus-visible { outline: 3px solid #0b72df; outline-offset: 4px; }
+
+    .site-shell {
+      position: relative;
+      isolation: isolate;
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .site-header {
+      display: flex;
+      justify-content: center;
+      padding: clamp(28px, 6vw, 58px) 20px 12px;
+      animation: fade-in .9s ease-out both;
+    }
+
+    .brand { display: grid; justify-items: center; gap: 10px; text-align: center; }
+    .brand-mark { width: 72px; height: 72px; filter: drop-shadow(0 14px 18px rgba(22, 119, 242, .16)); }
+
+    .brand-name {
+      margin: 0;
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      font-weight: 850;
+      letter-spacing: .02em;
+    }
+
+    .brand-name span { color: #16bfc9; }
+
+    .brand-kicker {
+      margin: -4px 0 0;
+      color: var(--muted);
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+    }
+
+    main {
+      display: grid;
+      width: min(920px, calc(100% - 36px));
+      flex: 1;
+      align-content: center;
+      justify-items: center;
+      margin: 0 auto;
+      padding: 30px 0 180px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--blue);
+      font-size: clamp(.82rem, 2vw, 1.05rem);
+      font-weight: 800;
+      letter-spacing: .34em;
+      text-transform: uppercase;
+      animation: rise-in .85s .12s ease-out both;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(3.3rem, 10vw, 7.8rem);
+      font-weight: 900;
+      letter-spacing: -.065em;
+      line-height: .88;
+      animation: rise-in .9s .18s cubic-bezier(.2,.75,.25,1) both;
+    }
+
+    .coming-soon {
+      margin: 16px 0 0;
+      color: transparent;
+      background: linear-gradient(105deg, #126cf0 5%, #22a9ef 38%, #24d3cd 67%, #126cf0 95%);
+      background-size: 220% auto;
+      background-clip: text;
+      -webkit-background-clip: text;
+      font-size: clamp(2.2rem, 8.2vw, 6.2rem);
+      font-weight: 900;
+      letter-spacing: -.055em;
+      line-height: 1;
+      animation: rise-in .9s .25s cubic-bezier(.2,.75,.25,1) both, gradient-flow 8s 1.2s ease-in-out infinite;
+    }
+
+    .pulse-divider {
+      width: min(520px, 82vw);
+      height: 44px;
+      margin: 20px 0 10px;
+      color: #2b9ff4;
+      animation: fade-in 1s .45s ease-out both;
+    }
+
+    .pulse-path {
+      stroke-dasharray: 18 8;
+      animation: heartbeat-line 7s linear infinite;
+    }
+
+    .intro {
+      max-width: 720px;
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 2.1vw, 1.18rem);
+      line-height: 1.75;
+      animation: fade-in .9s .45s ease-out both;
+    }
+
+    .intro strong { color: var(--ink); }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 28px;
+      padding: 11px 22px;
+      border: 1px solid rgba(255,255,255,.72);
+      border-radius: 999px;
+      color: #fff;
+      background: linear-gradient(100deg, #1476f3, #1ccbd2);
+      box-shadow: 0 12px 30px rgba(20, 125, 232, .22);
+      font-size: .78rem;
+      font-weight: 850;
+      letter-spacing: .18em;
+      animation: fade-in .9s .58s ease-out both, status-pulse 3.4s 1.5s ease-in-out infinite;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      box-shadow: 0 0 0 4px rgba(255,255,255,.18);
+    }
+
+    .message-card {
+      width: min(650px, 100%);
+      margin-top: 44px;
+      padding: 23px 28px;
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: 24px;
+      color: var(--muted);
+      background: var(--panel);
+      box-shadow: 0 22px 60px rgba(36, 105, 165, .09);
+      backdrop-filter: blur(12px);
+      line-height: 1.65;
+      animation: fade-in .9s .7s ease-out both;
+    }
+
+    .message-card p { margin: 0; }
+    .message-card strong { color: var(--blue); }
+
+    .decor { position: absolute; z-index: -1; pointer-events: none; }
+    .decor-cross { width: 54px; height: 54px; color: rgba(27, 138, 244, .22); animation: float 8s ease-in-out infinite; }
+    .cross-one { top: 16%; left: 7%; transform: rotate(-10deg); }
+    .cross-two { top: 35%; right: 8%; width: 36px; animation-delay: -3s; }
+
+    .orb {
+      width: 92px;
+      height: 92px;
+      border: 1px solid rgba(24, 154, 238, .18);
+      border-radius: 50%;
+      background: linear-gradient(145deg, rgba(255,255,255,.84), rgba(40,186,245,.12));
+      box-shadow: inset 0 0 28px rgba(40, 183, 242, .08);
+      animation: float 10s ease-in-out infinite;
+    }
+
+    .orb-one { top: 25%; left: -34px; }
+    .orb-two { top: 13%; right: 7%; width: 44px; height: 44px; animation-delay: -5s; }
+    .orb-three { bottom: 19%; right: -28px; width: 110px; height: 110px; animation-delay: -2s; }
+
+    .waves {
+      position: absolute;
+      right: -3%;
+      bottom: -2px;
+      left: -3%;
+      z-index: -1;
+      height: clamp(135px, 18vw, 230px);
+      overflow: hidden;
+    }
+
+    .waves svg { width: 106%; height: 100%; animation: wave-drift 16s ease-in-out infinite alternate; }
+
+    footer {
+      position: absolute;
+      right: 20px;
+      bottom: 22px;
+      left: 20px;
+      color: rgba(255,255,255,.96);
+      font-size: clamp(.72rem, 1.7vw, .9rem);
+      text-align: center;
+    }
+
+    @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes rise-in { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes gradient-flow { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+    @keyframes heartbeat-line { to { stroke-dashoffset: -104; } }
+    @keyframes float { 0%,100% { translate: 0 0; rotate: 0deg; } 50% { translate: 0 -14px; rotate: 4deg; } }
+    @keyframes status-pulse { 0%,100% { box-shadow: 0 12px 30px rgba(20,125,232,.22); } 50% { box-shadow: 0 12px 38px rgba(27,198,210,.34); } }
+    @keyframes wave-drift { from { transform: translateX(-1.5%) scaleX(1.01); } to { transform: translateX(1.5%) scaleX(1.03); } }
+
+    @media (max-width: 600px) {
+      .site-header { padding-top: 24px; }
+      .brand-mark { width: 60px; height: 60px; }
+      main { width: min(100% - 28px, 920px); padding-top: 22px; padding-bottom: 150px; }
+      .eyebrow { letter-spacing: .24em; }
+      h1 { font-size: clamp(2.9rem, 14vw, 4.4rem); }
+      .coming-soon { margin-top: 13px; font-size: clamp(1.85rem, 9.5vw, 3.1rem); }
+      .pulse-divider { margin-top: 13px; }
+      .intro { line-height: 1.62; }
+      .message-card { margin-top: 30px; padding: 19px 18px; border-radius: 20px; }
+      .cross-one { left: 2%; }
+      .cross-two { right: 2%; }
+      .orb-two { right: -12px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Kalo te përmbajtja</a>
+  <div class="site-shell">
+    <header class="site-header">
+      <div class="brand" aria-label="SHËNDETI IM">
+        <svg class="brand-mark" viewBox="0 0 80 80" role="img" aria-label="Logoja SHËNDETI IM">
+          <defs><linearGradient id="brandGradient" x1="8" y1="8" x2="72" y2="72" gradientUnits="userSpaceOnUse"><stop stop-color="#1476f3"/><stop offset="1" stop-color="#20d0d2"/></linearGradient></defs>
+          <path d="M40 67C20 55 10 44 10 29c0-9 7-16 16-16 6 0 11 3 14 8 3-5 8-8 14-8 9 0 16 7 16 16 0 15-10 26-30 38Z" fill="none" stroke="url(#brandGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M40 31v20M30 41h20" stroke="#20cfd2" stroke-width="7" stroke-linecap="round"/>
+        </svg>
+        <p class="brand-name">SHËNDETI <span>IM</span></p>
+        <p class="brand-kicker">PLATFORMA DIGJITALE SHËNDETËSORE</p>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <p class="eyebrow">SHËNDETI IM</p>
+      <h1>SË SHPEJTI</h1>
+      <p class="coming-soon" aria-label="Coming soon">COMING SOON</p>
+
+      <svg class="pulse-divider" viewBox="0 0 520 44" aria-hidden="true">
+        <path d="M2 22h176l8-8 8 16 9-26 10 36 10-18h65l9-9 12 18 10-9h199" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity=".75" class="pulse-path"/>
+        <path d="M256 15c-5-8-18-4-18 6 0 10 18 18 18 18s18-8 18-18c0-10-13-14-18-6Z" fill="#f8fdff" stroke="currentColor" stroke-width="2"/>
+      </svg>
+
+      <p class="intro">Diçka e re për shëndetin tuaj po vjen së shpejti.<br><br><strong>SHËNDETI IM</strong> është një platformë moderne digjitale që synon ta bëjë menaxhimin e termineve dhe shërbimeve shëndetësore më të thjeshtë, më të shpejtë dhe më të sigurt.</p>
+
+      <div class="status" role="status"><span class="status-dot" aria-hidden="true"></span>NË ZHVILLIM</div>
+
+      <section class="message-card" aria-label="Njoftim për publikimin">
+        <p>Platforma është duke u përgatitur për publikim.<br><strong>Ju faleminderit për durimin.</strong></p>
+      </section>
+    </main>
+
+    <svg class="decor decor-cross cross-one" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 4h12v14h14v12H30v14H18V30H4V18h14Z" fill="currentColor"/></svg>
+    <svg class="decor decor-cross cross-two" viewBox="0 0 48 48" aria-hidden="true"><path d="M18 4h12v14h14v12H30v14H18V30H4V18h14Z" fill="currentColor"/></svg>
+    <span class="decor orb orb-one" aria-hidden="true"></span>
+    <span class="decor orb orb-two" aria-hidden="true"></span>
+    <span class="decor orb orb-three" aria-hidden="true"></span>
+
+    <div class="waves" aria-hidden="true">
+      <svg viewBox="0 0 1440 230" preserveAspectRatio="none">
+        <path d="M0 95C220 10 390 190 670 112c265-74 410-1 770-72v190H0Z" fill="#bcecff" opacity=".78"/>
+        <path d="M0 122c240 94 480 8 708 47 262 45 445-89 732-53v114H0Z" fill="#4fb8fa" opacity=".62"/>
+        <path d="M0 156c260 88 497-40 770 15 265 53 427-23 670-15v74H0Z" fill="url(#waveGradient)"/>
+        <defs><linearGradient id="waveGradient" x1="0" y1="180" x2="1440" y2="180" gradientUnits="userSpaceOnUse"><stop stop-color="#1677f2"/><stop offset=".52" stop-color="#239df2"/><stop offset="1" stop-color="#20cad8"/></linearGradient></defs>
+      </svg>
+    </div>
+
+    <footer>© 2026 SHËNDETI IM. Të gjitha të drejtat e rezervuara.</footer>
+  </div>
+</body>
+</html>

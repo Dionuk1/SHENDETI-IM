@@ -30,6 +30,11 @@ function getAesKey() {
     return key;
 }
 
+function validateAesConfiguration() {
+    getAesKey();
+    return true;
+}
+
 function encryptText(plainText) {
     const key = getAesKey();
     const iv = crypto.randomBytes(12); // GCM recommended 12 bytes
@@ -66,4 +71,5 @@ function decryptText(payload) {
 module.exports = {
     encryptText,
     decryptText,
+    validateAesConfiguration,
 };

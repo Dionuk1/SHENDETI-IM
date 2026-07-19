@@ -4,6 +4,7 @@
  */
 
 const express = require('express');
+const mongoose = require('mongoose');
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
@@ -18,6 +19,10 @@ const {
 } = require('../utils/queueManager');
 const { checkSymptoms } = require('../utils/symptomChecker');
 const { classifyClinicSymptomsWithGemini, isGeminiAvailable } = require('../services/geminiAI');
+const { appointmentCreateLimiter } = require('../middleware/rateLimits');
+const { appointmentDuration, isWithinDoctorAvailability, cancelAppointment, findDoctorUser } = require('../utils/appointments');
+const { createNotification } = require('../utils/notifications');
+const { writeAudit } = require('../utils/audit');
 
 const router = express.Router();
 
@@ -229,6 +234,66 @@ router.post('/recommend', async (req, res, next) => {
     }
 });
 
+router.get('/slots/:doctorId', async (req, res, next) => {
+    try {
+        const doctorId = String(req.params.doctorId || '');
+        const date = String(req.query.date || '').trim();
+        const service = String(req.query.service || 'Konsultim').trim();
+        if (!mongoose.isValidObjectId(doctorId)) return res.status(400).json({ error: 'Invalid doctor id' });
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'Date must use YYYY-MM-DD format' });
+
+        const doctor = await Doctor.findOne({ _id: doctorId, isActive: true });
+        if (!doctor) return res.status(404).json({ error: 'Doctor not found' });
+
+        const dayStart = new Date(`${date}T00:00:00`);
+        const dayEnd = new Date(`${date}T23:59:59.999`);
+        if (Number.isNaN(dayStart.getTime())) return res.status(400).json({ error: 'Invalid date' });
+        if (dayEnd <= new Date()) return res.status(400).json({ error: 'Past dates cannot be booked' });
+
+        const weekday = dayStart.getDay();
+        const availability = doctor.availability || {};
+        const hours = weekday === 0
+            ? (availability.sundayOff !== false ? null : availability.mondayFriday)
+            : weekday === 6 ? availability.saturday : availability.mondayFriday;
+        if (!hours?.start || !hours?.end) return res.json({ date, durationMinutes: appointmentDuration(doctor, service), slots: [] });
+
+        const durationMinutes = appointmentDuration(doctor, service);
+        const toMinutes = (value) => {
+            const match = /^(\d{2}):(\d{2})$/.exec(String(value));
+            return match ? Number(match[1]) * 60 + Number(match[2]) : null;
+        };
+        const startMinutes = toMinutes(hours.start);
+        const endMinutes = toMinutes(hours.end);
+        if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+            return res.json({ date, durationMinutes, slots: [] });
+        }
+
+        const occupied = await Appointment.find({
+            doctorId: doctor._id,
+            status: { $in: ['pending', 'confirmed', 'completed'] },
+            scheduledAt: { $gte: dayStart, $lte: dayEnd },
+        }).select('scheduledAt durationMinutes status').lean();
+        const now = new Date();
+        const slots = [];
+        for (let minute = startMinutes; minute + durationMinutes <= endMinutes; minute += durationMinutes) {
+            const hh = String(Math.floor(minute / 60)).padStart(2, '0');
+            const mm = String(minute % 60).padStart(2, '0');
+            const start = new Date(`${date}T${hh}:${mm}:00`);
+            const end = new Date(start.getTime() + durationMinutes * 60000);
+            const conflict = occupied.find((item) => {
+                const itemStart = new Date(item.scheduledAt);
+                const itemEnd = new Date(itemStart.getTime() + Number(item.durationMinutes || 30) * 60000);
+                return start < itemEnd && end > itemStart;
+            });
+            const past = start <= now;
+            slots.push({ time: `${hh}:${mm}`, scheduledAt: start.toISOString(), available: !conflict && !past, state: conflict || past ? 'occupied' : 'available' });
+        }
+        res.json({ date, durationMinutes, slots });
+    } catch (error) {
+        next(error);
+    }
+});
+
 // ============================================
 // Patient Routes (Authenticated)
 // ============================================
@@ -261,6 +326,9 @@ router.get('/my-appointments', async (req, res, next) => {
                         scheduledAt: app.scheduledAt,
                         status: app.status,
                         notes: app.notes,
+                        durationMinutes: app.durationMinutes,
+                        cancelledAt: app.cancelledAt,
+                        cancellationReason: app.cancellationReason,
                         queue: queueData,
                     };
                 }
@@ -292,7 +360,7 @@ router.get('/my-appointments', async (req, res, next) => {
  *   notes?: "..."
  * }
  */
-router.post('/create', async (req, res, next) => {
+router.post('/create', appointmentCreateLimiter, async (req, res, next) => {
     try {
         const {
             doctorId,
@@ -314,6 +382,12 @@ router.post('/create', async (req, res, next) => {
 
         if (!service || !scheduledAt) {
             return res.status(400).json({ error: 'Service and scheduledAt are required' });
+        }
+        if (String(service).trim().length > 120 || (notes && String(notes).length > 5000)) {
+            return res.status(400).json({ error: 'Appointment details are too long' });
+        }
+        if (!['low', 'medium', 'high'].includes(String(urgencyLevel).toLowerCase())) {
+            return res.status(400).json({ error: 'Invalid urgency level' });
         }
 
         let finalDoctorId = doctorId;
@@ -346,9 +420,13 @@ router.post('/create', async (req, res, next) => {
             finalDoctorId = recommendation.doctor.id;
         }
 
+        if (!mongoose.isValidObjectId(finalDoctorId)) {
+            return res.status(400).json({ error: 'Invalid doctor id' });
+        }
+
         // Verify doctor exists
         const doctor = await Doctor.findById(finalDoctorId);
-        if (!doctor) {
+        if (!doctor || doctor.isActive === false) {
             return res.status(404).json({ error: 'Doctor not found' });
         }
 
@@ -360,13 +438,21 @@ router.post('/create', async (req, res, next) => {
 
         // Real-time availability check (MongoDB): prevent overlapping bookings for the same doctor.
         // Use doctor's average duration as the collision window (default 30 mins).
-        const slotMinutes = Number(doctor.avgDurationMins) > 0 ? Number(doctor.avgDurationMins) : 30;
-        const windowMs = Math.max(5, slotMinutes - 1) * 60 * 1000;
-        const conflict = await Appointment.findOne({
+        const slotMinutes = appointmentDuration(doctor, service);
+        if (!isWithinDoctorAvailability(doctor, when, slotMinutes)) {
+            return res.status(409).json({ error: 'Selected time is outside the doctor availability' });
+        }
+        const end = new Date(when.getTime() + slotMinutes * 60000);
+        const possibleConflicts = await Appointment.find({
             doctorId: doctor._id,
-            scheduledAt: { $gte: new Date(when.getTime() - windowMs), $lte: new Date(when.getTime() + windowMs) },
-            status: { $in: ['pending', 'confirmed'] },
-        }).select('_id scheduledAt status');
+            scheduledAt: { $gte: new Date(when.getTime() - 480 * 60000), $lt: end },
+            status: { $in: ['pending', 'confirmed', 'completed'] },
+        }).select('_id scheduledAt status durationMinutes');
+        const conflict = possibleConflicts.find((item) => {
+            const itemStart = new Date(item.scheduledAt);
+            const itemEnd = new Date(itemStart.getTime() + Number(item.durationMinutes || 30) * 60000);
+            return when < itemEnd && end > itemStart;
+        });
 
         if (conflict) {
             return res.status(409).json({
@@ -380,6 +466,7 @@ router.post('/create', async (req, res, next) => {
             doctorId: doctor._id,
             service: String(service).trim(),
             scheduledAt: when,
+            durationMinutes: slotMinutes,
             status: 'pending',
             // Store emergency flag in notes or as separate field
             notes: emergencyMode
@@ -389,6 +476,13 @@ router.post('/create', async (req, res, next) => {
 
         // Invalidate queue cache since we added an appointment
         invalidateQueueCache(finalDoctorId);
+
+        const doctorUser = await findDoctorUser(doctor);
+        await Promise.all([
+            createNotification({ userId: req.user._id, type: 'appointment_created', message: 'Termini u krijua me sukses.', resourceType: 'appointment', resourceId: appointment._id }),
+            doctorUser ? createNotification({ userId: doctorUser._id, type: 'appointment_created', message: 'Keni një termin të ri.', resourceType: 'appointment', resourceId: appointment._id }) : null,
+            writeAudit(req, { action: 'appointment.create', resourceType: 'appointment', resourceId: appointment._id, status: 'success' }),
+        ]);
 
         const queueData = await calculateWaitTime(doctor._id);
 
@@ -400,11 +494,13 @@ router.post('/create', async (req, res, next) => {
                 service: appointment.service,
                 scheduledAt: appointment.scheduledAt,
                 status: appointment.status,
+                durationMinutes: appointment.durationMinutes,
                 queueInfo: queueData,
                 emergencyMode,
             },
         });
     } catch (e) {
+        if (e?.code === 11000) return res.status(409).json({ error: 'This time slot was just booked. Please choose another slot.' });
         next(e);
     }
 });
@@ -415,20 +511,14 @@ router.post('/create', async (req, res, next) => {
  */
 router.delete('/:id', async (req, res, next) => {
     try {
+        if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid appointment id' });
         const app = await Appointment.findOne({ _id: req.params.id, patientId: req.user._id });
         if (!app) {
             return res.status(404).json({ error: 'Appointment not found' });
         }
 
-        const doctorId = app.doctorId;
-        await Appointment.deleteOne({ _id: app._id });
-
-        // Invalidate cache
-        if (doctorId) {
-            invalidateQueueCache(doctorId);
-        }
-
-        res.json({ ok: true });
+        const cancelled = await cancelAppointment({ req, appointment: app, reason: req.body?.reason });
+        res.json({ ok: true, appointment: { id: cancelled._id.toString(), status: cancelled.status, cancelledAt: cancelled.cancelledAt } });
     } catch (e) {
         next(e);
     }

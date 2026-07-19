@@ -154,7 +154,7 @@ GEMINI_API_KEY = AQ.xyz123...# ❌ Wrong (spaces around =)
 
 ### Test 2: Verify .env is Loaded
 ```bash
-node -e "require('dotenv').config(); console.log('KEY:', process.env.GEMINI_API_KEY);"
+node -e "require('dotenv').config(); console.log('GEMINI_API_KEY configured:', Boolean(process.env.GEMINI_API_KEY));"
 ```
 
 Should print your API key.

@@ -16,6 +16,7 @@ const prescriptionSchema = new mongoose.Schema(
         title: { type: String, required: true, trim: true, maxlength: 200 },
         bodyEncrypted: { type: encryptedTextSchema, required: true },
         appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment', default: null, index: true },
+        status: { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active', index: true },
     },
     { timestamps: true }
 );

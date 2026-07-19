@@ -1,5 +1,5 @@
 /**
- * HealthFlow OS Frontend Client
+ * SHËNDETI IM Frontend Client
  * Wraps API calls with JWT + role-based UI
  */
 
@@ -44,6 +44,12 @@ class HealthFlowClient {
 
     async login(email, password, role) {
         const data = await this.request('POST', '/auth/login', { email, password, role });
+        this.setToken(data.token, data.user);
+        return data.user;
+    }
+
+    async googleLogin(credential) {
+        const data = await this.request('POST', '/auth/google', { credential });
         this.setToken(data.token, data.user);
         return data.user;
     }
@@ -283,8 +289,21 @@ class HealthFlowClient {
         return this.createAppointmentSmart({ doctorId, service, scheduledAt, notes });
     }
 
-    async cancelAppointment(id) {
-        await this.request('DELETE', `/appointments/${id}`);
+    async appointmentSlots(doctorId, date, service) {
+        const data = await this.request('GET', `/appointments/slots/${encodeURIComponent(doctorId)}?date=${encodeURIComponent(date)}&service=${encodeURIComponent(service || 'Konsultim')}`);
+        return data.slots || [];
+    }
+
+    async cancelAppointment(id, reason = '') {
+        return this.request('DELETE', `/appointments/${id}`, { reason });
+    }
+
+    async notifications(limit = 30) {
+        return this.request('GET', `/notifications?limit=${encodeURIComponent(limit)}`);
+    }
+
+    async markNotificationRead(id) {
+        return this.request('PATCH', `/notifications/${encodeURIComponent(id)}/read`);
     }
 }
 

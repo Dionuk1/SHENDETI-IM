@@ -7,8 +7,10 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 
 const Doctor = require('../models/Doctor');
+const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/requireRole');
+const { writeAudit } = require('../utils/audit');
 
 const router = express.Router();
 
@@ -22,34 +24,74 @@ router.use(requireAuth, requireRole('admin'));
 router.get('/', async (req, res, next) => {
     try {
         const { specialization, isActive, page = 1, limit = 20 } = req.query;
-        const query = {};
+        const pageNumber = Math.max(1, Number.parseInt(page, 10) || 1);
+        const limitNumber = Math.max(1, Math.min(100, Number.parseInt(limit, 10) || 20));
 
-        if (specialization) {
-            query.specialization = String(specialization);
-        }
-
-        if (isActive !== undefined) {
-            query.isActive = String(isActive) === 'true';
-        }
-
-        const skip = (Number(page) - 1) * Number(limit);
-
-        const [doctors, total] = await Promise.all([
-            Doctor.find(query)
-                .select('-passwordHash')
-                .skip(skip)
-                .limit(Number(limit))
-                .sort({ createdAt: -1 }),
-            Doctor.countDocuments(query),
+        const [doctorProfiles, doctorUsers] = await Promise.all([
+            Doctor.find({}).select('-passwordHash').lean(),
+            User.find({ role: 'doctor' }).select('_id name email isActive createdAt').lean(),
         ]);
+        const usersByEmail = new Map(doctorUsers.map((user) => [String(user.email).toLowerCase(), user]));
+        const linkedEmails = new Set();
+        const merged = doctorProfiles.map((profile) => {
+            const normalizedEmail = String(profile.email).toLowerCase();
+            const user = usersByEmail.get(normalizedEmail);
+            linkedEmails.add(normalizedEmail);
+            return {
+                id: profile._id.toString(),
+                name: profile.name,
+                email: profile.email,
+                specialization: profile.specialization,
+                department: profile.department,
+                experience: profile.experience,
+                services: profile.services,
+                licenseNumber: profile.licenseNumber,
+                isActive: profile.isActive,
+                availability: profile.availability,
+                maxPatientsPerDay: profile.maxPatientsPerDay,
+                avgRating: profile.avgRating,
+                totalPatients: profile.totalPatients,
+                createdAt: profile.createdAt,
+                profileComplete: true,
+                accountExists: Boolean(user),
+                accountIsActive: user ? user.isActive : null,
+            };
+        });
+
+        for (const user of doctorUsers) {
+            const normalizedEmail = String(user.email).toLowerCase();
+            if (linkedEmails.has(normalizedEmail)) continue;
+            merged.push({
+                id: null,
+                userId: user._id.toString(),
+                name: user.name,
+                email: user.email,
+                specialization: null,
+                department: null,
+                isActive: user.isActive,
+                createdAt: user.createdAt,
+                profileComplete: false,
+                accountExists: true,
+                accountIsActive: user.isActive,
+            });
+        }
+
+        const filtered = merged
+            .filter((doctor) => !specialization || doctor.specialization === String(specialization))
+            .filter((doctor) => isActive === undefined || doctor.isActive === (String(isActive) === 'true'))
+            .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+        const total = filtered.length;
+        const totalPages = Math.ceil(total / limitNumber);
+        const doctors = filtered.slice((pageNumber - 1) * limitNumber, pageNumber * limitNumber);
 
         res.json({
-            doctors: doctors.map((d) => d.toSafeJson()),
+            doctors,
             pagination: {
-                page: Number(page),
-                limit: Number(limit),
+                page: pageNumber,
+                limit: limitNumber,
                 total,
-                pages: Math.ceil(total / Number(limit)),
+                pages: totalPages,
+                totalPages,
             },
         });
     } catch (e) {
@@ -79,7 +121,7 @@ router.get('/:id', async (req, res, next) => {
  * POST /admin/doctors
  * Body: {
  *   name: "Dr. Agon Berisha",
- *   email: "agon@healthflow.test",
+ *   email: "agon@shendeti-im.test",
  *   password: "securePassword123",
  *   specialization: "cardiology",
  *   department: "Cardiology Department",
@@ -126,15 +168,16 @@ router.post('/', async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid specialization' });
         }
 
-        const existing = await Doctor.findOne({ email: String(email).toLowerCase().trim() });
-        if (existing) {
+        const normalizedEmail = String(email).toLowerCase().trim();
+        const existing = await Promise.all([Doctor.findOne({ email: normalizedEmail }), User.findOne({ email: normalizedEmail })]);
+        if (existing.some(Boolean)) {
             return res.status(409).json({ error: 'Doctor email already exists' });
         }
 
         const passwordHash = await bcrypt.hash(String(password), 12);
         const doctor = await Doctor.create({
             name: String(name).trim(),
-            email: String(email).toLowerCase().trim(),
+            email: normalizedEmail,
             passwordHash,
             specialization,
             department: String(department).trim(),
@@ -144,6 +187,21 @@ router.post('/', async (req, res, next) => {
             bio: bio ? String(bio).trim() : undefined,
             maxPatientsPerDay: Number(maxPatientsPerDay),
         });
+
+        try {
+            await User.create({
+                name: String(name).trim(),
+                email: normalizedEmail,
+                passwordHash,
+                role: 'doctor',
+                authProvider: 'local',
+            });
+        } catch (error) {
+            await Doctor.deleteOne({ _id: doctor._id });
+            throw error;
+        }
+
+        await writeAudit(req, { action: 'admin.doctor_create', resourceType: 'doctor', resourceId: doctor._id, status: 'success' });
 
         res.status(201).json({ doctor: doctor.toSafeJson() });
     } catch (e) {
@@ -175,6 +233,12 @@ router.patch('/:id', async (req, res, next) => {
         if (!doctor) {
             return res.status(404).json({ error: 'Doctor not found' });
         }
+
+        const userUpdate = {};
+        if (name) userUpdate.name = doctor.name;
+        if (isActive !== undefined) userUpdate.isActive = doctor.isActive;
+        if (Object.keys(userUpdate).length) await User.updateOne({ email: doctor.email, role: 'doctor' }, userUpdate);
+        await writeAudit(req, { action: 'admin.doctor_update', resourceType: 'doctor', resourceId: doctor._id, status: 'success' });
 
         res.json({ doctor: doctor.toSafeJson() });
     } catch (e) {
@@ -208,6 +272,8 @@ router.patch('/:id/availability', async (req, res, next) => {
             return res.status(404).json({ error: 'Doctor not found' });
         }
 
+        await writeAudit(req, { action: 'admin.doctor_availability', resourceType: 'doctor', resourceId: doctor._id, status: 'success' });
+
         res.json({ doctor: doctor.toSafeJson() });
     } catch (e) {
         next(e);
@@ -220,10 +286,13 @@ router.patch('/:id/availability', async (req, res, next) => {
  */
 router.delete('/:id', async (req, res, next) => {
     try {
-        const doctor = await Doctor.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
+        const doctor = await Doctor.findByIdAndUpdate(req.params.id, { isActive: false }, { returnDocument: 'after' });
         if (!doctor) {
             return res.status(404).json({ error: 'Doctor not found' });
         }
+
+        await User.updateOne({ email: doctor.email, role: 'doctor' }, { isActive: false });
+        await writeAudit(req, { action: 'admin.doctor_deactivate', resourceType: 'doctor', resourceId: doctor._id, status: 'success' });
 
         res.json({ ok: true });
     } catch (e) {

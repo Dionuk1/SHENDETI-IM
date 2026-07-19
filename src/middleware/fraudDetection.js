@@ -11,11 +11,16 @@ const blockedIPs = new Set();
 const suspiciousPatterns = {};
 let lastCleanupAt = 0;
 
+function readPositiveInteger(name, fallback) {
+    const value = Number(process.env[name]);
+    return Number.isInteger(value) && value > 0 ? value : fallback;
+}
+
 // Configuration
 const CONFIG = {
-    MAX_REQUESTS_PER_MINUTE: 60,
+    MAX_REQUESTS_PER_MINUTE: readPositiveInteger('MAX_REQUESTS_PER_MINUTE', 60),
     MAX_FAILED_LOGINS: 5,
-    BAN_DURATION_MINUTES: 15,
+    BAN_DURATION_MINUTES: readPositiveInteger('BAN_DURATION_MINUTES', 15),
     FAILED_LOGIN_WINDOW: 5 * 60 * 1000, // 5 minutes
     BULK_ACCESS_THRESHOLD: 50, // requests to /api/admin/users within 1 minute
     // Soft protection for bursty public endpoints (avoid full IP ban)
@@ -255,6 +260,11 @@ function detectSuspiciousPatterns(clientIP, endpoint, timestamp) {
  */
 
 function blockIP(clientIP) {
+    if (process.env.NODE_ENV === 'development' && (clientIP === '127.0.0.1' || clientIP === '::1')) {
+        console.warn(`⚠️ SECURITY: Global IP ban skipped for development localhost ${clientIP}`);
+        return;
+    }
+
     blockedIPs.add(clientIP);
     console.warn(`⚠️ SECURITY: IP ${clientIP} blocked for ${CONFIG.BAN_DURATION_MINUTES} minutes`);
 

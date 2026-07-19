@@ -1,6 +1,6 @@
-﻿# ðŸ¥ Node/Express/Mongo HealthFlow OS - BlueCare Medical Center
+﻿# SHÃ‹NDETI IM
 
-A comprehensive healthcare web application featuring AI-powered smart queue management, intelligent symptom checking, and advanced doctor scheduling.
+SHÃ‹NDETI IM is a secure Node.js, Express, and MongoDB healthcare application with patient self-registration, Google sign-in, appointment scheduling and cancellation, role-based dashboards, audit logs, notifications, encrypted medical data, and AI-assisted workflows.
 
 ![image alt](https://github.com/Dionuk1/HealthFlowOS/blob/6824890e99cc359b5518c9c4620c8762cbfb2821/image.png)
 
@@ -84,7 +84,7 @@ A comprehensive healthcare web application featuring AI-powered smart queue mana
 â”‚       â”œâ”€â”€ symptomChecker.js                  # Symptomâ†’Department (NEW)
 â”‚       â””â”€â”€ queueManager.js                    # Smart queue logic (NEW)
 â”œâ”€â”€ public/hf-client.js                        # Frontend JS client
-â”œâ”€â”€ bluecare/index.html                        # HealthFlow OS UI
+â”œâ”€â”€ bluecare/index.html                        # SHÃ‹NDETI IM UI
 â”œâ”€â”€ uploads/medical-records/                   # PDF storage
 â””â”€â”€ package.json
 ```
@@ -117,8 +117,8 @@ Notes
 - Do **not** commit real credentials or connection strings to GitHub.
 - If your hosting platform provides `MONGODB_URI`, map it to `MONGO_URI` (the app reads `MONGO_URI` by default).
 
-**Database Seeding**
-- After MongoDB is configured:
+**Optional development data**
+- Public patient registration and normal login do not require seeding. To create optional doctor/admin development data:
 ```bash
 npm run seed
 ```
@@ -133,8 +133,8 @@ cp .env.example .env
 
 **Key settings:**
 ```
-JWT_SECRET=your-secret-key-here
-MEDICAL_AES_KEY=<64_hex_chars>
+JWT_SECRET=
+MEDICAL_AES_KEY=
 MONGO_URI=mongodb://127.0.0.1:27017/healthflow_os
 ```
 
@@ -145,7 +145,7 @@ Note: Secrets/keys should be provided via environment variables and generated du
 npm install
 ```
 
-### 3ï¸âƒ£ Seed Database (Create Doctors & Users)
+### 3ï¸âƒ£ Optional: Seed Development Doctors and Admins
 ```bash
 npm run seed
 ```
@@ -157,9 +157,7 @@ Creates 5 specialist doctors with real services:
 - Dr. Nura Rama (General Practice)
 - Dr. Mirela Duka (Psychiatry)
 
-Plus: admin@healthflow.test, patient@healthflow.test (demo accounts)
-
-Passwords are defined in environment variables or generated during local setup.
+Example development addresses use the valid local-only `@shendeti-im.test` domain. The optional seed stops if legacy `@healthflow.test` or `@shendeti.test` users exist, so it never silently duplicates development accounts. Passwords come from environment variables or are generated for that seed run and are never printed.
 
 Tip: Set `SEED_DEFAULT_PASSWORD` (and optionally `SEED_ADMIN_PASSWORD`, `SEED_PATIENT_PASSWORD`, `SEED_DOCTOR_PASSWORD`) in your `.env` before running `npm run seed` to keep demo logins stable across runs.
 
@@ -270,7 +268,7 @@ Authorization: Bearer <TOKEN>
   "patient": {
     "id": "...",
     "name": "Dion Ukshini",
-    "email": "patient@healthflow.test",
+    "email": "patient@shendeti-im.test",
     "role": "patient"
   },
   "schedule": {
@@ -381,7 +379,7 @@ POST /api/doctor/prescriptions
 POST /api/admin/doctors
 {
   "name": "Dr. New Specialist",
-  "email": "new@healthflow.test",
+  "email": "new@shendeti-im.test",
   "password": "<PASSWORD>",
   "specialization": "emergency",
   "department": "Emergency Department",
@@ -503,7 +501,7 @@ DELETE /api/admin/doctors/:id
 
   // Login
   const user = await hfClient.login(
-    'patient@healthflow.test',
+    'patient@shendeti-im.test',
     '<PASSWORD>',
     'patient'
   );
@@ -622,7 +620,7 @@ curl -X POST http://localhost:5500/api/appointments/recommend \
 # 5. Login as patient
 TOKEN=$(curl -X POST http://localhost:5500/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"patient@healthflow.test","password":"<PASSWORD>","role":"patient"}' \
+  -d '{"email":"patient@shendeti-im.test","password":"<PASSWORD>"}' \
   | jq -r '.token')
 
 # 6. Get dashboard
@@ -778,7 +776,7 @@ All cards refresh data every time page loads:
 |-------|----------|
 | `Missing JWT_SECRET` | Set in .env file |
 | `MongoDB connection refused` | Ensure MongoDB running on localhost:27017 |
-| `Doctor not found` | Run `npm run seed` |
+| `Doctor not found` | Create the doctor through the protected admin flow, or optionally run `npm run seed` for development data |
 | `Symptom not recognized` | Add to `SYMPTOM_DATABASE` in `symptomChecker.js` |
 | `Queue data not updating` | Cache expires after 1 minute, restart server if needed |
 | `Doctor cards show empty/no wait times` | Ensure `/api/appointments/doctors` returns valid data |
@@ -791,7 +789,7 @@ All cards refresh data every time page loads:
 
 ### **Frontend Error Checklist:**
 1. âœ… Server running on `http://localhost:5500` (not 3000)
-2. âœ… MongoDB connected and `npm run seed` executed
+2. âœ… MongoDB connected; optional doctor/admin data created through the admin flow or development seed
 3. âœ… Doctor cards loading with real data (check Network tab)
 4. âœ… Emergency toggle appears in top-right of nav
 5. âœ… Symptom Quick-Check button functional
@@ -802,4 +800,56 @@ All cards refresh data every time page loads:
 **Built with â¤ï¸ for BlueCare Medical Center**
 
 *Now serving smarter healthcare through intelligent appointment scheduling, advanced symptom analysis, and secure patient data management.*
+
+## Authentication and Google setup
+
+Patients can register directly in the web application; `npm run seed` is optional and is intended only for development doctor/admin data. Public registration always creates a `patient` account.
+
+Required environment variables (placeholders only):
+
+```env
+PORT=5500
+MONGO_URI=mongodb://127.0.0.1:27017/healthflow_os
+JWT_SECRET=
+MEDICAL_AES_KEY=
+GOOGLE_CLIENT_ID=
+GEMINI_API_KEY=
+GEMINI_MODEL=auto
+ADMIN_EMAIL=admin@shendeti-im.test
+ADMIN_PASSWORD=
+```
+
+Google Cloud Console configuration:
+
+1. Create or select a Google Cloud project.
+2. Configure the OAuth consent screen and add the required application/contact details.
+3. Create an OAuth 2.0 Client ID with application type **Web application**.
+4. In **Authorized JavaScript origins**, add the exact HTTPS origin where the application is deployed. Add a development origin only when needed; do not hardcode either origin in source code.
+5. This implementation uses Google Identity Services ID-token callbacks, so it does not require a redirect URI. If a future flow uses redirects, add only the exact callback URL implemented by that flow.
+6. Copy only the Web client ID to `GOOGLE_CLIENT_ID` in the hosting environment, then restart the application.
+7. Leave `GOOGLE_CLIENT_ID` empty until hosting is configured. The Google controls stay hidden and email/password authentication continues to work; setting the variable later enables Google Login without code changes.
+
+Never place a Google client secret, JWT secret, AES key, token, password, or production database credential in frontend files or Git-tracked configuration.
+
+## Safe admin bootstrap
+
+The public login rejects admin accounts. Administrators sign in only at `http://localhost:5500/admin`. To create the first admin safely, set a new private `ADMIN_PASSWORD` of at least 12 characters in the untracked `.env` file and run:
+
+```bash
+npm run bootstrap:admin
+```
+
+The command hashes the password with bcrypt, prints no credential, and stops without changing anything if an admin already exists. Remove `ADMIN_PASSWORD` from `.env` after the one-time bootstrap. If legacy development accounts already exist, update or remove those accounts explicitly before using the optional seed; the seed intentionally refuses to create parallel `@shendeti-im.test` copies.
+
+## Commands
+
+```bash
+npm install
+npm start
+npm run check
+npm test
+$env:RUN_INTEGRATION='1'; $env:TEST_BASE_URL='http://localhost:5510'; npm test
+```
+
+Use `npm run seed` only when optional development doctor/admin records are needed.
 

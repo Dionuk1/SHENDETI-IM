@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthFlow OS | Pro Edition 2026</title>
+    <title>SHËNDETI IM | Pro Edition 2026</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <script src="https://accounts.google.com/gsi/client" async defer onload="initializeGoogleAuthentication()"></script>
     
     <style>
         :root {
@@ -451,6 +452,50 @@
         .hero { min-height: 90vh; display: flex; align-items: center; padding: 0 8%; background: radial-gradient(circle at 70% 30%, #eef5ff 0%, #fff 100%); }
         .hero h1 { font-size: 4rem; line-height: 1.1; margin-bottom: 25px; }
 
+        /* --- HOMEPAGE INFORMATION --- */
+        .home-info-section { padding: 80px 8%; }
+        .home-info-section.alt { background: #f1f6ff; }
+        .home-section-heading { text-align: center; font-size: 2.5rem; margin-bottom: 40px; }
+        .feature-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+        .feature-card { border: 1px solid #e8eef7; }
+        .feature-icon { width: 52px; height: 52px; border-radius: 15px; display: flex; align-items: center; justify-content: center; margin-bottom: 18px; background: #eef5ff; color: var(--primary); font-size: 1.3rem; }
+        .feature-card h3 { font-size: 1.08rem; margin-bottom: 10px; }
+        .feature-card p { color: var(--gray); line-height: 1.7; font-size: 0.94rem; }
+        .security-panel { margin-top: 30px; padding: 28px; border: 1px solid #dbe8ff; }
+        .security-panel h3 { margin-bottom: 18px; }
+        .security-list { display: flex; flex-wrap: wrap; gap: 12px; list-style: none; }
+        .security-list li { padding: 10px 14px; border-radius: 12px; background: #eef5ff; color: var(--dark); font-size: 0.88rem; font-weight: 600; }
+        .security-list i { color: var(--success); margin-right: 7px; }
+        .faq-list { max-width: 900px; margin: 0 auto; display: grid; gap: 12px; }
+        .faq-item { background: white; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04); }
+        .faq-question { width: 100%; padding: 20px 22px; border: 0; background: transparent; color: var(--dark); cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 18px; text-align: left; font-size: 1rem; font-weight: 700; }
+        .faq-question:focus-visible { outline: 3px solid rgba(0, 98, 255, 0.3); outline-offset: -3px; }
+        .faq-question i { color: var(--primary); transition: transform 0.2s ease; }
+        .faq-question[aria-expanded="true"] i { transform: rotate(180deg); }
+        .faq-answer { padding: 0 22px 20px; color: var(--gray); line-height: 1.75; }
+        body.emergency-mode .home-info-section.alt { background: rgba(2, 6, 23, 0.35) !important; }
+        body.emergency-mode .feature-card,
+        body.emergency-mode .security-panel,
+        body.emergency-mode .faq-item { background: var(--em-surface) !important; border-color: rgba(148, 163, 184, 0.18) !important; }
+        body.emergency-mode .feature-icon,
+        body.emergency-mode .security-list li { background: rgba(59, 130, 246, 0.14) !important; color: var(--em-text) !important; }
+        body.emergency-mode .faq-question { color: var(--em-text) !important; }
+
+        @media (max-width: 900px) {
+            .feature-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+
+        @media (max-width: 600px) {
+            .home-info-section { padding: 58px 5%; }
+            .home-section-heading { font-size: 2rem; margin-bottom: 28px; }
+            .feature-grid { grid-template-columns: 1fr; }
+            .feature-card { padding: 22px; }
+            .security-panel { padding: 22px; }
+            .security-list { flex-direction: column; }
+            .faq-question { padding: 18px; font-size: 0.95rem; }
+            .faq-answer { padding: 0 18px 18px; font-size: 0.92rem; }
+        }
+
         /* --- DOCTOR LIST --- */
         .doctor-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; padding: 60px 8%; }
         .doc-card { text-align: center; border: 1px solid #eee; }
@@ -568,12 +613,26 @@
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; color: var(--gray); padding: 10px 5px; font-size: 0.85rem; border-bottom: 1px solid #eee; }
         td { padding: 12px 5px; border-bottom: 1px solid #f9f9f9; font-size: 0.9rem; }
+        .slot-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(82px,1fr)); gap:8px; margin:10px 0 16px; }
+        .slot-btn { border:1px solid var(--primary); background:white; color:var(--primary); padding:10px; border-radius:10px; font-weight:700; cursor:pointer; }
+        .slot-btn:hover { background:#eef2ff; transform:translateY(-1px); }
+        .slot-btn.selected { background:var(--primary); color:white; box-shadow:0 0 0 3px rgba(79,70,229,.15); }
+        .slot-btn.occupied, .slot-btn.occupied:hover { border-color:#cbd5e1; background:#f1f5f9; color:#94a3b8; cursor:not-allowed; opacity:.7; transform:none; }
+        .notification-badge { min-width:20px; height:20px; border-radius:10px; background:var(--danger); color:white; display:inline-flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:800; }
+        @media print {
+            body.print-prescription * { visibility: hidden !important; }
+            body.print-prescription #prescriptionDetailsModal,
+            body.print-prescription #prescriptionDetailsModal * { visibility: visible !important; }
+            body.print-prescription #prescriptionDetailsModal { position:absolute; inset:0; display:block; background:white; }
+            body.print-prescription #prescriptionDetailsModal .modal-box { width:100%; max-width:none; box-shadow:none; border-radius:0; }
+            body.print-prescription .prescription-print-hide { display:none !important; }
+        }
     </style>
 </head>
 <body>
 
     <nav id="nav" class="glass">
-        <div style="font-weight: 800; font-size: 1.5rem; color: var(--primary);">HEALTHFLOW<span style="color:var(--dark)">.OS</span></div>
+        <div style="font-weight: 800; font-size: 1.5rem; color: var(--primary);">SHËNDETI<span style="color:var(--dark)"> IM</span></div>
         <div style="display:flex; gap:25px; align-items:center;">
             <a href="#doctors" style="text-decoration:none; font-weight:600; color:var(--dark);">Doktorët</a>
             <div
@@ -587,7 +646,7 @@
                 <span>Emergency</span>
                 <div id="toggle-switch"><div></div></div>
             </div>
-            <button class="btn btn-primary" onclick="toggleModal('loginModal')">Hyr në Sistem</button>
+            <button class="btn btn-primary" onclick="toggleModal('loginModal')">Kyçu</button>
         </div>
     </nav>
 
@@ -603,6 +662,18 @@
                 </div>
             </div>
         </header>
+
+        <section class="home-info-section" aria-labelledby="features-title">
+            <h2 id="features-title" class="home-section-heading">Çfarë bën SHËNDETI IM?</h2>
+            <div class="feature-grid">
+                <article class="card feature-card"><div class="feature-icon"><i class="fa-regular fa-calendar-check" aria-hidden="true"></i></div><h3>Rezervim i termineve</h3><p>Pacienti zgjedh doktorin, shërbimin, datën dhe orarin e lirë në kohë reale.</p></article>
+                <article class="card feature-card"><div class="feature-icon"><i class="fa-solid fa-list-check" aria-hidden="true"></i></div><h3>Menaxhim i termineve</h3><p>Pacienti, doktori dhe administratori menaxhojnë terminet sipas rolit të tyre.</p></article>
+                <article class="card feature-card"><div class="feature-icon"><i class="fa-solid fa-prescription" aria-hidden="true"></i></div><h3>Recept digjital</h3><p>Doktori krijon receptin digjital, ndërsa pacienti e sheh në profilin e tij.</p></article>
+                <article class="card feature-card"><div class="feature-icon"><i class="fa-solid fa-notes-medical" aria-hidden="true"></i></div><h3>Historia mjekësore</h3><p>Pacienti sheh vizitat e përfunduara, diagnozat dhe receptet e lidhura.</p></article>
+                <article class="card feature-card"><div class="feature-icon"><i class="fa-solid fa-stethoscope" aria-hidden="true"></i></div><h3>Kontroll i simptomave</h3><p>Sistemi ndihmon pacientin të gjejë departamentin e përshtatshëm sipas simptomave.</p></article>
+                <article class="card feature-card"><div class="feature-icon"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div><h3>Siguri e të dhënave</h3><p>Fjalëkalimet ruhen të hash-uara dhe të dhënat mjekësore mbrohen me AES-256.</p></article>
+            </div>
+        </section>
 
         <section id="doctors">
             <div style="padding:0 140px; margin-bottom:18px;">
@@ -621,28 +692,46 @@
             </div>
             <div id="landing-doctor-grid" class="doctor-grid"></div>
         </section>
+
+        <section class="home-info-section" aria-labelledby="security-title">
+            <aside class="card security-panel" aria-labelledby="security-title">
+                <h3 id="security-title">Siguria e sistemit</h3>
+                <ul class="security-list">
+                    <li><i class="fa-solid fa-check" aria-hidden="true"></i>AES-256 për të dhënat mjekësore</li>
+                    <li><i class="fa-solid fa-check" aria-hidden="true"></i>bcrypt për fjalëkalimet</li>
+                    <li><i class="fa-solid fa-check" aria-hidden="true"></i>JWT authentication</li>
+                    <li><i class="fa-solid fa-check" aria-hidden="true"></i>Role-based authorization</li>
+                    <li><i class="fa-solid fa-check" aria-hidden="true"></i>Rate limiting</li>
+                    <li><i class="fa-solid fa-check" aria-hidden="true"></i>Audit logging</li>
+                </ul>
+            </aside>
+        </section>
+
+        <section class="home-info-section alt" aria-labelledby="faq-title">
+            <h2 id="faq-title" class="home-section-heading">Pyetje të shpeshta</h2>
+            <div class="faq-list">
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-1"><span>Çfarë është SHËNDETI IM?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-1" hidden>SHËNDETI IM është një platformë digjitale për rezervimin e termineve, menaxhimin e pacientëve, doktorëve, recetave dhe historisë mjekësore.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-2"><span>A mund të rezervoj termin pa u regjistruar?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-2" hidden>Mund të shikoni doktorët dhe oraret, por për konfirmimin e terminit duhet të kyçeni ose të krijoni një llogari.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-3"><span>Si e zgjedh orarin e lirë?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-3" hidden>Pas zgjedhjes së doktorit, shërbimit dhe datës, sistemi shfaq oraret e lira dhe ato të zëna.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-4"><span>A mund ta anuloj terminin?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-4" hidden>Po. Pacienti mund ta anulojë terminin e vet, doktori terminet e pacientëve të tij, ndërsa administratori mund të menaxhojë të gjitha terminet.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-5"><span>Si e marr receptin digjital?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-5" hidden>Pas vizitës, doktori mund të krijojë receptin digjital, i cili shfaqet te seksioni “Receptet” në profilin e pacientit.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-6"><span>A janë të sigurta të dhënat e mia?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-6" hidden>Po. Sistemi përdor autentikim me JWT, hash-im të fjalëkalimeve dhe enkriptim AES-256 për të dhënat mjekësore.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-7"><span>Kush mund t’i shohë të dhënat mjekësore?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-7" hidden>Vetëm pacienti dhe doktori i autorizuar mund t’i shohin të dhënat përkatëse.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-8"><span>A mund të regjistrohem si doktor?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-8" hidden>Jo. Regjistrimi publik krijon vetëm llogari pacienti. Doktorët menaxhohen nga administratori.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-9"><span>Çfarë ndodh nëse një orar është i zënë?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-9" hidden>Orari shfaqet i zbehur dhe nuk mund të zgjidhet.</div></div>
+                <div class="faq-item"><button class="faq-question" type="button" aria-expanded="false" aria-controls="faq-answer-10"><span>A funksionon SHËNDETI IM në telefon?</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="faq-answer" id="faq-answer-10" hidden>Po. Platforma është responsive dhe përshtatet për telefon, tablet dhe kompjuter.</div></div>
+            </div>
+        </section>
     </div>
 
     <div id="loginModal" class="modal hidden">
         <div class="modal-box animate__animated animate__zoomIn">
-            <h2 style="text-align:center; margin-bottom:20px;">Mirësevini përsëri</h2>
-            
-            <!-- Role Selection for Auth -->
-            <div class="segmented role-tabs" style="--seg-count:3; --seg-idx:0; margin-bottom:25px;">
-                <div id="tab-user" class="btn seg-btn active" onclick="setRole('user')">Pacient</div>
-                <div id="tab-doctor" class="btn seg-btn" onclick="setRole('doctor')">Doktor</div>
-                <div id="tab-admin" class="btn seg-btn" onclick="setRole('admin')">Admin</div>
-            </div>
-            
-            <!-- Login/Register Tabs -->
-            <div class="segmented auth-tabs" style="--seg-count:2; --seg-idx:0; margin-bottom:25px;">
-                <div id="tab-login" class="btn seg-btn active" onclick="switchAuthTab('login')">Hyr</div>
-                <div id="tab-register" class="btn seg-btn" onclick="switchAuthTab('register')">Regjistro</div>
-            </div>
+            <div style="text-align:center; color:var(--primary); font-weight:800; margin-bottom:8px;">SHËNDETI IM</div>
+            <h2 id="authModalTitle" style="text-align:center; margin-bottom:20px;">Mirësevini përsëri</h2>
             
             <!-- Login Form -->
             <div id="login-form">
-                <input type="email" id="loginEmail" class="input" placeholder="Email Adresa">
+                <input type="email" id="loginEmail" class="input" placeholder="Adresa e emailit" autocomplete="email">
                 <div class="password-field">
                     <input type="password" id="loginPass" class="input" placeholder="Fjalëkalimi" autocomplete="current-password">
                     <button
@@ -654,13 +743,15 @@
                         onclick="toggleLoginPasswordVisibility()"
                     ><i id="loginPassToggleIcon" class="fa-regular fa-eye"></i></button>
                 </div>
-                <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="auth()">Vazhdo</button>
+                <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="auth()">Kyçu</button>
+                <div id="googleLoginButton" hidden style="display:none; justify-content:center; margin-top:12px;"></div>
+                <p style="text-align:center; margin-top:14px; color:var(--gray);">Nuk ke llogari? <button type="button" style="border:0;background:none;color:var(--primary);font-weight:700;cursor:pointer;" onclick="showRegisterForm()">Regjistrohu</button></p>
             </div>
             
             <!-- Registration Form -->
             <div id="register-form" class="hidden">
-                <input type="text" id="regName" class="input" placeholder="Emri Plotë">
-                <input type="email" id="regEmail" class="input" placeholder="Email Adresa">
+                <input type="text" id="regName" class="input" placeholder="Emri i plotë" autocomplete="name">
+                <input type="email" id="regEmail" class="input" placeholder="Adresa e emailit" autocomplete="email">
                 <div class="password-field">
                     <input type="password" id="regPass" class="input" placeholder="Fjalëkalimi" autocomplete="new-password">
                     <button
@@ -673,7 +764,7 @@
                     ><i id="regPassToggleIcon" class="fa-regular fa-eye"></i></button>
                 </div>
                 <div class="password-field">
-                    <input type="password" id="regPassConfirm" class="input" placeholder="Konfirmo Fjalëkalimin" autocomplete="new-password">
+                    <input type="password" id="regPassConfirm" class="input" placeholder="Konfirmo fjalëkalimin" autocomplete="new-password">
                     <button
                         id="regPassConfirmToggleBtn"
                         type="button"
@@ -683,12 +774,9 @@
                         onclick="toggleRegisterPasswordVisibility('regPassConfirm')"
                     ><i id="regPassConfirmToggleIcon" class="fa-regular fa-eye"></i></button>
                 </div>
-                <label style="font-size:0.8rem; font-weight:700; display:block; margin-bottom:8px;">Zgjidh Rolin</label>
-                <select id="regRole" class="input" style="margin-bottom:15px;">
-                    <option value="patient">Pacient</option>
-                    <option value="doctor">Doktor</option>
-                </select>
-                <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="registerUser()">Regjistro</button>
+                <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="registerUser()">Regjistrohu</button>
+                <div id="googleRegisterButton" hidden style="display:none; justify-content:center; margin-top:12px;"></div>
+                <p style="text-align:center; margin-top:14px; color:var(--gray);">Ke llogari? <button type="button" style="border:0;background:none;color:var(--primary);font-weight:700;cursor:pointer;" onclick="showLoginForm()">Kyçu</button></p>
             </div>
             
             <p style="text-align:center; margin-top:15px; cursor:pointer; color:var(--gray);" onclick="toggleModal('loginModal')">Anulo</p>
@@ -697,16 +785,22 @@
 
     <div id="bookModal" class="modal hidden">
         <div class="modal-box animate__animated animate__bounceIn">
-            <h2>Rezervo Termin të Ri</h2>
+            <h2>Rezervo termin të ri</h2>
             <p style="color:var(--gray); margin-bottom:20px;">Zgjidhni orarin që ju përshtatet.</p>
             <label style="font-size:0.8rem; font-weight:700;">DOKTORI</label>
-            <select id="bookDoc" class="input"></select>
-            <label style="font-size:0.8rem; font-weight:700;">DATA DHE ORA</label>
-            <div style="display:flex; gap:10px;">
+            <select id="bookDoc" class="input" onchange="onBookingDoctorChange()"></select>
+            <label style="font-size:0.8rem; font-weight:700;">SHËRBIMI</label>
+            <select id="bookService" class="input" onchange="loadBookingSlots()"><option value="Konsultim">Konsultim</option></select>
+            <label style="font-size:0.8rem; font-weight:700;">DATA</label>
+            <div>
                 <input type="date" id="bookDate" class="input">
-                <input type="time" id="bookTime" class="input">
             </div>
-            <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="saveBooking()">Konfirmo Rezervimin</button>
+            <input type="hidden" id="bookTime">
+            <input type="hidden" id="bookScheduledAt">
+            <input type="hidden" id="bookDuration">
+            <div id="bookSlotCount" style="font-weight:700; color:var(--primary); margin-top:8px;" aria-live="polite"></div>
+            <div id="bookSlots" class="slot-grid" aria-live="polite"><span style="color:var(--gray);">Zgjidhni doktorin dhe datën.</span></div>
+            <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="saveBooking()">Konfirmo rezervimin</button>
             <p style="text-align:center; margin-top:15px; cursor:pointer;" onclick="toggleModal('bookModal')">Anulo</p>
         </div>
     </div>
@@ -740,16 +834,37 @@
         </div>
     </div>
 
+    <div id="passwordResetModal" class="modal hidden">
+        <div class="modal-box">
+            <h2>Ndrysho fjalëkalimin</h2>
+            <p id="passwordResetIdentity" style="color:var(--gray); margin-top:8px;"></p>
+            <div style="margin-top:20px;">
+                <label style="font-weight:700; font-size:0.8rem;">Fjalëkalimi i ri</label>
+                <div class="password-field">
+                    <input type="password" id="resetUserPassword" class="input" autocomplete="new-password" />
+                    <button type="button" class="pw-toggle" aria-label="Shfaq ose fsheh fjalëkalimin" onclick="toggleResetPasswordVisibility('resetUserPassword', this)"><i class="fa-regular fa-eye"></i></button>
+                </div>
+                <label style="font-weight:700; font-size:0.8rem;">Konfirmo fjalëkalimin e ri</label>
+                <div class="password-field">
+                    <input type="password" id="resetUserPasswordConfirm" class="input" autocomplete="new-password" />
+                    <button type="button" class="pw-toggle" aria-label="Shfaq ose fsheh konfirmimin" onclick="toggleResetPasswordVisibility('resetUserPasswordConfirm', this)"><i class="fa-regular fa-eye"></i></button>
+                </div>
+            </div>
+            <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="saveAdminUserPassword()">Ruaj</button>
+            <button class="btn" style="width:100%; margin-top:10px;" onclick="closePasswordResetModal()">Anulo</button>
+        </div>
+    </div>
+
     <div id="app-shell" class="app-shell hidden">
         <aside class="sidebar">
-            <div style="font-weight: 800; color: var(--primary); margin-bottom:25px; font-size:1.2rem;">HEALTHFLOW OS</div>
+            <div style="font-weight: 800; color: var(--primary); margin-bottom:25px; font-size:1.2rem;">SHËNDETI IM</div>
             <div id="sidebar-links"></div>
             <div id="logoutLink" class="nav-link" style="margin-top:auto; color:var(--danger);" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Dil</div>
         </aside>
         <main class="main-content">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h1 id="dash-title">Dashboard</h1>
-                <div id="security-badge" class="status-pill status-success"><i class="fas fa-shield-alt"></i> AES-256 ACTIVE</div>
+                <div style="display:flex; gap:10px; align-items:center;"><button class="btn" onclick="openNotificationCenter()"><i class="fas fa-bell"></i> <span id="notificationCount" class="notification-badge" style="display:none;">0</span></button><div id="security-badge" class="status-pill status-success"><i class="fas fa-shield-alt"></i> AES-256 ACTIVE</div></div>
             </div>
             <div id="dash-view" style="margin-top:30px;"></div>
         </main>
@@ -768,9 +883,9 @@
     </div>
 
     <script>
-        let role = 'user';
         let isRegisterMode = false;
         let doctors = [];
+        let adminDoctors = [];
         let users = [];
         let usersLoaded = false;
         let appointments = [];
@@ -783,7 +898,7 @@
             if (!grid) return;
 
             if (doctors.length === 0) {
-                grid.innerHTML = '<p style="text-align:center; color:var(--gray); grid-column: 1/-1;">Nuk ka doktorë të regjistruar. Ekskutoni npm run seed.</p>';
+                grid.innerHTML = '<p style="text-align:center; color:var(--gray); grid-column: 1/-1;">Nuk ka doktorë të disponueshëm për momentin.</p>';
                 return;
             }
 
@@ -1198,23 +1313,6 @@
             document.getElementById(id).classList.toggle('hidden'); 
             if(id === 'loginModal' && !document.getElementById(id).classList.contains('hidden')) {
                 showLoginForm(); // Reset to login form when opening
-                setRole(role);
-            }
-        }
-
-        function setRole(r) {
-            role = r;
-
-            const roleTabs = document.querySelectorAll('#loginModal .role-tabs .seg-btn');
-            roleTabs.forEach(b => b.classList.remove('active'));
-
-            const active = document.getElementById(`tab-${r}`);
-            if (active) active.classList.add('active');
-
-            const wrapper = document.querySelector('#loginModal .role-tabs');
-            if (wrapper) {
-                const idx = r === 'user' ? 0 : (r === 'doctor' ? 1 : 2);
-                wrapper.style.setProperty('--seg-idx', String(idx));
             }
         }
 
@@ -1251,11 +1349,14 @@
             if (!msg) return;
 
             const host = ensureToastHost();
+            const dedupeKey = String(opts.dedupeKey || '').trim();
+            if (dedupeKey && Array.from(host.children).some((item) => item.dataset.toastKey === dedupeKey)) return;
             const t = String(type || 'info').toLowerCase();
             const color = t === 'success' ? 'var(--success)' : t === 'warn' ? 'var(--warning)' : t === 'error' ? 'var(--danger)' : 'var(--primary)';
             const icon = t === 'success' ? '✅' : t === 'warn' ? '⚠️' : t === 'error' ? '❌' : 'ℹ️';
 
             const toast = document.createElement('div');
+            if (dedupeKey) toast.dataset.toastKey = dedupeKey;
             toast.setAttribute('role', 'status');
             toast.style.padding = '12px 14px';
             toast.style.borderRadius = '14px';
@@ -1457,6 +1558,55 @@
             setRegisterPasswordVisible('regPassConfirm', false);
         }
 
+        function completeAuthentication(data) {
+            if (!data?.token || !data?.user) throw new Error('Përgjigje e pavlefshme autentifikimi');
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+            localStorage.setItem('role', data.user.role || 'patient');
+            const userRole = data.user.role || 'patient';
+            renderDashboard(userRole);
+            updateGlobalIdentityDisplay();
+            loadNotificationCount();
+            setTimeout(restorePendingBookingAfterAuth, 0);
+        }
+
+        async function handleGoogleCredential(response) {
+            try {
+                const result = await fetch('/api/auth/google', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credential: response?.credential || '' }),
+                });
+                const data = await result.json().catch(() => ({}));
+                if (!result.ok) throw new Error(data.error || 'Kyçja me Google dështoi');
+                completeAuthentication(data);
+                showToast('success', 'Kyçja me Google u krye me sukses.');
+            } catch (error) {
+                showToast('error', error.message || 'Kyçja me Google dështoi');
+            }
+        }
+
+        async function initializeGoogleAuthentication() {
+            try {
+                const configResponse = await fetch('/api/auth/google-config');
+                if (!configResponse.ok) return;
+                const config = await configResponse.json().catch(() => ({}));
+                if (!config?.enabled || !config?.clientId || !window.google?.accounts?.id) return;
+                google.accounts.id.initialize({ client_id: config.clientId, callback: handleGoogleCredential });
+                ['googleLoginButton', 'googleRegisterButton'].forEach((id) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.innerHTML = '';
+                        el.hidden = false;
+                        el.style.display = 'flex';
+                        google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', text: 'continue_with', width: 300 });
+                    }
+                });
+            } catch {
+                // Google login is optional; email/password authentication remains available.
+            }
+        }
+
         async function auth() {
             // Security best-practice: always restore password masking on submit.
             try { ensureLoginPasswordHidden(); } catch (e) { /* ignore */ }
@@ -1474,13 +1624,12 @@
             }
             
             try {
-                const response = await fetch('http://localhost:5500/api/auth/login', {
+                const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         email: email.toLowerCase().trim(),
-                        password: pass,
-                        role: role === 'user' ? 'patient' : role
+                        password: pass
                     })
                 });
                 
@@ -1490,15 +1639,8 @@
                 }
                 
                 const data = await response.json();
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                localStorage.setItem('role', data.user.role || role);
-                
-                // Redirect based on user's role from database
-                const userRole = data.user.role || (role === 'user' ? 'patient' : role);
-                renderDashboard(userRole);
-                updateGlobalIdentityDisplay();
-                addLog(`${userRole} u identifikua`, email);
+                completeAuthentication(data);
+                addLog(`${data.user.role} u identifikua`, email);
             } catch(err) {
                 setInlineNoticeAfterField(passEl, 'loginPassNotice', 'warn', 'Gabim lidhje: ' + err.message + '. Sigurohuni se serveri funksionon në localhost:5500');
             }
@@ -1507,24 +1649,16 @@
         function switchAuthTab(tab) {
             const loginForm = document.getElementById('login-form');
             const registerForm = document.getElementById('register-form');
-            const tabLogin = document.getElementById('tab-login');
-            const tabRegister = document.getElementById('tab-register');
+            const title = document.getElementById('authModalTitle');
 
             if(tab === 'login') {
                 loginForm.classList.remove('hidden');
                 registerForm.classList.add('hidden');
-                tabLogin.classList.add('active');
-                tabRegister.classList.remove('active');
+                if (title) title.textContent = 'Mirësevini përsëri';
             } else {
                 loginForm.classList.add('hidden');
                 registerForm.classList.remove('hidden');
-                tabRegister.classList.add('active');
-                tabLogin.classList.remove('active');
-            }
-
-            const wrapper = document.querySelector('#loginModal .auth-tabs');
-            if (wrapper) {
-                wrapper.style.setProperty('--seg-idx', tab === 'login' ? '0' : '1');
+                if (title) title.textContent = 'Regjistrohu';
             }
         }
 
@@ -1535,7 +1669,6 @@
             const email = document.getElementById('regEmail').value;
             const pass = document.getElementById('regPass').value;
             const passConfirm = document.getElementById('regPassConfirm').value;
-            const roleSelected = document.getElementById('regRole').value;
 
             const nameEl = document.getElementById('regName');
             const emailEl = document.getElementById('regEmail');
@@ -1558,14 +1691,14 @@
             }
             
             try {
-                const response = await fetch('http://localhost:5500/api/auth/register', {
+                const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         name: name.trim(),
                         email: email.toLowerCase().trim(),
                         password: pass,
-                        role: roleSelected === 'doctor' ? 'doctor' : 'patient'
+                        passwordConfirm: passConfirm
                     })
                 });
                 
@@ -1575,11 +1708,9 @@
                     return;
                 }
                 
-                showToast('success', 'Regjistrimi i suksesshëm! Tani hyni në sistem.');
-                setRole(roleSelected === 'doctor' ? 'doctor' : 'user');
-                switchAuthTab('login');
-                document.getElementById('loginEmail').value = email;
-                document.getElementById('loginPass').value = '';
+                const data = await response.json();
+                completeAuthentication(data);
+                showToast('success', 'Regjistrimi u krye me sukses.');
                 document.getElementById('regName').value = '';
                 document.getElementById('regEmail').value = '';
                 document.getElementById('regPass').value = '';
@@ -1587,48 +1718,6 @@
                 try { ensureRegisterPasswordsHidden(); } catch (e) { /* ignore */ }
             } catch(err) {
                 setInlineNoticeAfterField(passConfirmEl, 'regPassConfirmNotice', 'warn', 'Gabim: ' + err.message);
-            }
-        }
-
-        async function register() {
-            // Security best-practice: always restore password masking on submit.
-            try { ensureLoginPasswordHidden(); } catch (e) { /* ignore */ }
-            const name = document.getElementById('registerName')?.value || '';
-            const email = document.getElementById('loginEmail').value;
-            const pass = document.getElementById('loginPass').value;
-
-            const passEl = document.getElementById('loginPass');
-            setInlineNoticeAfterField(passEl, 'registerNotice', 'error', '');
-            
-            if(!name || !email || !pass) {
-                setInlineNoticeAfterField(passEl, 'registerNotice', 'error', 'Plotësoni të gjitha fushat.');
-                return;
-            }
-            
-            try {
-                const response = await fetch('http://localhost:5500/api/auth/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        name: name.trim(),
-                        email: email.toLowerCase().trim(),
-                        password: pass,
-                        role: 'patient'
-                    })
-                });
-                
-                if(!response.ok) {
-                    const error = await response.json();
-                    setInlineNoticeAfterField(passEl, 'registerNotice', 'error', (error.error || 'Regjistrimi dështoi'));
-                    return;
-                }
-                
-                showToast('success', 'Regjistrimi i suksesshëm! Tani hyni në sistem.');
-                showLoginForm();
-                document.getElementById('loginEmail').value = email;
-                document.getElementById('loginPass').value = '';
-            } catch(err) {
-                setInlineNoticeAfterField(passEl, 'registerNotice', 'warn', 'Gabim: ' + err.message);
             }
         }
 
@@ -1802,7 +1891,8 @@
                 renderLandingDoctorsGrid();
 
                 if(select) {
-                    select.innerHTML = doctors.length === 0 ? '<option>Nuk ka doktorë</option>' : doctors.map(d => `<option>${d.name} (${d.spec})</option>`).join('');
+                    select.innerHTML = doctors.length === 0 ? '<option value="">Nuk ka doktorë</option>' : doctors.map(d => `<option value="${escapeHtml(String(d.id || ''))}">${escapeHtml(d.name)} (${escapeHtml(d.spec)})</option>`).join('');
+                    onBookingDoctorChange();
                 }
             })();
 
@@ -1886,8 +1976,120 @@
             const select = document.getElementById('bookDoc');
             if(select) {
                 const option = Array.from(select.options).find(opt => opt.textContent.includes(doctorName));
-                if(option) select.value = option.value;
+                if(option) {
+                    select.value = option.value;
+                    onBookingDoctorChange();
+                }
             }
+        }
+
+        const PENDING_BOOKING_KEY = 'shendeti_im_pending_booking';
+        let bookingSlotsRequestId = 0;
+
+        function preservePendingBooking(state) {
+            const safe = {
+                flow: state.flow === 'symptom' ? 'symptom' : 'main',
+                doctorId: String(state.doctorId || '').slice(0, 80),
+                doctorName: String(state.doctorName || '').slice(0, 120),
+                service: String(state.service || '').slice(0, 120),
+                date: String(state.date || '').slice(0, 10),
+                time: String(state.time || '').slice(0, 5),
+                durationMinutes: Math.max(0, Math.min(480, Number(state.durationMinutes || 0))),
+                urgencyLevel: String(state.urgencyLevel || '').slice(0, 20),
+                returnDestination: state.flow === 'symptom' ? 'symptom-booking' : 'appointment-booking',
+            };
+            sessionStorage.setItem(PENDING_BOOKING_KEY, JSON.stringify(safe));
+        }
+
+        function requirePatientAuthenticationForBooking(state) {
+            preservePendingBooking(state);
+            document.getElementById('bookModal')?.classList.add('hidden');
+            document.getElementById('symptomBookingModal')?.classList.add('hidden');
+            showLoginForm();
+            document.getElementById('loginModal')?.classList.remove('hidden');
+            window.location.hash = 'login';
+            document.getElementById('loginEmail')?.focus();
+        }
+
+        async function restorePendingBookingAfterAuth() {
+            let state;
+            try { state = JSON.parse(sessionStorage.getItem(PENDING_BOOKING_KEY) || 'null'); } catch { state = null; }
+            if (!state || getLoggedInIdentityInfo().role !== 'patient') return;
+            sessionStorage.removeItem(PENDING_BOOKING_KEY);
+
+            if (state.flow === 'symptom') {
+                openSymptomBookingModal(state.doctorId, state.doctorName);
+                const dateInput = document.getElementById('symptomBookingDate');
+                const timeInput = document.getElementById('symptomBookingTime');
+                const serviceInput = document.getElementById('symptomBookingService');
+                if (dateInput) dateInput.value = state.date || dateInput.value;
+                if (serviceInput) serviceInput.value = state.service || serviceInput.value;
+                const restored = await populateSymptomBookingTimeSlots(dateInput?.value, state.time);
+                if (!restored && state.time) showToast('warn', 'Orari i zgjedhur ndërkohë është zënë. Ju lutem zgjidhni një orar tjetër.');
+            } else {
+                const doc = document.getElementById('bookDoc');
+                const date = document.getElementById('bookDate');
+                const service = document.getElementById('bookService');
+                if (doc && state.doctorId) doc.value = state.doctorId;
+                onBookingDoctorChange(false);
+                if (service && state.service) service.value = state.service;
+                if (date) date.value = state.date || date.value;
+                const restored = await loadBookingSlots(state.time);
+                document.getElementById('bookModal')?.classList.remove('hidden');
+                if (!restored?.selected && state.time) showToast('warn', 'Orari i zgjedhur ndërkohë është zënë. Ju lutem zgjidhni një orar tjetër.');
+            }
+            showToast('info', 'Zgjedhjet u rikthyen. Ju lutem konfirmoni terminin.');
+        }
+
+        function onBookingDoctorChange(shouldLoad = true) {
+            const doctorId = document.getElementById('bookDoc')?.value || '';
+            const doctor = doctors.find((item) => String(item.id) === String(doctorId));
+            const serviceSelect = document.getElementById('bookService');
+            const services = Array.isArray(doctor?.services) && doctor.services.length ? doctor.services.filter((item) => item.available !== false) : [{ name: 'Konsultim' }];
+            if (serviceSelect) serviceSelect.innerHTML = services.map((item) => `<option value="${escapeHtml(item.name)}">${escapeHtml(item.name)}</option>`).join('');
+            if (shouldLoad) loadBookingSlots();
+        }
+
+        async function loadBookingSlots(preferredTime) {
+            const requestId = ++bookingSlotsRequestId;
+            const doctorId = document.getElementById('bookDoc')?.value || '';
+            const date = document.getElementById('bookDate')?.value || '';
+            const service = document.getElementById('bookService')?.value || 'Konsultim';
+            const host = document.getElementById('bookSlots');
+            const hidden = document.getElementById('bookTime');
+            const scheduled = document.getElementById('bookScheduledAt');
+            const duration = document.getElementById('bookDuration');
+            const count = document.getElementById('bookSlotCount');
+            if (hidden) hidden.value = '';
+            if (scheduled) scheduled.value = '';
+            if (duration) duration.value = '';
+            if (count) count.textContent = '';
+            if (!host || !doctorId || !date) return { selected: false, availableCount: 0 };
+            host.innerHTML = '<span style="color:var(--gray);">Duke kontrolluar oraret...</span>';
+            try {
+                const response = await fetch(`/api/appointments/slots/${encodeURIComponent(doctorId)}?date=${encodeURIComponent(date)}&service=${encodeURIComponent(service)}`);
+                const data = await response.json().catch(() => ({}));
+                if (requestId !== bookingSlotsRequestId) return { selected: false, availableCount: 0, stale: true };
+                if (!response.ok) throw new Error(data.error || 'Orari nuk u ngarkua');
+                const slots = Array.isArray(data.slots) ? data.slots : [];
+                const availableCount = slots.filter((slot) => slot.available).length;
+                if (count) count.textContent = availableCount > 0 ? `${availableCount} termine të lira` : 'Nuk ka termine të lira për këtë datë.';
+                host.innerHTML = slots.length ? slots.map((slot) => `<button type="button" class="slot-btn ${slot.available ? '' : 'occupied'}" data-time="${escapeHtml(slot.time)}" data-scheduled-at="${escapeHtml(slot.scheduledAt)}" data-duration="${escapeHtml(data.durationMinutes)}" ${slot.available ? '' : 'disabled title="Ky termin është i rezervuar" aria-label="' + escapeHtml(slot.time) + ' — Ky termin është i rezervuar"'} onclick="selectBookingSlot(this)">${escapeHtml(slot.time)}${slot.available ? '' : '<br><small>I zënë</small>'}</button>`).join('') : '<span style="color:var(--gray);">Nuk ka termine të lira për këtë datë.</span>';
+                const target = preferredTime ? host.querySelector(`[data-time="${CSS.escape(preferredTime)}"]:not(:disabled)`) : null;
+                if (target) selectBookingSlot(target);
+                return { selected: Boolean(target), availableCount };
+            } catch (error) {
+                host.innerHTML = `<span style="color:var(--danger);">${escapeHtml(error.message)}</span>`;
+                return { selected: false, availableCount: 0 };
+            }
+        }
+
+        function selectBookingSlot(button) {
+            document.querySelectorAll('#bookSlots .slot-btn').forEach((item) => item.classList.remove('selected'));
+            button.classList.add('selected');
+            document.getElementById('bookTime').value = button.dataset.time || '';
+            document.getElementById('bookScheduledAt').value = button.dataset.scheduledAt || '';
+            document.getElementById('bookDuration').value = button.dataset.duration || '';
         }
 
         // ===== PROTECTED PATIENT LINKS (JWT Check) =====
@@ -1921,6 +2123,58 @@
             const sidebar = document.getElementById('sidebar-links');
             refreshView(type);
             updateGlobalIdentityDisplay();
+            loadNotificationCount();
+        }
+
+        async function loadNotificationCount() {
+            const badge = document.getElementById('notificationCount');
+            const token = localStorage.getItem('token');
+            if (!badge || !token) return;
+            try {
+                const response = await fetch('/api/notifications?limit=1', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await response.json().catch(() => ({}));
+                const count = Number(data.unread || 0);
+                badge.textContent = String(count);
+                badge.style.display = count > 0 ? 'inline-flex' : 'none';
+            } catch { badge.style.display = 'none'; }
+        }
+
+        async function openNotificationCenter() {
+            let modal = document.getElementById('notificationModal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'notificationModal';
+                modal.className = 'modal hidden';
+                modal.innerHTML = `<div class="modal-box"><div style="display:flex;justify-content:space-between;align-items:center;"><h2>Njoftimet</h2><button class="btn" onclick="closeNotificationCenter()">×</button></div><div id="notificationList" style="margin-top:15px;max-height:55vh;overflow:auto;">Duke ngarkuar...</div><button class="btn btn-primary" style="width:100%;margin-top:12px;" onclick="markAllNotificationsRead()">Shëno të gjitha si të lexuara</button></div>`;
+                document.body.appendChild(modal);
+            }
+            modal.classList.remove('hidden');
+            const host = document.getElementById('notificationList');
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('/api/notifications?limit=50', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || 'Njoftimet nuk u ngarkuan');
+                const items = Array.isArray(data.notifications) ? data.notifications : [];
+                host.innerHTML = items.length ? items.map((item) => `<button class="card" style="width:100%;text-align:left;box-shadow:none;margin-bottom:8px;border:1px solid ${item.read ? '#e2e8f0' : 'var(--primary)'};" onclick="markNotificationRead('${escapeHtml(item._id)}', this)"><b>${escapeHtml(item.message)}</b><br><small style="color:var(--gray);">${escapeHtml(new Date(item.createdAt).toLocaleString())}</small></button>`).join('') : '<p style="color:var(--gray);">Nuk ka njoftime.</p>';
+                loadNotificationCount();
+            } catch (error) { host.textContent = error.message; }
+        }
+
+        function closeNotificationCenter() { document.getElementById('notificationModal')?.classList.add('hidden'); }
+
+        async function markNotificationRead(id, button) {
+            const token = localStorage.getItem('token');
+            await fetch(`/api/notifications/${encodeURIComponent(id)}/read`, { method:'PATCH', headers:{ 'Authorization':`Bearer ${token}` } });
+            if (button) button.style.borderColor = '#e2e8f0';
+            loadNotificationCount();
+        }
+
+        async function markAllNotificationsRead() {
+            const token = localStorage.getItem('token');
+            await fetch('/api/notifications/read-all', { method:'PATCH', headers:{ 'Authorization':`Bearer ${token}` } });
+            await openNotificationCenter();
+            loadNotificationCount();
         }
 
         function refreshView(type, subview = 'dashboard') {
@@ -1932,14 +2186,14 @@
             stopDoctorLiveUpdates();
 
             if(type === 'user' || type === 'patient') {
-                document.getElementById('dash-title').innerText = "Shëndeti Im";
+                document.getElementById('dash-title').innerText = "SHËNDETI IM";
                 sidebar.innerHTML = `
                     <div class="nav-link active" onclick="refreshView('patient', 'dashboard')"><i class="fas fa-columns"></i> Dashboard</div>
                     <div class="nav-link" onclick="refreshView('patient', 'symptoms')"><i class="fas fa-heartbeat"></i> Symptoma</div>
                     <div class="nav-link" onclick="refreshView('patient', 'schedule')"><i class="fas fa-calendar"></i> Orari Im</div>
                     <div class="nav-link" onclick="refreshView('patient', 'messages')"><i class="fas fa-envelope"></i> Mesazhet</div>
                     <div class="nav-link" onclick="refreshView('patient', 'prescriptions')"><i class="fas fa-pills"></i> Receptet</div>
-                    <div class="nav-link" onclick="refreshView('patient', 'records')"><i class="fas fa-file-medical"></i> Analizat</div>
+                    <div class="nav-link" onclick="refreshView('patient', 'history')"><i class="fas fa-notes-medical"></i> Historia Mjekësore</div>
                 `;
                 
                 if(!subview || subview === 'dashboard') {
@@ -1953,7 +2207,7 @@
                         <div class="grid-3">
                             <div class="card metric-card"><h3>Terminet</h3><h2 style="color:var(--primary);">${myApps.length}</h2></div>
                             <div class="card metric-card"><h3>Receta</h3><h2 style="color:var(--success);">--</h2></div>
-                            <div class="card metric-card"><h3>Analiza</h3><h2 style="color:var(--warning);">--</h2></div>
+                            <div class="card metric-card"><h3>Historia Mjekësore</h3><h2 style="color:var(--warning);">--</h2></div>
                         </div>
                         <div class="card" style="margin-top:30px;">
                             <h3>⚡ Symptoma Checker</h3>
@@ -1992,11 +2246,12 @@
                             <h2>📅 Orari Im (My Schedule)</h2>
                             <button class="btn btn-primary" style="margin-bottom:15px;" onclick="toggleModal('bookModal')">+ Rezervo Vizitë të Re</button>
                             <table>
-                                <thead><tr><th>Doktori</th><th>Specialiteti</th><th>Data</th><th>Ora</th><th>Pritje</th><th>Statusi</th></tr></thead>
-                                <tbody>${myApps.length === 0 ? '<tr><td colspan="6" style="text-align:center; color:var(--gray);">Ska termine. Kliko "Rezervo Vizitë" për të marrë termin.</td></tr>' : myApps.map(a => `<tr><td>${escapeHtml(a.doc || '')}</td><td>${escapeHtml(a.spec || 'N/A')}</td><td>${escapeHtml(a.date || '')}</td><td>${escapeHtml(a.time || '')}</td><td>${escapeHtml(a.wait || '~30 min')}</td><td><span class="status-pill status-waiting">${escapeHtml(a.status || 'Pritje')}</span></td></tr>`).join('')}</tbody>
+                                <thead><tr><th>Doktori</th><th>Specialiteti</th><th>Data</th><th>Ora</th><th>Statusi</th><th>Veprim</th></tr></thead>
+                                <tbody id="patientAppointmentsBody"><tr><td colspan="6" style="text-align:center; color:var(--gray);">Duke ngarkuar terminet...</td></tr></tbody>
                             </table>
                         </div>
                     `;
+                    fetchAndRenderPatientAppointments();
                 }
                 else if(subview === 'messages') {
                     const myName = user.name || 'Pacient';
@@ -2058,35 +2313,30 @@
                 else if(subview === 'prescriptions') {
                     view.innerHTML = `
                         <div class="card">
-                            <h2>💊 Receptet (My Prescriptions)</h2>
-                            <p style="color:var(--gray); margin-bottom:15px;">Recepatet e enkriptuara do të shfaqen këtu.</p>
+                            <h2>💊 Receptet</h2>
+                            <p style="color:var(--gray); margin-bottom:15px;">Receptet tuaja digjitale shfaqen këtu në mënyrë të sigurt.</p>
                             <div id="prescriptionsList" style="margin-top:15px;">
-                                <p style="color:var(--gray); text-align:center;">Duke kërkuar recepate...</p>
+                                <p style="color:var(--gray); text-align:center;">Duke ngarkuar receptet...</p>
                             </div>
                         </div>
                     `;
                     loadPrescriptions();
                 }
-                else if(subview === 'records') {
+                else if(subview === 'history') {
                     view.innerHTML = `
                         <div class="card">
-                            <h2>📄 Analizat e Mia (My Analysis)</h2>
-                            <div style="margin-bottom:20px;">
-                                <label style="font-weight:700; display:block; margin-bottom:8px;">Ngarko dokumentin mjekësor (PDF)</label>
-                                <input type="file" id="recordFile" accept=".pdf" class="input" style="margin-bottom:10px;">
-                                <textarea id="recordNotes" class="input" placeholder="Shënime rreth dokumentit..." style="height:80px; font-family:inherit; margin-bottom:10px;"></textarea>
-                                <button class="btn btn-primary" style="width:100%;" onclick="uploadRecord()">Ngarko Dokumentin</button>
-                            </div>
-                            <h3 style="margin-top:30px;">Dokumentet e Mia</h3>
-                            <div id="recordsList" style="margin-top:15px;">
-                                <p style="color:var(--gray); text-align:center;">Nuk ka dokumenta.</p>
+                            <h2>📖 Historia Mjekësore</h2>
+                            <p style="color:var(--gray); margin-bottom:15px;">Vizitat e përfunduara dhe receptet e lidhura, sipas rendit kronologjik.</p>
+                            <div id="medicalHistoryList" style="margin-top:15px;">
+                                <p style="color:var(--gray); text-align:center;">Duke ngarkuar historinë...</p>
                             </div>
                         </div>
                     `;
+                    loadMedicalHistory();
                 }
             } 
             else if(type === 'admin') {
-                document.getElementById('dash-title').innerText = "Admin Panel";
+                document.getElementById('dash-title').innerText = "SHËNDETI IM — Admin";
                 sidebar.innerHTML = `
                     <div class="nav-link ${subview==='dashboard'?'active':''}" onclick="refreshView('admin', 'dashboard')"><i class="fas fa-shield-virus"></i> Logs & Security</div>
                     <div class="nav-link ${subview==='health'?'active':''}" onclick="refreshView('admin', 'health')"><i class="fas fa-database"></i> Database Health</div>
@@ -2099,16 +2349,28 @@
                     view.innerHTML = `
                         <div class="grid-3">
                             <div class="card"><h3>Doktorë</h3><h2 id="statDoctors">—</h2></div>
-                            <div class="card"><h3>Usera</h3><h2 id="statUsers">—</h2></div>
+                            <div class="card"><h3>Pacientë</h3><h2 id="statUsers">—</h2></div>
                             <div class="card"><h3>Termine</h3><h2 id="statAppointments">—</h2></div>
+                            <div class="card"><h3>Termine sot</h3><h2 id="statToday">—</h2></div>
+                            <div class="card"><h3>Në pritje</h3><h2 id="statPending">—</h2></div>
+                            <div class="card"><h3>Të përfunduara</h3><h2 id="statCompleted">—</h2></div>
+                            <div class="card"><h3>Të anuluara</h3><h2 id="statCancelled">—</h2></div>
                         </div>
+                        <div class="card" style="margin-top:20px;"><h3>Terminet sipas departamentit</h3><div id="departmentStats" style="margin-top:12px;color:var(--gray);">Duke ngarkuar...</div></div>
                         <div class="card" style="margin-top:20px;">
                             <h3>Audit Logs</h3>
-                            <div style="font-size:0.8rem; color:var(--gray); margin-top:10px;">
-                                ${logs.map(l => `<p>[${l.time}] <b>${l.user}</b>: ${l.action}</p>`).join('')}
+                            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:12px 0;">
+                                <input id="auditActionFilter" class="input" placeholder="Veprimi" />
+                                <select id="auditRoleFilter" class="input"><option value="">Të gjitha rolet</option><option value="patient">Pacient</option><option value="doctor">Doktor</option><option value="admin">Admin</option><option value="anonymous">Anonim</option></select>
+                                <select id="auditStatusFilter" class="input"><option value="">Të gjitha statuset</option><option value="success">Sukses</option><option value="failure">Dështim</option></select>
+                                <input id="auditFromFilter" class="input" type="date" />
+                                <button class="btn btn-primary" onclick="fetchAuditLogs(1)">Filtro</button>
                             </div>
+                            <div id="auditLogsTable" style="font-size:0.85rem;color:var(--gray);">Duke ngarkuar...</div>
+                            <div id="auditPagination" style="display:flex;gap:8px;margin-top:12px;"></div>
                         </div>`;
                     startAdminLiveUpdates('dashboard');
+                    fetchAuditLogs(1);
                 } else if(subview === 'health') {
                     view.innerHTML = `
                         <div class="card">
@@ -2151,23 +2413,10 @@
                     startAdminLiveUpdates('app');
                 } else if(subview === 'docs') {
                     view.innerHTML = `<div class="card"><button class="btn btn-primary" onclick="openAdminAdd('doc')">+ Shto Doktor</button>
-                        <table><thead><tr><th>Emri</th><th>Spec</th><th>Veprim</th></tr></thead>
-                        <tbody>${doctors.map(d => {
-                            const s = String(d.spec || 'general').toLowerCase();
-                            const label = ({
-                                cardiology: 'Cardiology',
-                                neurology: 'Neurology',
-                                orthopedics: 'Orthopedics',
-                                general: 'General Medicine',
-                                psychiatry: 'Psychiatry',
-                                pediatrics: 'Pediatrics',
-                                dermatology: 'Dermatology',
-                                gynecology: 'Gynecology',
-                                emergency: 'Emergency',
-                            }[s] || (s ? (s.charAt(0).toUpperCase() + s.slice(1)) : 'General Medicine'));
-                            return `<tr><td>${d.name}</td><td>${label}</td><td><button class="btn btn-danger" onclick="deleteDoc(${d.id})">Fshij</button></td></tr>`;
-                        }).join('')}</tbody>
+                        <table><thead><tr><th>Emri</th><th>Spec</th><th>Statusi</th><th>Veprim</th></tr></thead>
+                        <tbody id="adminDoctorsBody"><tr><td colspan="4" style="text-align:center; color:var(--gray);">Duke kërkuar doktorët...</td></tr></tbody>
                         </table></div>`;
+                    fetchAndDisplayAdminDoctors();
                 } else if(subview === 'users') {
                     view.innerHTML = `<div class="card"><button class="btn btn-primary" onclick="openAdminAdd('user')">+ Shto User</button>
                         <table><thead><tr><th>Emri</th><th>Email</th><th>Roli</th><th>Veprim</th></tr></thead>
@@ -2178,10 +2427,11 @@
                 }
             }
             else if(type === 'doctor') {
-                document.getElementById('dash-title').innerText = "Portal i Doktorit";
+                document.getElementById('dash-title').innerText = "SHËNDETI IM — Portali i doktorit";
                 sidebar.innerHTML = `
                     <div class="nav-link ${subview==='dashboard'?'active':''}" onclick="refreshView('doctor', 'dashboard')"><i class="fas fa-columns"></i> Dashboard</div>
                     <div class="nav-link ${subview==='patients'?'active':''}" onclick="refreshView('doctor', 'patients')"><i class="fas fa-user-injured"></i> Pacientët e Mij</div>
+                    <div class="nav-link ${subview==='prescriptions'?'active':''}" onclick="refreshView('doctor', 'prescriptions')"><i class="fas fa-prescription"></i> Recept i ri</div>
                     <div class="nav-link ${subview==='schedule'?'active':''}" onclick="refreshView('doctor', 'schedule')"><i class="fas fa-calendar-alt"></i> Orari im</div>
                     <div class="nav-link ${subview==='messages'?'active':''}" onclick="refreshView('doctor', 'messages')"><i class="fas fa-envelope"></i> Mesazhet</div>
                     <div class="nav-link ${subview==='profile'?'active':''}" onclick="refreshView('doctor', 'profile')"><i class="fas fa-user-circle"></i> Profili</div>
@@ -2214,6 +2464,33 @@
                         </div>
                     `;
                     startDoctorLiveUpdates('patients');
+                } else if(subview === 'prescriptions') {
+                    view.innerHTML = `
+                        <div class="card">
+                            <h2>💊 Krijo recept digjital</h2>
+                            <p style="color:var(--gray); margin:8px 0 18px;">Plotësohet vetëm nga doktori për pacientë me termin të konfirmuar ose të përfunduar.</p>
+                            <label style="font-weight:700;">Pacienti</label>
+                            <select id="prescriptionPatient" class="input" onchange="updatePrescriptionAppointmentOptions()"><option value="">Duke ngarkuar pacientët...</option></select>
+                            <label style="font-weight:700;">Termini</label>
+                            <select id="prescriptionAppointment" class="input"><option value="">Zgjidhni pacientin</option></select>
+                            <label style="font-weight:700;">Diagnoza ose arsyeja e trajtimit</label>
+                            <textarea id="prescriptionDiagnosis" class="input" maxlength="500"></textarea>
+                            <label style="font-weight:700;">Emri i ilaçit</label>
+                            <input id="prescriptionMedication" class="input" maxlength="300">
+                            <label style="font-weight:700;">Doza</label>
+                            <input id="prescriptionDosage" class="input" maxlength="200">
+                            <label style="font-weight:700;">Shpeshtësia</label>
+                            <input id="prescriptionFrequency" class="input" maxlength="200">
+                            <label style="font-weight:700;">Kohëzgjatja e trajtimit</label>
+                            <input id="prescriptionDuration" class="input" maxlength="200">
+                            <label style="font-weight:700;">Udhëzimet</label>
+                            <textarea id="prescriptionInstructions" class="input" maxlength="2000"></textarea>
+                            <label style="font-weight:700;">Shënime shtesë</label>
+                            <textarea id="prescriptionAdditionalNotes" class="input" maxlength="2000"></textarea>
+                            <button id="createPrescriptionButton" class="btn btn-primary" style="width:100%; justify-content:center;" onclick="submitDoctorPrescription()">Krijo receptin</button>
+                        </div>
+                    `;
+                    loadDoctorPrescriptionOptions();
                 } else if(subview === 'schedule') {
                     view.innerHTML = `
                         <div class="card">
@@ -2289,9 +2566,9 @@
                         <div class="card">
                             <h2>👨‍⚕️ Profili im</h2>
                             <div style="display:grid; gap:15px;">
-                                <div><label style="font-weight:700;">Emri Plotë</label><input type="text" class="input" value="${user.name || 'Dr. Agon Berisha'}" /></div>
+                                <div><label style="font-weight:700;">Emri i plotë</label><input type="text" class="input" value="${user.name || 'Dr. Agon Berisha'}" /></div>
                                 <div><label style="font-weight:700;">Specialiteti</label><input type="text" class="input" value="${user.specialization || 'Kardiologjía'}" /></div>
-                                <div><label style="font-weight:700;">Email</label><input type="email" class="input" value="${user.email || 'agon@healthflow.os'}" /></div>
+                                <div><label style="font-weight:700;">Email</label><input type="email" class="input" value="${user.email || 'agon@shendeti-im.test'}" /></div>
                                 <div><label style="font-weight:700;">Telefon</label><input type="tel" class="input" value="${user.phone || '+355 696 123 456'}" /></div>
                                 <button class="btn btn-primary" style="width:100%;">Ruaj Ndryshimet</button>
                             </div>
@@ -2312,14 +2589,81 @@
         });
 
         // Initial render (in case a session exists)
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             updateGlobalIdentityDisplay();
+            const bookDate = document.getElementById('bookDate');
+            if (bookDate) {
+                const now = new Date();
+                const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+                bookDate.min = today;
+                if (!bookDate.value) bookDate.value = today;
+                bookDate.addEventListener('change', () => loadBookingSlots());
+            }
+            initializeGoogleAuthentication();
+            loadNotificationCount();
+            if (new URLSearchParams(window.location.search).get('admin') === '1') {
+                const token = localStorage.getItem('token');
+                try {
+                    const response = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token || ''}` } });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok || data?.user?.role !== 'admin') throw new Error('Admin session required');
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('role', data.user.role);
+                    renderDashboard('admin');
+                    window.history.replaceState({}, '', '/');
+                } catch {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    localStorage.removeItem('role');
+                    window.location.replace('/admin');
+                }
+            }
         });
 
-        async function approveDoctorApp(id) {
-            const token = localStorage.getItem('token');
+        function handleDoctorAppointmentAuthFailure(status) {
+            if (Number(status) !== 401) return false;
+            showToast('error', 'Sesioni ka skaduar. Ju lutem kyçuni përsëri.', { ttlMs: 3600 });
+            logout();
+            showLoginForm();
+            document.getElementById('loginModal')?.classList.remove('hidden');
+            document.getElementById('loginEmail')?.focus();
+            return true;
+        }
 
-            if (token && isMongoObjectId(id)) {
+        function updateDoctorAppointmentRow(id, status) {
+            const row = document.querySelector(`[data-doctor-appointment-id="${String(id)}"]`);
+            if (!row) return;
+            const normalized = String(status || '').toLowerCase();
+            const statusPill = row.querySelector('.js-doctor-appointment-status');
+            if (statusPill) {
+                statusPill.textContent = toSqAppointmentStatus(normalized);
+                statusPill.className = `status-pill js-doctor-appointment-status ${normalized === 'confirmed' ? 'status-success' : 'status-waiting'}`;
+            }
+            row.querySelector('.js-doctor-approve')?.remove();
+            if (['cancelled', 'completed'].includes(normalized)) {
+                row.querySelector('.js-doctor-complete')?.remove();
+                row.querySelector('.js-doctor-cancel')?.remove();
+            }
+        }
+
+        async function approveDoctorApp(id, actionButton) {
+            const token = localStorage.getItem('token');
+            const actionKey = `doctor-appointment:${String(id)}`;
+            if (doctorAppointmentActionsInFlight.has(actionKey)) return;
+
+            if (!token) {
+                handleDoctorAppointmentAuthFailure(401);
+                return;
+            }
+
+            if (isMongoObjectId(id)) {
+                doctorAppointmentActionsInFlight.add(actionKey);
+                const originalText = actionButton?.textContent || 'Aprovo';
+                if (actionButton) {
+                    actionButton.disabled = true;
+                    actionButton.textContent = 'Duke aprovuar...';
+                }
+                let succeeded = false;
                 try {
                     const response = await fetch(`http://localhost:5500/api/doctor/appointments/${encodeURIComponent(String(id))}`, {
                         method: 'PATCH',
@@ -2331,14 +2675,24 @@
                     });
 
                     const data = await response.json().catch(() => ({}));
-                    if (!response.ok) throw new Error(data?.error || `Gabim (${response.status})`);
+                    if (handleDoctorAppointmentAuthFailure(response.status)) return;
+                    if (!response.ok) throw new Error('Doctor appointment update failed');
 
+                    succeeded = true;
+                    updateDoctorAppointmentRow(id, data?.appointment?.status || 'confirmed');
+                    showToast('success', 'Termini u aprovua me sukses.', { ttlMs: 3600 });
                     await fetchAndRenderDoctorAppointments();
                     return;
                 } catch (e) {
-                    console.error('Doctor approve appointment error:', e);
-                    showToast('warn', 'Gabim: ' + e.message);
+                    console.error('Doctor appointment approval request failed.');
+                    showToast('error', 'Nuk u arrit të përditësohet termini. Provo përsëri.', { ttlMs: 3600 });
                     return;
+                } finally {
+                    doctorAppointmentActionsInFlight.delete(actionKey);
+                    if (!succeeded && actionButton?.isConnected) {
+                        actionButton.disabled = false;
+                        actionButton.textContent = originalText;
+                    }
                 }
             }
 
@@ -2347,6 +2701,10 @@
             const sid = String(id);
             const a = (Array.isArray(appointments) ? appointments : []).find(x => String(x.id) === sid);
             if (!a) return;
+            if (String(a.status || '').toLowerCase() !== 'pending' && String(a.status || '').toLowerCase() !== 'pritje') {
+                showToast('error', 'Nuk u arrit të përditësohet termini. Provo përsëri.', { ttlMs: 3600 });
+                return;
+            }
 
             // Only allow the assigned doctor to approve
             if (!isAppointmentForDoctor(a, u)) {
@@ -2357,6 +2715,39 @@
             a.status = 'Aprovuar';
             persistAppointmentsToStorage();
             refreshView('doctor', 'dashboard');
+            showToast('success', 'Termini u aprovua me sukses.', { ttlMs: 3600 });
+        }
+
+        async function completeDoctorAppointment(id, actionButton) {
+            const token = localStorage.getItem('token');
+            const actionKey = `doctor-appointment:${String(id)}`;
+            if (!token || doctorAppointmentActionsInFlight.has(actionKey)) {
+                if (!token) handleDoctorAppointmentAuthFailure(401);
+                return;
+            }
+            doctorAppointmentActionsInFlight.add(actionKey);
+            const originalText = actionButton?.textContent || 'Përfundo vizitën';
+            if (actionButton) { actionButton.disabled = true; actionButton.textContent = 'Duke përfunduar...'; }
+            let succeeded = false;
+            try {
+                const response = await fetch(`/api/doctor/appointments/${encodeURIComponent(String(id))}`, {
+                    method: 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'completed' }),
+                });
+                const data = await response.json().catch(() => ({}));
+                if (handleDoctorAppointmentAuthFailure(response.status)) return;
+                if (!response.ok) throw new Error('Doctor appointment completion failed');
+                succeeded = true;
+                updateDoctorAppointmentRow(id, data?.appointment?.status || 'completed');
+                showToast('success', 'Vizita u shënua si e përfunduar.', { ttlMs: 3600 });
+                await fetchAndRenderDoctorAppointments();
+            } catch {
+                showToast('error', 'Nuk u arrit të përfundohet vizita. Provo përsëri.', { ttlMs: 3600 });
+            } finally {
+                doctorAppointmentActionsInFlight.delete(actionKey);
+                if (!succeeded && actionButton?.isConnected) { actionButton.disabled = false; actionButton.textContent = originalText; }
+            }
         }
 
         function openDoctorMessages(encodedPatientName) {
@@ -2508,9 +2899,74 @@
             persistAppointmentsToStorage();
             addLog('Fshiu terminin', 'Admin'); refreshView('admin', 'app');
         }
-        function deleteDoc(id) {
-            doctors = doctors.filter(x => x.id !== id);
-            addLog('Fshiu doktorin', 'Admin'); updateLandingDoctors(true); refreshView('admin', 'docs');
+        function adminDoctorSpecializationLabel(value) {
+            const specialization = String(value || '').toLowerCase();
+            return ({
+                cardiology: 'Cardiology', neurology: 'Neurology', orthopedics: 'Orthopedics',
+                general: 'General Medicine', psychiatry: 'Psychiatry', pediatrics: 'Pediatrics',
+                dermatology: 'Dermatology', gynecology: 'Gynecology', emergency: 'Emergency',
+            }[specialization] || (specialization ? specialization.charAt(0).toUpperCase() + specialization.slice(1) : 'Profil i paplotë'));
+        }
+
+        function renderAdminDoctorsTable() {
+            const body = document.getElementById('adminDoctorsBody');
+            if (!body) return;
+            if (!adminDoctors.length) {
+                body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray);">Nuk ka doktorë të regjistruar.</td></tr>';
+                return;
+            }
+            body.innerHTML = adminDoctors.map((doctor) => {
+                const active = doctor.isActive !== false;
+                const profileComplete = doctor.profileComplete !== false && isMongoObjectId(doctor.id);
+                const accountNote = doctor.accountExists === false ? ' · Pa llogari User' : '';
+                const status = profileComplete ? `${active ? 'Aktiv' : 'Joaktiv'}${accountNote}` : 'Profil i paplotë';
+                const action = profileComplete
+                    ? `<button class="btn ${active ? 'btn-danger' : 'btn-success'}" onclick="toggleDoctorStatus('${escapeHtml(String(doctor.id))}', ${active})">${active ? 'Çaktivizo' : 'Aktivizo'}</button>`
+                    : '<span style="color:var(--gray);">—</span>';
+                return `<tr><td>${escapeHtml(doctor.name || 'Pa emër')}</td><td>${escapeHtml(adminDoctorSpecializationLabel(doctor.specialization))}</td><td>${escapeHtml(status)}</td><td>${action}</td></tr>`;
+            }).join('');
+        }
+
+        async function fetchAndDisplayAdminDoctors() {
+            const body = document.getElementById('adminDoctorsBody');
+            const token = localStorage.getItem('token');
+            if (!body || !token) return;
+            body.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray);">Duke kërkuar doktorët...</td></tr>';
+            try {
+                const records = [];
+                let page = 1;
+                let totalPages = 1;
+                while (page <= totalPages) {
+                    const response = await fetch(`/api/admin/doctors?page=${page}&limit=100`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(data.error || 'Doktorët nuk u ngarkuan');
+                    records.push(...(Array.isArray(data.doctors) ? data.doctors : []));
+                    totalPages = Math.max(0, Number(data.pagination?.totalPages ?? data.pagination?.pages ?? 1));
+                    page += 1;
+                }
+                adminDoctors = [...new Map(records.map((doctor) => [String(doctor.id || doctor.email).toLowerCase(), doctor])).values()];
+                renderAdminDoctorsTable();
+            } catch (error) {
+                body.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--danger);">${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+
+        async function toggleDoctorStatus(id, isActive) {
+            if (!isMongoObjectId(id)) return;
+            const actionLabel = isActive ? 'çaktivizoni' : 'aktivizoni';
+            if (!confirm(`A jeni i sigurt që doni ta ${actionLabel} këtë doktor?`)) return;
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch(`/api/admin/doctors/${encodeURIComponent(id)}`, {
+                    method: isActive ? 'DELETE' : 'PATCH',
+                    headers: { 'Authorization': `Bearer ${token}`, ...(isActive ? {} : { 'Content-Type': 'application/json' }) },
+                    body: isActive ? undefined : JSON.stringify({ isActive: true }),
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || 'Statusi i doktorit nuk u ndryshua');
+                showToast('success', isActive ? 'Doktori u çaktivizua.' : 'Doktori u aktivizua.');
+                await Promise.all([fetchAndDisplayAdminDoctors(), updateLandingDoctors(true)]);
+            } catch (error) { showToast('error', error.message); }
         }
 
         function openAdminAdd(type) {
@@ -2518,28 +2974,38 @@
             const fields = document.getElementById('adminAddFields');
             if(type === 'doc') {
                 title.innerText = "Shto Doktor";
-                fields.innerHTML = `<input id="adInp1" class="input" placeholder="Emri"><input id="adInp2" class="input" placeholder="Specializimi">`;
+                fields.innerHTML = `<input id="adInp1" class="input" placeholder="Emri"><input id="adInp2" type="email" class="input" placeholder="Email"><input id="adInp3" type="password" class="input" placeholder="Fjalëkalimi (min. 8)"><select id="adInp4" class="input"><option value="general">General</option><option value="cardiology">Cardiology</option><option value="neurology">Neurology</option><option value="orthopedics">Orthopedics</option><option value="pediatrics">Pediatrics</option><option value="psychiatry">Psychiatry</option><option value="dermatology">Dermatology</option><option value="emergency">Emergency</option></select><input id="adInp5" class="input" placeholder="Departamenti">`;
             } else {
                 title.innerText = "Shto User";
-                fields.innerHTML = `<input id="adInp1" class="input" placeholder="Emri i plotë"><input id="adInp2" class="input" placeholder="Email">`;
+                fields.innerHTML = `<input id="adInp1" class="input" placeholder="Emri i plotë"><input id="adInp2" type="email" class="input" placeholder="Email"><input id="adInp3" type="password" class="input" placeholder="Fjalëkalimi (min. 8)"><select id="adInp4" class="input"><option value="patient">Pacient</option><option value="admin">Admin</option></select>`;
             }
             window.currentAdminAdd = type;
             toggleModal('adminAddModal');
         }
 
-        function executeAdminAdd() {
+        async function executeAdminAdd() {
             const v1 = document.getElementById('adInp1').value;
             const v2 = document.getElementById('adInp2').value;
-            if(window.currentAdminAdd === 'doc') {
-                doctors.push({ id: Date.now(), name: v1, spec: v2 });
-                addLog('Shtoi doktor: ' + v1, 'Admin');
-                updateLandingDoctors(true); refreshView('admin', 'docs');
-            } else {
-                users.push({ id: Date.now(), name: v1, email: v2, role: 'patient' });
-                addLog('Shtoi user: ' + v1, 'Admin');
-                refreshView('admin', 'users');
-            }
-            toggleModal('adminAddModal');
+            const password = document.getElementById('adInp3')?.value || '';
+            const selection = document.getElementById('adInp4')?.value || '';
+            const department = document.getElementById('adInp5')?.value || '';
+            if (!v1.trim() || !v2.trim() || password.length < 8) return showToast('error', 'Plotësoni fushat dhe përdorni së paku 8 karaktere për fjalëkalimin.');
+            const token = localStorage.getItem('token');
+            const isDoctor = window.currentAdminAdd === 'doc';
+            const path = isDoctor ? '/api/admin/doctors' : '/api/admin/users';
+            const body = isDoctor
+                ? { name:v1.trim(), email:v2.trim(), password, specialization:selection, department:department.trim() || selection }
+                : { name:v1.trim(), email:v2.trim(), password, role:selection || 'patient' };
+            try {
+                const response = await fetch(path, { method:'POST', headers:{ 'Authorization':`Bearer ${token}`, 'Content-Type':'application/json' }, body:JSON.stringify(body) });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || 'Ruajtja dështoi');
+                document.getElementById('adInp3').value = '';
+                toggleModal('adminAddModal');
+                showToast('success', isDoctor ? 'Doktori u krijua.' : 'Përdoruesi u krijua.');
+                if (isDoctor) { await Promise.all([updateLandingDoctors(true), fetchAndDisplayAdminDoctors()]); }
+                else { usersLoaded = false; refreshView('admin', 'users'); }
+            } catch (error) { showToast('error', error.message); }
         }
 
         function escapeHtml(value) {
@@ -2560,6 +3026,7 @@
 
         let doctorLiveIntervalId = null;
         let doctorLiveSubview = '';
+        const doctorAppointmentActionsInFlight = new Set();
 
         function stopAdminLiveUpdates() {
             if (adminLiveIntervalId) {
@@ -2884,19 +3351,27 @@
                         const statusLabel = toSqAppointmentStatus(a.status);
                         const pill = String(a.status || '').toLowerCase() === 'confirmed' ? 'status-success' : 'status-waiting';
 
-                        const approveBtn = id
-                            ? `<button class="btn btn-success" onclick="approveDoctorApp('${id}')">Aprovo</button>`
+                        const approveBtn = id && String(a.status || '').toLowerCase() === 'pending'
+                            ? `<button class="btn btn-success js-doctor-approve" onclick="approveDoctorApp('${id}', this)">Aprovo</button>`
                             : `<button class="btn btn-success" disabled>Aprovo</button>`;
+                        const completeBtn = id && String(a.status || '').toLowerCase() === 'confirmed'
+                            ? `<button class="btn btn-success js-doctor-complete" onclick="completeDoctorAppointment('${id}', this)">Përfundo vizitën</button>`
+                            : '';
+
+                        const canCancel = !['cancelled', 'completed'].includes(String(a.status || '').toLowerCase());
+                        const cancelBtn = id && canCancel
+                            ? `<button class="btn btn-danger js-doctor-cancel" onclick="cancelAppointmentFromDashboard('${id}', 'doctor', this)">Anulo terminin</button>`
+                            : '';
 
                         const msgBtn = `<button class="btn btn-primary" onclick="openDoctorMessages('${encodeURIComponent(patientName)}')">Mesazh</button>`;
 
                         return `
-                            <tr>
+                            <tr data-doctor-appointment-id="${escapeHtml(id)}">
                                 <td>${escapeHtml(patientName)}</td>
                                 <td>${escapeHtml(dateStr)}</td>
-                                <td>${escapeHtml(timeStr)}</td>
-                                <td><span class="status-pill ${pill}">${escapeHtml(statusLabel || 'Pritje')}</span></td>
-                                <td>${approveBtn} ${msgBtn}</td>
+                                <td>${escapeHtml(timeStr)} ${String(a.status || '').toLowerCase() === 'cancelled' ? '' : '<small style="color:var(--gray);">I zënë</small>'}</td>
+                                <td><span class="status-pill js-doctor-appointment-status ${pill}">${escapeHtml(statusLabel || 'Pritje')}</span></td>
+                                <td>${approveBtn} ${completeBtn} ${cancelBtn} ${msgBtn}</td>
                             </tr>
                         `;
                     })
@@ -3271,6 +3746,80 @@
             return status || '';
         }
 
+        async function cancelAppointmentFromDashboard(id, actor, actionButton) {
+            if (!confirm('A jeni i sigurt që doni ta anuloni këtë termin?')) return;
+            const reason = prompt('Arsyeja e anulimit (opsionale):', '');
+            if (reason === null) return;
+            const token = localStorage.getItem('token');
+            if (!token) {
+                if (actor === 'doctor') handleDoctorAppointmentAuthFailure(401);
+                return;
+            }
+            const base = actor === 'admin' ? '/api/admin/appointments/' : actor === 'doctor' ? '/api/doctor/appointments/' : '/api/appointments/';
+            const actionKey = actor === 'doctor' ? `doctor-appointment:${String(id)}` : `cancel:${actor}:${String(id)}`;
+            if (doctorAppointmentActionsInFlight.has(actionKey)) return;
+            doctorAppointmentActionsInFlight.add(actionKey);
+            const originalText = actionButton?.textContent || 'Anulo terminin';
+            if (actionButton) {
+                actionButton.disabled = true;
+                actionButton.textContent = 'Duke anuluar...';
+            }
+            let succeeded = false;
+            try {
+                const response = await fetch(base + encodeURIComponent(String(id)), {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reason: String(reason || '').slice(0, 300) }),
+                });
+                const data = await response.json().catch(() => ({}));
+                if (actor === 'doctor' && handleDoctorAppointmentAuthFailure(response.status)) return;
+                if (!response.ok) throw new Error('Appointment cancellation failed');
+                succeeded = true;
+                appointments = appointments.map((item) => String(item.dbId || item.id) === String(id) ? { ...item, status: 'Anuluar' } : item);
+                persistAppointmentsToStorage();
+                if (actor === 'doctor') {
+                    updateDoctorAppointmentRow(id, data?.appointment?.status || 'cancelled');
+                    showToast('success', 'Termini u anulua me sukses.', { ttlMs: 3600 });
+                } else {
+                    showToast('success', 'Termini u anulua me sukses. Orari është liruar.');
+                }
+                if (actor === 'admin') { await fetchAndRenderAdminAppointments(); fetchAdminStats(); }
+                else if (actor === 'doctor') await fetchAndRenderDoctorAppointments();
+                else await fetchAndRenderPatientAppointments();
+            } catch (error) {
+                if (actor === 'doctor') showToast('error', 'Nuk u arrit të përditësohet termini. Provo përsëri.', { ttlMs: 3600 });
+                else showToast('error', error.message || 'Anulimi dështoi');
+            } finally {
+                doctorAppointmentActionsInFlight.delete(actionKey);
+                if (!succeeded && actionButton?.isConnected) {
+                    actionButton.disabled = false;
+                    actionButton.textContent = originalText;
+                }
+            }
+        }
+
+        async function fetchAndRenderPatientAppointments() {
+            const body = document.getElementById('patientAppointmentsBody');
+            if (!body) return;
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            try {
+                const response = await fetch('/api/appointments/my-appointments', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || 'Terminet nuk u ngarkuan');
+                const list = Array.isArray(data.appointments) ? data.appointments : [];
+                body.innerHTML = list.length ? list.map((item) => {
+                    const when = new Date(item.scheduledAt);
+                    const status = String(item.status || '').toLowerCase();
+                    const canCancel = !['cancelled', 'completed'].includes(status);
+                    const pill = status === 'confirmed' ? 'status-success' : status === 'cancelled' ? 'status-danger' : 'status-waiting';
+                    return `<tr><td>${escapeHtml(item.doctor?.name || '—')}</td><td>${escapeHtml(item.doctor?.specialization || '—')}</td><td>${escapeHtml(when.toLocaleDateString())}</td><td>${escapeHtml(when.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }))}</td><td><span class="status-pill ${pill}">${escapeHtml(toSqAppointmentStatus(status))}</span></td><td>${canCancel ? `<button class="btn btn-danger" onclick="cancelAppointmentFromDashboard('${escapeHtml(item.id)}','patient')">Anulo terminin</button>` : '—'}</td></tr>`;
+                }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray);">Nuk ka termine.</td></tr>';
+            } catch (error) {
+                body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);">${escapeHtml(error.message)}</td></tr>`;
+            }
+        }
+
         async function adminSetAppointmentStatus(id, status) {
             const token = localStorage.getItem('token');
             if (!token) return;
@@ -3297,29 +3846,7 @@
         }
 
         async function adminDeleteAppointmentDb(id) {
-            const ok = confirm('A jeni i sigurt që doni ta fshini këtë termin?');
-            if (!ok) return;
-
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            try {
-                const response = await fetch(`http://localhost:5500/api/admin/appointments/${encodeURIComponent(String(id))}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) throw new Error(data?.error || `Gabim (${response.status})`);
-
-                await fetchAndRenderAdminAppointments();
-                fetchAdminStats();
-            } catch (e) {
-                console.error('Delete appointment error:', e);
-                showToast('warn', 'Gabim: ' + e.message);
-            }
+            return cancelAppointmentFromDashboard(id, 'admin');
         }
 
         async function fetchAndRenderAdminAppointments() {
@@ -3362,19 +3889,20 @@
                         const timeStr = when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
                         const statusLabel = toSqAppointmentStatus(a.status);
 
-                        const approveBtn = id
+                        const approveBtn = id && !['cancelled', 'completed'].includes(String(a.status || '').toLowerCase())
                             ? `<button class="btn btn-success" onclick="adminSetAppointmentStatus('${id}', 'confirmed')">Aprovo</button>`
                             : `<button class="btn btn-success" disabled>Aprovo</button>`;
 
-                        const delBtn = id
-                            ? `<button class="btn btn-danger" onclick="adminDeleteAppointmentDb('${id}')">Fshij</button>`
-                            : `<button class="btn btn-danger" disabled>Fshij</button>`;
+                        const canCancel = !['cancelled', 'completed'].includes(String(a.status || '').toLowerCase());
+                        const delBtn = id && canCancel
+                            ? `<button class="btn btn-danger" onclick="adminDeleteAppointmentDb('${id}')">Anulo terminin</button>`
+                            : '';
 
                         return `
                             <tr>
                                 <td>${escapeHtml(patientName)}</td>
                                 <td>${escapeHtml(doctorName)}</td>
-                                <td>${escapeHtml(dateStr)} ${escapeHtml(timeStr)}</td>
+                                <td>${escapeHtml(dateStr)} ${escapeHtml(timeStr)} ${String(a.status || '').toLowerCase() === 'cancelled' ? '' : '<small style="color:var(--gray);">I zënë</small>'}</td>
                                 <td>${escapeHtml(a.service || '—')}</td>
                                 <td>${escapeHtml(statusLabel || '—')}</td>
                                 <td>${approveBtn} ${delBtn}</td>
@@ -3408,12 +3936,52 @@
                 const d = document.getElementById('statDoctors');
                 const u = document.getElementById('statUsers');
                 const a = document.getElementById('statAppointments');
+                const today = document.getElementById('statToday');
+                const pending = document.getElementById('statPending');
+                const completed = document.getElementById('statCompleted');
+                const cancelled = document.getElementById('statCancelled');
 
                 if (d) d.innerText = String(data.doctors ?? 0);
                 if (u) u.innerText = String(data.users ?? 0);
                 if (a) a.innerText = String(data.appointments ?? 0);
+                if (today) today.innerText = String(data.appointmentsToday ?? 0);
+                if (pending) pending.innerText = String(data.pendingAppointments ?? 0);
+                if (completed) completed.innerText = String(data.completedAppointments ?? 0);
+                if (cancelled) cancelled.innerText = String(data.cancelledAppointments ?? 0);
+                const departmentStats = document.getElementById('departmentStats');
+                if (departmentStats) {
+                    const groups = Array.isArray(data.appointmentsByDepartment) ? data.appointmentsByDepartment : [];
+                    departmentStats.innerHTML = groups.length ? groups.map((item) => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eef2f7;"><span>${escapeHtml(item.department)}</span><b>${Number(item.count) || 0}</b></div>`).join('') : 'Nuk ka të dhëna.';
+                }
             } catch (e) {
                 // Silent: dashboard can render even if stats fail.
+            }
+        }
+
+        async function fetchAuditLogs(page = 1) {
+            const host = document.getElementById('auditLogsTable');
+            if (!host) return;
+            const token = localStorage.getItem('token');
+            const params = new URLSearchParams({ page: String(page), limit: '15' });
+            const action = document.getElementById('auditActionFilter')?.value.trim();
+            const roleFilter = document.getElementById('auditRoleFilter')?.value;
+            const statusFilter = document.getElementById('auditStatusFilter')?.value;
+            const from = document.getElementById('auditFromFilter')?.value;
+            if (action) params.set('action', action);
+            if (roleFilter) params.set('role', roleFilter);
+            if (statusFilter) params.set('status', statusFilter);
+            if (from) params.set('from', new Date(`${from}T00:00:00`).toISOString());
+            try {
+                const response = await fetch(`/api/admin/audit-logs?${params}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || 'Audit logs nuk u ngarkuan');
+                const items = Array.isArray(data.logs) ? data.logs : [];
+                host.innerHTML = items.length ? `<table><thead><tr><th>Koha</th><th>Roli</th><th>Veprimi</th><th>Statusi</th><th>Burimi</th></tr></thead><tbody>${items.map((item) => `<tr><td>${escapeHtml(new Date(item.timestamp).toLocaleString())}</td><td>${escapeHtml(item.role)}</td><td>${escapeHtml(item.action)}</td><td>${escapeHtml(item.status)}</td><td>${escapeHtml(item.resourceType || '—')}</td></tr>`).join('')}</tbody></table>` : 'Nuk ka audit logs për filtrat e zgjedhur.';
+                const p = data.pagination || {};
+                const pagination = document.getElementById('auditPagination');
+                if (pagination) pagination.innerHTML = `<button class="btn" ${p.page <= 1 ? 'disabled' : ''} onclick="fetchAuditLogs(${Math.max(1, Number(p.page || 1) - 1)})">Mbrapa</button><span style="padding:10px;">${Number(p.page || 1)} / ${Math.max(1, Number(p.pages || 1))}</span><button class="btn" ${p.page >= p.pages ? 'disabled' : ''} onclick="fetchAuditLogs(${Number(p.page || 1) + 1})">Para</button>`;
+            } catch (error) {
+                host.textContent = error.message;
             }
         }
 
@@ -3473,12 +4041,16 @@
                         ? `<button class="btn btn-danger" onclick="deleteUserById('${id}')">Fshij</button>`
                         : `<button class="btn btn-danger" disabled title="Mungon ID e përdoruesit">Fshij</button>`;
 
+                    const passwordBtn = id
+                        ? `<button class="btn" onclick="openPasswordResetModal('${id}')">Fjalëkalimi</button>`
+                        : `<button class="btn" disabled title="Mungon ID e përdoruesit">Fjalëkalimi</button>`;
+
                     return `
                         <tr>
                             <td>${escapeHtml(u.name || 'N/A')}</td>
                             <td>${escapeHtml(u.email || 'N/A')}</td>
                             <td>${escapeHtml(u.role || 'patient')}</td>
-                            <td>${editBtn} ${deleteBtn}</td>
+                            <td>${editBtn} ${passwordBtn} ${deleteBtn}</td>
                         </tr>
                     `;
                 })
@@ -3560,6 +4132,89 @@
             window.editingUserId = id;
             window.editingUserOriginalEmail = source.email || '';
             toggleModal('editUserModal');
+        }
+
+        function clearPasswordResetFields() {
+            for (const id of ['resetUserPassword', 'resetUserPasswordConfirm']) {
+                const field = document.getElementById(id);
+                field.value = '';
+                field.type = 'password';
+                const icon = field.parentElement.querySelector('.pw-toggle i');
+                if (icon) icon.className = 'fa-regular fa-eye';
+            }
+        }
+
+        function toggleResetPasswordVisibility(fieldId, button) {
+            const field = document.getElementById(fieldId);
+            const visible = field.type === 'text';
+            field.type = visible ? 'password' : 'text';
+            const icon = button.querySelector('i');
+            if (icon) icon.className = visible ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash';
+        }
+
+        function openPasswordResetModal(userId) {
+            const id = String(userId || '');
+            const target = (Array.isArray(users) ? users : []).find((user) => String(user.id || user._id || '') === id);
+            if (!id || !target || !isMongoObjectId(id)) {
+                showToast('error', 'Përdoruesi nuk mund të përditësohet pa një ID të vlefshme.');
+                return;
+            }
+
+            window.passwordResetUserId = id;
+            window.passwordResetUserRole = target.role || 'patient';
+            document.getElementById('passwordResetIdentity').textContent = `${target.name || 'Përdorues'} — ${target.email || ''}`;
+            clearPasswordResetFields();
+            toggleModal('passwordResetModal');
+        }
+
+        function closePasswordResetModal() {
+            clearPasswordResetFields();
+            window.passwordResetUserId = '';
+            window.passwordResetUserRole = '';
+            document.getElementById('passwordResetIdentity').textContent = '';
+            document.getElementById('passwordResetModal').classList.add('hidden');
+        }
+
+        async function saveAdminUserPassword() {
+            const userId = String(window.passwordResetUserId || '');
+            const passwordField = document.getElementById('resetUserPassword');
+            const confirmationField = document.getElementById('resetUserPasswordConfirm');
+            const newPassword = passwordField.value;
+            const confirmation = confirmationField.value;
+
+            if (newPassword.length < 8) {
+                showToast('error', 'Fjalëkalimi duhet të ketë së paku 8 karaktere.');
+                return;
+            }
+            if (newPassword !== confirmation) {
+                showToast('error', 'Fjalëkalimet nuk përputhen.');
+                return;
+            }
+            if (window.passwordResetUserRole === 'admin' && !confirm('Po ndryshoni fjalëkalimin e një administratori. Dëshironi të vazhdoni?')) return;
+
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('error', 'Nuk keni autentifikim.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/admin/users/${encodeURIComponent(userId)}/password`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ newPassword }),
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data?.error || `Gabim (${response.status})`);
+
+                closePasswordResetModal();
+                showToast('success', 'Fjalëkalimi u ndryshua me sukses.');
+            } catch (error) {
+                showToast('error', error.message || 'Fjalëkalimi nuk mund të ndryshohej.');
+            }
         }
 
         async function saveUserEdit() {
@@ -3652,22 +4307,29 @@
                     return;
                 }
                 
-                const response = await fetch('http://localhost:5500/api/admin/users', {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
+                const usersList = [];
+                let page = 1;
+                let totalPages = 1;
+                while (page <= totalPages) {
+                    const response = await fetch(`/api/admin/users?page=${page}&limit=100`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if(!response.ok) {
+                        console.error('Error fetching users:', response.status);
+                        document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">❌ Gabim në marrjen e përdoruesve</td></tr>';
+                        return;
                     }
-                });
-                
-                if(!response.ok) {
-                    console.error('Error fetching users:', response.status);
-                    document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">❌ Gabim në marrjen e përdoruesve</td></tr>';
-                    return;
+
+                    const data = await response.json();
+                    usersList.push(...(Array.isArray(data.users) ? data.users : (Array.isArray(data) ? data : [])));
+                    totalPages = Math.max(0, Number(data.pagination?.totalPages ?? data.pagination?.pages ?? 1));
+                    page += 1;
                 }
-                
-                const data = await response.json();
-                const usersList = Array.isArray(data.users) ? data.users : (Array.isArray(data) ? data : []);
                 
                 if(usersList.length === 0) {
                     document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray);">Nuk ka përdorues të regjistruar</td></tr>';
@@ -3675,7 +4337,7 @@
                 }
                 
                 // Store in local users array for editing
-                users = usersList.map(u => ({
+                users = [...new Map(usersList.map((u) => [String(u.id || u._id), u])).values()].map(u => ({
                     _id: u._id || u.id,
                     id: u.id || u._id,
                     name: u.name,
@@ -3696,11 +4358,22 @@
         }
 
         async function saveBooking() {
-            const doc = document.getElementById('bookDoc').value;
+            const doctorId = document.getElementById('bookDoc').value;
             const date = document.getElementById('bookDate').value;
             const time = document.getElementById('bookTime').value;
-            if(!date || !time) {
-                showToast('error', 'Plotësoni të dhënat!');
+            const scheduledAt = document.getElementById('bookScheduledAt').value;
+            const durationMinutes = Number(document.getElementById('bookDuration').value || 0);
+            const service = document.getElementById('bookService').value || 'Konsultim';
+            if(!date || !time || !scheduledAt) {
+                showToast('error', 'Zgjidhni datën dhe një orar të lirë.');
+                return;
+            }
+
+            const match = (Array.isArray(doctors) ? doctors : []).find(d => String(d?.id || d?._id || '') === String(doctorId));
+            const doc = match?.name || 'Doktor';
+
+            if (!doctorId) {
+                showToast('error', 'Doktori nuk u gjet. Rifreskoni faqen dhe provoni përsëri.');
                 return;
             }
 
@@ -3709,31 +4382,21 @@
             const meRole = String(me?.role || localStorage.getItem('role') || '').toLowerCase();
 
             if (!token || (meRole && meRole !== 'patient')) {
-                showToast('error', 'Ju lutem kyçuni si Pacient për të rezervuar termin.');
+                requirePatientAuthenticationForBooking({ flow: 'main', doctorId, doctorName: doc, service, date, time, durationMinutes, urgencyLevel: emergencyMode ? 'high' : 'low' });
                 return;
             }
 
             const patientName = me?.name || 'Pacient';
 
-            const docNameClean = String(doc || '').replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
-            const match = (Array.isArray(doctors) ? doctors : []).find(d => normalizePersonName(d?.name) === normalizePersonName(docNameClean));
-            const doctorId = String(match?.id || match?._id || '').trim();
-
-            if (!doctorId) {
-                showToast('error', 'Doktori nuk u gjet. Rifreskoni faqen dhe provoni përsëri.');
-                return;
-            }
-
-            const whenLocal = new Date(`${date}T${time}`);
-            if (Number.isNaN(whenLocal.getTime()) || whenLocal <= new Date()) {
+            const selectedInstant = new Date(scheduledAt);
+            if (Number.isNaN(selectedInstant.getTime()) || selectedInstant <= new Date()) {
                 showToast('error', 'Zgjidhni një datë/orë në të ardhmen.');
                 return;
             }
 
             // Persist to backend so doctors/admin can see it in real-time.
             try {
-                const scheduledAt = whenLocal.toISOString();
-                const response = await fetch('http://localhost:5500/api/appointments/create', {
+                const response = await fetch('/api/appointments/create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -3741,13 +4404,20 @@
                     },
                     body: JSON.stringify({
                         doctorId,
-                        service: 'Konsultim',
+                        service,
                         scheduledAt,
+                        urgencyLevel: emergencyMode ? 'high' : 'low',
+                        emergencyMode,
                     }),
                 });
 
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) {
+                    if (response.status === 409) {
+                        await loadBookingSlots();
+                        showToast('warn', 'Ky orar sapo u rezervua. Lista u rifreskua; zgjidhni një orar tjetër.');
+                        return;
+                    }
                     showToast('error', 'Gabim në rezervim: ' + (data?.error || `Gabim (${response.status})`));
                     return;
                 }
@@ -3764,8 +4434,9 @@
             }
 
             showToast('success', 'Termini u regjistrua në sistem!');
+            await loadBookingSlots();
             toggleModal('bookModal');
-            if(!document.getElementById('app-shell').classList.contains('hidden')) refreshView(role);
+            if(!document.getElementById('app-shell').classList.contains('hidden')) refreshView(meRole || 'patient');
         }
 
         async function sendChat() {
@@ -4082,7 +4753,7 @@
                 <div class="modal-box modal-dark" style="width:520px; max-width: calc(100vw - 40px);">
                     <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px;">
                         <div>
-                            <h3 style="margin:0;">📅 Rezervo Termin</h3>
+                            <h3 style="margin:0;">📅 Rezervo termin</h3>
                             <div class="modal-subtitle" id="symptomBookingDoctorLabel">Zgjidh datën dhe orën</div>
                         </div>
                         <button class="btn btn-danger" style="padding:8px 12px;" type="button" onclick="closeSymptomBookingModal()">Mbyll</button>
@@ -4096,7 +4767,7 @@
                             <div>
                                 <label for="symptomBookingTime">Ora</label>
                                 <select id="symptomBookingTime" class="input"></select>
-                                <div style="margin-top:6px; font-size:12px; color:rgba(255,255,255,0.72);">Zgjidh një time-slot të paracaktuar</div>
+                                <div id="symptomBookingSlotCount" style="margin-top:6px; font-size:12px; color:rgba(255,255,255,0.72);" aria-live="polite"></div>
                             </div>
                             <div>
                                 <label for="symptomBookingService">Shërbimi</label>
@@ -4121,40 +4792,32 @@
             document.body.appendChild(modal);
         }
 
-        const symptomBookingTimeSlots = [
-            '08:00', '09:00', '10:00', '11:00',
-            '12:00', '13:00', '14:00', '15:00',
-            '16:00'
-        ];
-
-        function populateSymptomBookingTimeSlots(dateStr) {
+        async function populateSymptomBookingTimeSlots(dateStr, preferredTime) {
             const timeSelect = document.getElementById('symptomBookingTime');
             if (!timeSelect) return;
+            const count = document.getElementById('symptomBookingSlotCount');
             const date = String(dateStr || '').trim();
-
-            const now = new Date();
-            const isToday = (() => {
-                if (!date) return false;
-                const yyyy = now.getFullYear();
-                const mm = String(now.getMonth() + 1).padStart(2, '0');
-                const dd = String(now.getDate()).padStart(2, '0');
-                return date === `${yyyy}-${mm}-${dd}`;
-            })();
-
-            const allowed = symptomBookingTimeSlots.filter((t) => {
-                if (!isToday) return true;
-                const dt = new Date(`${date}T${t}`);
-                return !Number.isNaN(dt.getTime()) && dt.getTime() > now.getTime();
-            });
-
-            const slots = allowed.length ? allowed : symptomBookingTimeSlots;
-            const current = String(timeSelect.value || '').trim();
-
-            timeSelect.innerHTML = slots.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join('');
-            if (current && slots.includes(current)) {
-                timeSelect.value = current;
-            } else {
-                timeSelect.value = slots[0] || '09:00';
+            const currentTime = String(timeSelect.selectedOptions?.[0]?.dataset?.time || '').trim();
+            const service = document.getElementById('symptomBookingService')?.value || 'Konsultim';
+            if (!date || !symptomBookingState.doctorId) return;
+            timeSelect.innerHTML = '<option value="">Duke ngarkuar...</option>';
+            try {
+                const response = await fetch(`/api/appointments/slots/${encodeURIComponent(symptomBookingState.doctorId)}?date=${encodeURIComponent(date)}&service=${encodeURIComponent(service)}`);
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error(data.error || 'Orari nuk u ngarkua');
+                const slots = Array.isArray(data.slots) ? data.slots : [];
+                const availableCount = slots.filter((slot) => slot.available).length;
+                if (count) count.textContent = availableCount > 0 ? `${availableCount} termine të lira` : 'Nuk ka termine të lira për këtë datë.';
+                timeSelect.innerHTML = slots.map((slot) => `<option value="${escapeHtml(slot.scheduledAt)}" data-time="${escapeHtml(slot.time)}" ${slot.available ? '' : 'disabled title="Ky termin është i rezervuar"'}>${escapeHtml(slot.time)}${slot.available ? '' : ' - I zënë'}</option>`).join('') || '<option value="">Nuk ka termine të lira për këtë datë.</option>';
+                const wantedTime = String(preferredTime || currentTime || '').trim();
+                const target = Array.from(timeSelect.options).find((option) => !option.disabled && option.dataset.time === wantedTime);
+                const firstAvailable = Array.from(timeSelect.options).find((option) => !option.disabled && option.value);
+                timeSelect.value = (target || firstAvailable)?.value || '';
+                return Boolean(target);
+            } catch (error) {
+                timeSelect.innerHTML = `<option value="">${escapeHtml(error.message)}</option>`;
+                if (count) count.textContent = '';
+                return false;
             }
         }
 
@@ -4172,15 +4835,6 @@
         }
 
         function openSymptomBookingModal(doctorId, doctorName) {
-            const token = localStorage.getItem('token');
-            const me = JSON.parse(localStorage.getItem('user') || '{}');
-            const meRole = String(me?.role || localStorage.getItem('role') || '').toLowerCase();
-
-            if (!token || (meRole && meRole !== 'patient')) {
-                showAnalysisBookingNotice('error', 'Ju lutem kyçuni si Pacient për të rezervuar termin.');
-                return;
-            }
-
             ensureSymptomBookingModal();
             symptomBookingState.doctorId = String(doctorId || '').trim();
             symptomBookingState.doctorName = String(doctorName || 'Doktor').trim();
@@ -4210,8 +4864,11 @@
             }
 
             populateSymptomBookingTimeSlots(dateInput?.value);
-            if (timeInput && !timeInput.value) timeInput.value = '09:00';
             if (serviceInput && !serviceInput.value) serviceInput.value = 'Konsultim';
+            if (serviceInput && !serviceInput.dataset.slotsBound) {
+                serviceInput.dataset.slotsBound = '1';
+                serviceInput.addEventListener('change', () => populateSymptomBookingTimeSlots(dateInput?.value));
+            }
 
             showSymptomBookingInlineError('');
             if (modal) modal.classList.remove('hidden');
@@ -4244,7 +4901,9 @@
             }
 
             const date = (document.getElementById('symptomBookingDate')?.value || '').trim();
-            const time = (document.getElementById('symptomBookingTime')?.value || '').trim();
+            const timeSelect = document.getElementById('symptomBookingTime');
+            const scheduledAtIso = (timeSelect?.value || '').trim();
+            const time = (timeSelect?.selectedOptions?.[0]?.dataset?.time || '').trim();
             const service = (document.getElementById('symptomBookingService')?.value || 'Konsultim').trim() || 'Konsultim';
 
             if (!date) {
@@ -4252,9 +4911,12 @@
                 return;
             }
 
-            const chosenTime = time || '09:00';
-            const whenLocal = new Date(`${date}T${chosenTime}`);
-            if (Number.isNaN(whenLocal.getTime()) || whenLocal <= new Date()) {
+            if (!scheduledAtIso || !time) {
+                showSymptomBookingInlineError('Ju lutem zgjidhni një orar të lirë.');
+                return;
+            }
+            const selectedInstant = new Date(scheduledAtIso);
+            if (Number.isNaN(selectedInstant.getTime()) || selectedInstant <= new Date()) {
                 showSymptomBookingInlineError('Zgjidhni një datë/orë në të ardhmen.');
                 return;
             }
@@ -4263,10 +4925,10 @@
             submitSymptomBooking({
                 doctorId: normalizedDoctorId,
                 doctorName: symptomBookingState.doctorName,
-                scheduledAtIso: whenLocal.toISOString(),
+                scheduledAtIso,
                 service,
                 date,
-                time: chosenTime,
+                time,
             });
         }
 
@@ -4282,7 +4944,7 @@
             const meRole = String(me?.role || localStorage.getItem('role') || '').toLowerCase();
 
             if (!token || (meRole && meRole !== 'patient')) {
-                showAnalysisBookingNotice('error', 'Ju lutem kyçuni si Pacient për të rezervuar termin.');
+                requirePatientAuthenticationForBooking({ flow: 'symptom', doctorId: normalizedDoctorId, doctorName: symptomBookingState.doctorName, service, date, time, urgencyLevel: 'low' });
                 return;
             }
 
@@ -4304,7 +4966,7 @@
                         : 'Disponueshmëria u verifikua.';
                     showAnalysisBookingNotice('warn', info + ' Po rezervoj...');
 
-                    return fetch('http://localhost:5500/api/appointments/create', {
+                    return fetch('/api/appointments/create', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -4316,7 +4978,9 @@
                 .then(async (r) => {
                     const data = await r.json().catch(() => ({}));
                     if (!r.ok) {
-                        throw new Error(data?.error || `Gabim (${r.status})`);
+                        const error = new Error(data?.error || `Gabim (${r.status})`);
+                        error.status = r.status;
+                        throw error;
                     }
 
                     const patientName = me?.name || 'Pacient';
@@ -4330,6 +4994,12 @@
                     setTimeout(() => refreshView('patient', 'schedule'), 900);
                 })
                 .catch((e) => {
+                    if (e.status === 409) {
+                        openSymptomBookingModal(normalizedDoctorId, doctorName);
+                        populateSymptomBookingTimeSlots(date);
+                        showSymptomBookingInlineError('Ky orar sapo u rezervua. Zgjidhni një orar tjetër.');
+                        return;
+                    }
                     showAnalysisBookingNotice('error', `Gabim në rezervim: ${e.message}`);
                 });
         }
@@ -4339,72 +5009,254 @@
             openSymptomBookingModal(doctorId, doctorName);
         }
 
+        function prescriptionStatusLabel(status) {
+            const value = String(status || 'active').toLowerCase();
+            if (value === 'completed') return 'I përfunduar';
+            if (value === 'cancelled') return 'I anuluar';
+            return 'Aktiv';
+        }
+
         async function loadPrescriptions() {
+            const listDiv = document.getElementById('prescriptionsList');
+            if (!listDiv) return;
+            listDiv.innerHTML = '<p style="color:var(--gray); text-align:center;">Duke ngarkuar receptet...</p>';
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch('http://localhost:5500/api/patient/prescriptions', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                
-                if(!response.ok) {
-                    document.getElementById('prescriptionsList').innerHTML = '<p style="color:var(--gray);">Nuk ka recepata të regjistruara</p>';
+                const response = await fetch('/api/patient/prescriptions', { headers: { 'Authorization': `Bearer ${token || ''}` } });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error('Prescription list request failed');
+
+                const prescriptions = Array.isArray(data.prescriptions) ? data.prescriptions : [];
+                if (prescriptions.length === 0) {
+                    listDiv.innerHTML = '<p style="color:var(--gray); text-align:center;">Nuk keni ende receta digjitale.</p>';
                     return;
                 }
-                
-                const prescriptions = await response.json();
-                const listDiv = document.getElementById('prescriptionsList');
-                
-                if(prescriptions.length === 0) {
-                    listDiv.innerHTML = '<p style="color:var(--gray);">Nuk ka recepata të regjistruara</p>';
-                } else {
-                    listDiv.innerHTML = prescriptions.map((p, i) => `
-                        <div style="padding:15px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px; background:#fafbfc;">
-                            <p><b>${p.title}</b></p>
-                            <p style="color:var(--gray); font-size:0.9rem;">Doktori: ${p.doctorName || 'System'} | ${p.createdAt ? new Date(p.createdAt).toLocaleDateString() : ''}</p>
-                            <p style="margin-top:10px; padding:10px; background:white; border-radius:8px; font-size:0.9rem;">${p.body || 'Mbani sipas udhëzimeve të doktorit'}</p>
+
+                listDiv.innerHTML = prescriptions.map((prescription) => `
+                    <div style="padding:15px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px; background:#fafbfc;">
+                        <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+                            <div>
+                                <p><b>${escapeHtml(prescription.title || 'Recept digjital')}</b></p>
+                                <p style="color:var(--gray); font-size:0.9rem;">${escapeHtml(prescription.referenceNumber || '')}</p>
+                                <p style="color:var(--gray); font-size:0.9rem;">Dr. ${escapeHtml(prescription.doctor?.name || '—')} · ${escapeHtml(new Date(prescription.issuedAt || prescription.createdAt).toLocaleDateString())}</p>
+                            </div>
+                            <span class="status-pill ${String(prescription.status).toLowerCase() === 'cancelled' ? 'status-danger' : 'status-success'}">${escapeHtml(prescriptionStatusLabel(prescription.status))}</span>
                         </div>
-                    `).join('');
-                }
-            } catch(err) {
-                document.getElementById('prescriptionsList').innerHTML = '<p style="color:var(--danger);">Gabim në kërkimin e receptave</p>';
+                        <button class="btn btn-primary" style="margin-top:12px;" onclick="openPrescriptionDetails('${escapeHtml(prescription.id)}')">Hap receptin</button>
+                    </div>
+                `).join('');
+            } catch {
+                listDiv.innerHTML = '<p style="color:var(--danger); text-align:center;">Gabim në kërkimin e recetave.</p>';
             }
         }
 
-        async function uploadRecord() {
-            const fileInput = document.getElementById('recordFile');
-            const notes = document.getElementById('recordNotes').value;
-            
-            if(!fileInput.files[0]) {
-                showToast('error', 'Zgjidhni dokumentin!');
-                return;
-            }
-            if(!notes) {
-                showToast('error', 'Shkruani shënimet!');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('notes', notes);
-            
+        function ensurePrescriptionDetailsModal() {
+            if (document.getElementById('prescriptionDetailsModal')) return;
+            const modal = document.createElement('div');
+            modal.id = 'prescriptionDetailsModal';
+            modal.className = 'modal hidden';
+            modal.innerHTML = `
+                <div class="modal-box" style="width:760px; max-width:calc(100vw - 32px); max-height:90vh; overflow:auto;">
+                    <div id="prescriptionPrintContent"></div>
+                    <div class="prescription-print-hide" style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;">
+                        <button class="btn btn-primary" onclick="printSelectedPrescription()">Printo receptin</button>
+                        <button class="btn" onclick="closePrescriptionDetails()">Mbyll</button>
+                    </div>
+                </div>
+            `;
+            modal.addEventListener('click', (event) => { if (event.target === modal) closePrescriptionDetails(); });
+            document.body.appendChild(modal);
+        }
+
+        function closePrescriptionDetails() {
+            document.getElementById('prescriptionDetailsModal')?.classList.add('hidden');
+        }
+
+        async function openPrescriptionDetails(id) {
+            ensurePrescriptionDetailsModal();
+            const modal = document.getElementById('prescriptionDetailsModal');
+            const host = document.getElementById('prescriptionPrintContent');
+            host.innerHTML = '<p style="color:var(--gray);">Duke ngarkuar receptin...</p>';
+            modal.classList.remove('hidden');
             try {
                 const token = localStorage.getItem('token');
-                const response = await fetch('http://localhost:5500/api/patient/records/upload', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-                
-                if(response.ok) {
-                    showToast('success', 'Dokumenti u ngarkua me sukses!');
-                    fileInput.value = '';
-                    document.getElementById('recordNotes').value = '';
-                    refreshView('patient', 'records');
-                } else {
-                    showToast('error', 'Gabim në ngarkim');
+                const response = await fetch(`/api/patient/prescriptions/${encodeURIComponent(String(id))}`, { headers: { 'Authorization': `Bearer ${token || ''}` } });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.prescription) throw new Error('Prescription details request failed');
+                const prescription = data.prescription;
+                if (prescription.unavailable) {
+                    host.innerHTML = '<p style="color:var(--warning);">Ky recept nuk mund të lexohet me çelësin aktual të enkriptimit.</p>';
+                    return;
                 }
-            } catch(err) {
-                showToast('warn', 'Gabim: ' + err.message);
+                const content = prescription.content || {};
+                const appointmentDate = prescription.appointment?.scheduledAt ? new Date(prescription.appointment.scheduledAt).toLocaleString() : '—';
+                host.innerHTML = `
+                    <div style="border-bottom:2px solid var(--primary); padding-bottom:14px; margin-bottom:18px;">
+                        <div style="font-weight:800; color:var(--primary); font-size:1.2rem;">SHËNDETI IM</div>
+                        <h2 style="margin-top:6px;">Recept Digjital</h2>
+                        <p style="color:var(--gray);">Referenca: ${escapeHtml(prescription.referenceNumber || '—')}</p>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px;">
+                        <p><b>Data e lëshimit:</b><br>${escapeHtml(new Date(prescription.issuedAt || prescription.createdAt).toLocaleString())}</p>
+                        <p><b>Statusi:</b><br>${escapeHtml(prescriptionStatusLabel(prescription.status))}</p>
+                        <p><b>Pacienti:</b><br>${escapeHtml(prescription.patient?.name || '—')}</p>
+                        <p><b>Doktori:</b><br>${escapeHtml(prescription.doctor?.name || '—')}</p>
+                        <p><b>Specializimi:</b><br>${escapeHtml(prescription.doctor?.specialization || '—')}</p>
+                        <p><b>Termini i lidhur:</b><br>${escapeHtml(appointmentDate)}</p>
+                    </div>
+                    <hr style="border:0; border-top:1px solid #e2e8f0; margin:18px 0;">
+                    <p><b>Diagnoza / arsyeja:</b><br>${escapeHtml(content.diagnosis || (content.legacy ? prescription.title : '—'))}</p>
+                    <p><b>Ilaçi:</b><br>${escapeHtml(content.medicationName || '—')}</p>
+                    <p><b>Doza:</b><br>${escapeHtml(content.dosage || '—')}</p>
+                    <p><b>Shpeshtësia:</b><br>${escapeHtml(content.frequency || '—')}</p>
+                    <p><b>Kohëzgjatja:</b><br>${escapeHtml(content.duration || '—')}</p>
+                    <p><b>Udhëzimet:</b><br>${escapeHtml(content.instructions || '—')}</p>
+                    ${content.additionalNotes ? `<p><b>Shënime shtesë:</b><br>${escapeHtml(content.additionalNotes)}</p>` : ''}
+                    <p style="margin-top:22px; padding:12px; background:#f8fafc; border-radius:10px; color:var(--gray); font-size:0.85rem;">Ky dokument është krijuar nga sistemi SHËNDETI IM dhe duhet të përdoret sipas udhëzimeve të mjekut.</p>
+                `;
+            } catch {
+                host.innerHTML = '<p style="color:var(--danger);">Nuk u arrit të ngarkohet recepti.</p>';
+            }
+        }
+
+        function printSelectedPrescription() {
+            document.body.classList.add('print-prescription');
+            const cleanup = () => document.body.classList.remove('print-prescription');
+            window.addEventListener('afterprint', cleanup, { once: true });
+            window.print();
+            setTimeout(cleanup, 1000);
+        }
+
+        async function loadMedicalHistory() {
+            const host = document.getElementById('medicalHistoryList');
+            if (!host) return;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/patient/history', { headers: { 'Authorization': `Bearer ${token || ''}` } });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) throw new Error('Medical history request failed');
+                const history = Array.isArray(data.history) ? data.history : [];
+                if (!history.length) {
+                    host.innerHTML = '<p style="color:var(--gray); text-align:center;">Nuk keni ende vizita të përfunduara në historinë mjekësore.</p>';
+                    return;
+                }
+                host.innerHTML = history.map((entry) => {
+                    const when = new Date(entry.scheduledAt);
+                    const prescriptions = Array.isArray(entry.prescriptions) ? entry.prescriptions : [];
+                    return `
+                        <div class="card" style="box-shadow:none; border:1px solid #e2e8f0; margin-bottom:12px;">
+                            <p style="color:var(--primary); font-weight:800;">${escapeHtml(when.toLocaleDateString())} · ${escapeHtml(when.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }))}</p>
+                            <h3 style="margin-top:6px;">Vizitë te ${escapeHtml(entry.doctor?.name || 'Doktori')}</h3>
+                            <p style="color:var(--gray);">${escapeHtml(entry.doctor?.specialization || '')}</p>
+                            <p><b>Shërbimi:</b> ${escapeHtml(entry.service || '—')}</p>
+                            ${entry.reportedSymptoms ? `<p><b>Simptomat e raportuara:</b> ${escapeHtml(entry.reportedSymptoms)}</p>` : ''}
+                            <p><b>Statusi:</b> ${escapeHtml(toSqAppointmentStatus(entry.status))}</p>
+                            ${prescriptions.map((prescription) => `
+                                <div style="margin-top:12px; padding:12px; background:#f8fafc; border-radius:10px;">
+                                    ${prescription.unavailable ? '<p style="color:var(--warning);">Përmbajtja e këtij recepti nuk është e disponueshme.</p>' : ''}
+                                    ${prescription.diagnosis ? `<p><b>Diagnoza:</b> ${escapeHtml(prescription.diagnosis)}</p>` : ''}
+                                    ${prescription.prescribedTreatment ? `<p><b>Trajtimi i përshkruar:</b> ${escapeHtml(prescription.prescribedTreatment)}</p>` : ''}
+                                    <p>Recept digjital i lëshuar · ${escapeHtml(prescription.referenceNumber || '')}</p>
+                                    <button class="btn btn-primary" style="margin-top:8px;" onclick="openPrescriptionDetails('${escapeHtml(prescription.id)}')">Hap receptin</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }).join('');
+            } catch {
+                host.innerHTML = '<p style="color:var(--danger); text-align:center;">Nuk u arrit të ngarkohet historia mjekësore.</p>';
+            }
+        }
+
+        let doctorPrescriptionAppointments = [];
+        let prescriptionSubmissionInFlight = false;
+
+        async function loadDoctorPrescriptionOptions() {
+            const patientSelect = document.getElementById('prescriptionPatient');
+            if (!patientSelect) return;
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/doctor/appointments', { headers: { 'Authorization': `Bearer ${token || ''}` } });
+                const data = await response.json().catch(() => ({}));
+                if (handleDoctorAppointmentAuthFailure(response.status)) return;
+                if (!response.ok) throw new Error('Prescription options request failed');
+                if (!Array.isArray(data.appointments)) throw new Error('Invalid prescription options response');
+                doctorPrescriptionAppointments = data.appointments
+                    .filter((appointment) => appointment.prescriptionEligible === true && appointment.patient?.id);
+                const patients = [...new Map(doctorPrescriptionAppointments.map((appointment) => [String(appointment.patient.id), appointment.patient])).values()];
+                patientSelect.innerHTML = patients.length
+                    ? `<option value="">Zgjidhni pacientin</option>${patients.map((patient) => `<option value="${escapeHtml(patient.id)}">${escapeHtml(patient.name)} (${escapeHtml(patient.email || '')})</option>`).join('')}`
+                    : '<option value="">Nuk ka pacientë me termin të aprovuar ose të përfunduar.</option>';
+                updatePrescriptionAppointmentOptions();
+            } catch {
+                patientSelect.innerHTML = '<option value="">Pacientët nuk u ngarkuan</option>';
+                showToast('error', 'Nuk u arrit të ngarkohen pacientët. Provo përsëri.');
+            }
+        }
+
+        function updatePrescriptionAppointmentOptions() {
+            const patientId = document.getElementById('prescriptionPatient')?.value || '';
+            const appointmentSelect = document.getElementById('prescriptionAppointment');
+            if (!appointmentSelect) return;
+            const matches = doctorPrescriptionAppointments.filter((appointment) => String(appointment.patient?.id || '') === patientId);
+            appointmentSelect.innerHTML = matches.length
+                ? `<option value="">Zgjidhni terminin</option>${matches.map((appointment) => `<option value="${escapeHtml(appointment.id)}">${escapeHtml(new Date(appointment.scheduledAt).toLocaleString())} · ${escapeHtml(toSqAppointmentStatus(appointment.status))}</option>`).join('')}`
+                : '<option value="">Zgjidhni pacientin</option>';
+            if (matches.length === 1) appointmentSelect.value = String(matches[0].id || '');
+        }
+
+        async function submitDoctorPrescription() {
+            if (prescriptionSubmissionInFlight) return;
+            const button = document.getElementById('createPrescriptionButton');
+            const payload = {
+                patientId: document.getElementById('prescriptionPatient')?.value || '',
+                appointmentId: document.getElementById('prescriptionAppointment')?.value || '',
+                diagnosis: document.getElementById('prescriptionDiagnosis')?.value.trim() || '',
+                medicationName: document.getElementById('prescriptionMedication')?.value.trim() || '',
+                dosage: document.getElementById('prescriptionDosage')?.value.trim() || '',
+                frequency: document.getElementById('prescriptionFrequency')?.value.trim() || '',
+                duration: document.getElementById('prescriptionDuration')?.value.trim() || '',
+                instructions: document.getElementById('prescriptionInstructions')?.value.trim() || '',
+                additionalNotes: document.getElementById('prescriptionAdditionalNotes')?.value.trim() || '',
+            };
+            if (!payload.patientId || !payload.appointmentId || !payload.diagnosis || !payload.medicationName || !payload.dosage || !payload.frequency || !payload.duration || !payload.instructions) {
+                showToast('error', 'Plotësoni të gjitha fushat e kërkuara.', { dedupeKey: 'prescription-submit-error' });
+                return;
+            }
+
+            prescriptionSubmissionInFlight = true;
+            if (button) { button.disabled = true; button.textContent = 'Duke krijuar...'; }
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/doctor/prescriptions', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token || ''}`, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                });
+                if (handleDoctorAppointmentAuthFailure(response.status)) return;
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok) {
+                    const safeMessage = response.status === 409
+                        ? (data?.error === 'A prescription already exists for this appointment' ? 'Ekziston tashmë një recept për këtë termin.' : (data?.error || 'Recepti nuk mund të krijohet për këtë termin.'))
+                        : [400, 403, 404].includes(response.status)
+                            ? (data?.error || 'Pacienti ose termini i zgjedhur nuk është i vlefshëm.')
+                            : (data?.error || 'Nuk u arrit të krijohet recepti. Provo përsëri.');
+                    throw new Error(safeMessage);
+                }
+
+                for (const id of ['prescriptionDiagnosis', 'prescriptionMedication', 'prescriptionDosage', 'prescriptionFrequency', 'prescriptionDuration', 'prescriptionInstructions', 'prescriptionAdditionalNotes']) {
+                    const field = document.getElementById(id);
+                    if (field) field.value = '';
+                }
+                const patient = document.getElementById('prescriptionPatient');
+                if (patient) patient.value = '';
+                updatePrescriptionAppointmentOptions();
+                showToast('success', 'Recepti u krijua me sukses.');
+            } catch (error) {
+                showToast('error', error.message || 'Nuk u arrit të krijohet recepti. Provo përsëri.', { dedupeKey: 'prescription-submit-error' });
+            } finally {
+                prescriptionSubmissionInFlight = false;
+                if (button?.isConnected) { button.disabled = false; button.textContent = 'Krijo receptin'; }
             }
         }
 
@@ -4753,6 +5605,15 @@
 
         // Auto-initialize AI when page loads
         document.addEventListener('DOMContentLoaded', initializeAI);
+
+        document.querySelectorAll('.faq-question').forEach((button) => {
+            button.addEventListener('click', () => {
+                const answer = document.getElementById(button.getAttribute('aria-controls'));
+                const willOpen = button.getAttribute('aria-expanded') !== 'true';
+                button.setAttribute('aria-expanded', String(willOpen));
+                answer.hidden = !willOpen;
+            });
+        });
 
     </script>
 </body>

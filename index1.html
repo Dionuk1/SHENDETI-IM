@@ -756,12 +756,58 @@
     // Small helpers
     const $ = (s) => document.querySelector(s);
 
+    // Lightweight toast (avoid browser popup dialogs)
+    const ensureToastHost = () => {
+      let host = document.getElementById("toastHost");
+      if (host) return host;
+      host = document.createElement("div");
+      host.id = "toastHost";
+      host.style.position = "fixed";
+      host.style.top = "16px";
+      host.style.right = "16px";
+      host.style.zIndex = "99999";
+      host.style.display = "flex";
+      host.style.flexDirection = "column";
+      host.style.gap = "10px";
+      host.style.maxWidth = "min(420px, calc(100vw - 32px))";
+      document.body.appendChild(host);
+      return host;
+    };
+
+    const showToast = (type, message, ttlMs = 3800) => {
+      const msg = String(message || "").trim();
+      if (!msg) return;
+      const host = ensureToastHost();
+      const t = String(type || "info").toLowerCase();
+      const color = t === "success" ? "#10b981" : t === "warn" ? "#f59e0b" : t === "error" ? "#ef4444" : "#60a5fa";
+      const icon = t === "success" ? "✅" : t === "warn" ? "⚠️" : t === "error" ? "❌" : "ℹ️";
+
+      const toast = document.createElement("div");
+      toast.style.padding = "12px 14px";
+      toast.style.borderRadius = "14px";
+      toast.style.border = "1px solid rgba(255,255,255,0.14)";
+      toast.style.background = "rgba(17, 24, 39, 0.92)";
+      toast.style.color = "rgba(255, 255, 255, 0.92)";
+      toast.style.boxShadow = "0 10px 30px rgba(0,0,0,0.35)";
+      toast.style.backdropFilter = "blur(6px)";
+      toast.innerHTML = `
+        <div style="display:flex; gap:10px; align-items:flex-start;">
+          <div style="font-weight:900; color:${color}; line-height:1; margin-top:2px;">${icon}</div>
+          <div style="flex:1; min-width:0; font-size:0.95rem; line-height:1.25;">${msg.replace(/</g,"&lt;").replace(/>/g,"&gt;")}</div>
+          <button type="button" aria-label="Close" style="padding:6px 10px; border-radius:10px; background:rgba(255,255,255,0.08); color:white; border:1px solid rgba(255,255,255,0.14); cursor:pointer;">×</button>
+        </div>
+      `;
+      toast.querySelector("button")?.addEventListener("click", () => toast.remove());
+      host.appendChild(toast);
+      if (ttlMs > 0) setTimeout(() => toast.remove(), ttlMs);
+    };
+
     // Buttons (demo actions)
-    $("#btnCall").addEventListener("click", () => alert("Demo: Call center (replace with real phone link)."));
-    $("#btnBook").addEventListener("click", () => alert("Demo: Booking modal (next step)."));
+    $("#btnCall").addEventListener("click", () => showToast("info", "Demo: Call center (replace with real phone link)."));
+    $("#btnBook").addEventListener("click", () => showToast("info", "Demo: Booking modal (next step)."));
     $("#btnExplore").addEventListener("click", () => location.hash = "#features");
-    $("#btnLocation").addEventListener("click", () => alert("Demo: Open map (later integrate Google Maps / Mapbox)."));
-    $("#btnViewAll").addEventListener("click", () => alert("Demo: Doctors page (later)."));
+    $("#btnLocation").addEventListener("click", () => showToast("info", "Demo: Open map (later integrate Google Maps / Mapbox)."));
+    $("#btnViewAll").addEventListener("click", () => showToast("info", "Demo: Doctors page (later)."));
 
     // Emergency mode toggle
     const emSwitch = $("#emSwitch");

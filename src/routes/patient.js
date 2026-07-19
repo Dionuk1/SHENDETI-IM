@@ -1,16 +1,24 @@
 const path = require('path');
+const fs = require('fs');
 
 const express = require('express');
+const mongoose = require('mongoose');
 const multer = require('multer');
 
 const Appointment = require('../models/Appointment');
 const MedicalRecord = require('../models/MedicalRecord');
 const Prescription = require('../models/Prescription');
 const User = require('../models/User');
+const Doctor = require('../models/Doctor');
 
 const { requireAuth } = require('../middleware/auth');
 const { requireRole } = require('../middleware/requireRole');
-const { encryptText, decryptText } = require('../utils/aes256');
+const { encryptText } = require('../utils/aes256');
+const { decryptPrescriptionContent, prescriptionReference } = require('../utils/prescriptions');
+const { appointmentDuration, isWithinDoctorAvailability, findDoctorUser } = require('../utils/appointments');
+const { createNotification } = require('../utils/notifications');
+const { writeAudit } = require('../utils/audit');
+const { appointmentCreateLimiter } = require('../middleware/rateLimits');
 
 const router = express.Router();
 
@@ -19,12 +27,12 @@ router.use(requireAuth, requireRole('patient'));
 /**
  * Patient Dashboard - Complete Health Overview
  * GET /patient/dashboard
- * Returns: appointments (schedule), prescriptions, medical records (analysis)
+ * Returns: appointments, prescriptions, and completed-history count
  */
 router.get('/dashboard', async (req, res, next) => {
     try {
         // Fetch all patient data in parallel
-        const [appointments, prescriptions, records] = await Promise.all([
+        const [appointments, prescriptions] = await Promise.all([
             Appointment.find({ patientId: req.user._id })
                 .populate('doctorId', 'name specialization')
                 .sort({ scheduledAt: -1 })
@@ -35,9 +43,6 @@ router.get('/dashboard', async (req, res, next) => {
                 .sort({ createdAt: -1 })
                 .limit(10),
 
-            MedicalRecord.find({ patientId: req.user._id })
-                .sort({ createdAt: -1 })
-                .limit(10),
         ]);
 
         const dashboard = {
@@ -57,6 +62,9 @@ router.get('/dashboard', async (req, res, next) => {
                     scheduledAt: a.scheduledAt,
                     status: a.status,
                     notes: a.notes,
+                    durationMinutes: a.durationMinutes,
+                    cancelledAt: a.cancelledAt,
+                    cancellationReason: a.cancellationReason,
                 })),
                 total: (await Appointment.countDocuments({ patientId: req.user._id })).toString(),
             },
@@ -71,17 +79,9 @@ router.get('/dashboard', async (req, res, next) => {
                 })),
                 total: (await Prescription.countDocuments({ patientId: req.user._id })).toString(),
             },
-            analysis: {
-                title: 'Analizat e Mia (My Analysis/Records)',
-                records: records.map((r) => ({
-                    id: r._id.toString(),
-                    originalName: r.originalName,
-                    mimeType: r.mimeType,
-                    size: r.size,
-                    createdAt: r.createdAt,
-                    hasNotes: Boolean(r.notesEncrypted),
-                })),
-                total: (await MedicalRecord.countDocuments({ patientId: req.user._id })).toString(),
+            history: {
+                title: 'Historia Mjekësore',
+                total: (await Appointment.countDocuments({ patientId: req.user._id, status: 'completed' })).toString(),
             },
         };
 
@@ -106,6 +106,9 @@ router.get('/appointments', async (req, res, next) => {
                 scheduledAt: a.scheduledAt,
                 status: a.status,
                 notes: a.notes,
+                durationMinutes: a.durationMinutes,
+                cancelledAt: a.cancelledAt,
+                cancellationReason: a.cancellationReason,
             })),
         });
     } catch (e) {
@@ -113,7 +116,7 @@ router.get('/appointments', async (req, res, next) => {
     }
 });
 
-router.post('/appointments', async (req, res, next) => {
+router.post('/appointments', appointmentCreateLimiter, async (req, res, next) => {
     try {
         const { doctorId, service, scheduledAt, notes } = req.body || {};
 
@@ -121,24 +124,49 @@ router.post('/appointments', async (req, res, next) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        const doctor = await User.findOne({ _id: doctorId, role: 'doctor' }).select('_id');
+        const doctor = await Doctor.findOne({ _id: doctorId, isActive: true });
         if (!doctor) {
             return res.status(400).json({ error: 'Invalid doctorId' });
         }
 
         const when = new Date(scheduledAt);
-        if (Number.isNaN(when.getTime())) {
-            return res.status(400).json({ error: 'Invalid scheduledAt' });
+        if (Number.isNaN(when.getTime()) || when <= new Date()) {
+            return res.status(400).json({ error: 'Invalid or past scheduledAt' });
         }
+
+        const durationMinutes = appointmentDuration(doctor, service);
+        if (!isWithinDoctorAvailability(doctor, when, durationMinutes)) {
+            return res.status(409).json({ error: 'Selected time is outside the doctor availability' });
+        }
+        const end = new Date(when.getTime() + durationMinutes * 60000);
+        const candidates = await Appointment.find({
+            doctorId: doctor._id,
+            status: { $in: ['pending', 'confirmed', 'completed'] },
+            scheduledAt: { $gte: new Date(when.getTime() - 480 * 60000), $lt: end },
+        }).select('scheduledAt durationMinutes');
+        const conflict = candidates.some((item) => {
+            const itemStart = new Date(item.scheduledAt);
+            const itemEnd = new Date(itemStart.getTime() + Number(item.durationMinutes || 30) * 60000);
+            return when < itemEnd && end > itemStart;
+        });
+        if (conflict) return res.status(409).json({ error: 'Doctor is not available at the selected time' });
 
         const app = await Appointment.create({
             patientId: req.user._id,
             doctorId: doctor._id,
             service: String(service).trim(),
             scheduledAt: when,
+            durationMinutes,
             status: 'pending',
             notes: notes ? String(notes).trim() : null,
         });
+
+        const doctorUser = await findDoctorUser(doctor);
+        await Promise.all([
+            createNotification({ userId: req.user._id, type: 'appointment_created', message: 'Termini u krijua me sukses.', resourceType: 'appointment', resourceId: app._id }),
+            doctorUser ? createNotification({ userId: doctorUser._id, type: 'appointment_created', message: 'Keni një termin të ri.', resourceType: 'appointment', resourceId: app._id }) : null,
+            writeAudit(req, { action: 'appointment.create', resourceType: 'appointment', resourceId: app._id, status: 'success' }),
+        ]);
 
         res.status(201).json({
             appointment: {
@@ -150,6 +178,7 @@ router.post('/appointments', async (req, res, next) => {
             },
         });
     } catch (e) {
+        if (e?.code === 11000) return res.status(409).json({ error: 'This time slot was just booked. Please choose another slot.' });
         next(e);
     }
 });
@@ -157,7 +186,8 @@ router.post('/appointments', async (req, res, next) => {
 router.get('/prescriptions', async (req, res, next) => {
     try {
         const items = await Prescription.find({ patientId: req.user._id })
-            .populate('doctorId', 'name')
+            .populate('doctorId', 'name email')
+            .populate('appointmentId', 'scheduledAt')
             .sort({ createdAt: -1 })
             .limit(200);
 
@@ -167,6 +197,10 @@ router.get('/prescriptions', async (req, res, next) => {
                 title: p.title,
                 doctor: p.doctorId ? { id: p.doctorId._id.toString(), name: p.doctorId.name } : null,
                 createdAt: p.createdAt,
+                issuedAt: p.createdAt,
+                appointmentDate: p.appointmentId?.scheduledAt || null,
+                status: p.status || 'active',
+                referenceNumber: prescriptionReference(p),
             })),
         });
     } catch (e) {
@@ -176,20 +210,45 @@ router.get('/prescriptions', async (req, res, next) => {
 
 router.get('/prescriptions/:id', async (req, res, next) => {
     try {
+        if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid prescription id' });
         const p = await Prescription.findOne({ _id: req.params.id, patientId: req.user._id })
-            .populate('doctorId', 'name');
+            .populate('doctorId', 'name email')
+            .populate('appointmentId', 'scheduledAt status');
 
         if (!p) {
             return res.status(404).json({ error: 'Not found' });
         }
 
+        await writeAudit(req, { action: 'prescription.view', resourceType: 'prescription', resourceId: p._id, status: 'success' });
+
+        const doctorProfile = p.doctorId?.email
+            ? await Doctor.findOne({ email: String(p.doctorId.email).toLowerCase().trim() }).select('specialization').lean()
+            : null;
+
+        let content = null;
+        let unavailable = false;
+        try {
+            content = decryptPrescriptionContent(p.bodyEncrypted);
+        } catch (error) {
+            unavailable = true;
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('Prescription decryption unavailable.', { type: String(error?.name || 'Error'), prescriptionId: p._id.toString() });
+            }
+        }
+
         res.json({
             prescription: {
                 id: p._id.toString(),
+                referenceNumber: prescriptionReference(p),
                 title: p.title,
-                doctor: p.doctorId ? { id: p.doctorId._id.toString(), name: p.doctorId.name } : null,
-                body: decryptText(p.bodyEncrypted),
+                patient: { name: req.user.name },
+                doctor: p.doctorId ? { name: p.doctorId.name, specialization: doctorProfile?.specialization || null } : null,
+                content,
+                unavailable,
+                appointment: p.appointmentId ? { scheduledAt: p.appointmentId.scheduledAt, status: p.appointmentId.status } : null,
                 createdAt: p.createdAt,
+                issuedAt: p.createdAt,
+                status: p.status || 'active',
             },
         });
     } catch (e) {
@@ -197,9 +256,66 @@ router.get('/prescriptions/:id', async (req, res, next) => {
     }
 });
 
+router.get('/history', async (req, res, next) => {
+    try {
+        const appointments = await Appointment.find({ patientId: req.user._id, status: 'completed' })
+            .populate('doctorId', 'name specialization')
+            .sort({ scheduledAt: -1 })
+            .limit(200)
+            .lean();
+        const appointmentIds = appointments.map((item) => item._id);
+        const prescriptions = appointmentIds.length
+            ? await Prescription.find({ patientId: req.user._id, appointmentId: { $in: appointmentIds }, status: { $ne: 'cancelled' } })
+                .sort({ createdAt: -1 })
+                .limit(200)
+                .lean()
+            : [];
+        const prescriptionsByAppointment = new Map();
+        for (const prescription of prescriptions) {
+            const key = String(prescription.appointmentId || '');
+            if (!prescriptionsByAppointment.has(key)) prescriptionsByAppointment.set(key, []);
+            let content = null;
+            let unavailable = false;
+            try { content = decryptPrescriptionContent(prescription.bodyEncrypted); } catch (error) {
+                content = null;
+                unavailable = true;
+                if (process.env.NODE_ENV === 'development') {
+                    console.warn('History prescription decryption unavailable.', { type: String(error?.name || 'Error'), prescriptionId: prescription._id.toString() });
+                }
+            }
+            prescriptionsByAppointment.get(key).push({
+                id: prescription._id.toString(),
+                referenceNumber: prescriptionReference(prescription),
+                title: prescription.title,
+                diagnosis: content?.diagnosis || (content?.legacy ? prescription.title : null),
+                prescribedTreatment: content?.medicationName || null,
+                unavailable,
+                status: prescription.status || 'active',
+            });
+        }
+
+        res.json({
+            history: appointments.map((appointment) => ({
+                id: appointment._id.toString(),
+                scheduledAt: appointment.scheduledAt,
+                doctor: appointment.doctorId ? { name: appointment.doctorId.name, specialization: appointment.doctorId.specialization } : null,
+                service: appointment.service,
+                reportedSymptoms: appointment.notes || null,
+                status: appointment.status,
+                prescriptions: prescriptionsByAppointment.get(appointment._id.toString()) || [],
+            })),
+        });
+    } catch (e) {
+        next(e);
+    }
+});
+
+const medicalUploadsDir = path.join(process.cwd(), 'uploads', 'medical-records');
+fs.mkdirSync(medicalUploadsDir, { recursive: true });
+
 const upload = multer({
     storage: multer.diskStorage({
-        destination: (req, file, cb) => cb(null, path.join(process.cwd(), 'uploads', 'medical-records')),
+        destination: (req, file, cb) => cb(null, medicalUploadsDir),
         filename: (req, file, cb) => {
             const safe = `${Date.now()}-${Math.random().toString(16).slice(2)}.pdf`;
             cb(null, safe);
@@ -210,7 +326,9 @@ const upload = multer({
     },
     fileFilter: (req, file, cb) => {
         if (file.mimetype !== 'application/pdf') {
-            return cb(new Error('Only PDF files are allowed'));
+            const error = new Error('Only PDF files are allowed');
+            error.statusCode = 400;
+            return cb(error);
         }
         return cb(null, true);
     },
@@ -222,6 +340,7 @@ router.get('/records', async (req, res, next) => {
             .sort({ createdAt: -1 })
             .limit(200);
 
+        await writeAudit(req, { action: 'medical_record.list', resourceType: 'medical_record', status: 'success' });
         res.json({
             records: records.map((r) => ({
                 id: r._id.toString(),
@@ -244,15 +363,33 @@ router.post('/records/upload', upload.single('file'), async (req, res, next) => 
         }
 
         const { notes } = req.body || {};
+        const handle = await fs.promises.open(req.file.path, 'r');
+        const signature = Buffer.alloc(5);
+        await handle.read(signature, 0, 5, 0);
+        await handle.close();
+        if (signature.toString('ascii') !== '%PDF-') {
+            await fs.promises.unlink(req.file.path).catch(() => {});
+            return res.status(400).json({ error: 'The uploaded file is not a valid PDF' });
+        }
+
+        if (notes && String(notes).length > 5000) {
+            await fs.promises.unlink(req.file.path).catch(() => {});
+            return res.status(400).json({ error: 'Notes are too long' });
+        }
 
         const doc = await MedicalRecord.create({
             patientId: req.user._id,
-            originalName: req.file.originalname,
+            originalName: path.basename(req.file.originalname).slice(0, 255),
             mimeType: req.file.mimetype,
             size: req.file.size,
             filePath: req.file.path,
             notesEncrypted: notes ? encryptText(String(notes)) : null,
         });
+
+        await Promise.all([
+            createNotification({ userId: req.user._id, type: 'medical_record_created', message: 'Dokumenti i ri mjekësor është i disponueshëm.', resourceType: 'medical_record', resourceId: doc._id }),
+            writeAudit(req, { action: 'medical_record.upload', resourceType: 'medical_record', resourceId: doc._id, status: 'success' }),
+        ]);
 
         res.status(201).json({
             record: {
@@ -272,6 +409,8 @@ router.get('/records/:id/download', async (req, res, next) => {
         if (!rec) {
             return res.status(404).json({ error: 'Not found' });
         }
+
+        await writeAudit(req, { action: 'medical_record.download', resourceType: 'medical_record', resourceId: rec._id, status: 'success' });
 
         // Only allow downloading files we stored.
         const abs = path.resolve(rec.filePath);

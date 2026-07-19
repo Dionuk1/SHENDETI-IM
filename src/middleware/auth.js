@@ -28,7 +28,7 @@ async function requireAuth(req, res, next) {
         }
 
         const user = await User.findById(payload.sub);
-        if (!user) {
+        if (!user || user.isActive === false) {
             return res.status(401).json({ error: 'Unauthorized' });
         }
 

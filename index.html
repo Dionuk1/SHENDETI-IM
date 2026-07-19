@@ -196,6 +196,78 @@
       box-shadow: 0 0 0 4px rgba(255,255,255,.18);
     }
 
+    .preparation {
+      width: min(620px, 92%);
+      margin-top: 36px;
+      animation: fade-in .9s .66s ease-out both;
+    }
+
+    .preparation-title {
+      margin: 0 0 12px;
+      color: var(--blue);
+      font-size: .78rem;
+      font-weight: 850;
+      letter-spacing: .22em;
+    }
+
+    .progress-track {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #dfedfa;
+      box-shadow: inset 0 2px 5px rgba(22, 78, 128, .08);
+    }
+
+    .progress-fill {
+      display: block;
+      width: 78%;
+      height: 100%;
+      border-radius: inherit;
+      background: repeating-linear-gradient(120deg, rgba(255,255,255,.16) 0 10px, transparent 10px 20px), linear-gradient(90deg, #1677f2, #20cfd2);
+      animation: progress-shimmer 7s ease-in-out infinite;
+    }
+
+    .feature-panel {
+      display: grid;
+      width: min(880px, 100%);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-top: 38px;
+      padding: 24px 12px;
+      border: 1px solid rgba(255,255,255,.92);
+      border-radius: 26px;
+      background: rgba(255,255,255,.76);
+      box-shadow: 0 22px 60px rgba(36, 105, 165, .1);
+      backdrop-filter: blur(12px);
+      animation: fade-in .9s .72s ease-out both;
+    }
+
+    .feature {
+      min-width: 0;
+      padding: 4px 18px;
+    }
+
+    .feature + .feature { border-left: 1px solid var(--line); }
+
+    .feature-icon {
+      width: 38px;
+      height: 38px;
+      margin-bottom: 10px;
+      color: var(--blue);
+    }
+
+    .feature h2 {
+      margin: 0 0 7px;
+      color: var(--blue);
+      font-size: .9rem;
+    }
+
+    .feature p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.5;
+    }
+
     .message-card {
       width: min(650px, 100%);
       margin-top: 44px;
@@ -260,7 +332,16 @@
     @keyframes heartbeat-line { to { stroke-dashoffset: -104; } }
     @keyframes float { 0%,100% { translate: 0 0; rotate: 0deg; } 50% { translate: 0 -14px; rotate: 4deg; } }
     @keyframes status-pulse { 0%,100% { box-shadow: 0 12px 30px rgba(20,125,232,.22); } 50% { box-shadow: 0 12px 38px rgba(27,198,210,.34); } }
+    @keyframes progress-shimmer { 0%,100% { filter: saturate(1); transform: scaleX(.98); transform-origin: left; } 50% { filter: saturate(1.18); transform: scaleX(1); transform-origin: left; } }
     @keyframes wave-drift { from { transform: translateX(-1.5%) scaleX(1.01); } to { transform: translateX(1.5%) scaleX(1.03); } }
+
+    @media (max-width: 760px) {
+      .feature-panel { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 12px; }
+      .feature { padding: 16px 14px; }
+      .feature + .feature { border-left: 0; }
+      .feature:nth-child(even) { border-left: 1px solid var(--line); }
+      .feature:nth-child(n+3) { border-top: 1px solid var(--line); }
+    }
 
     @media (max-width: 600px) {
       .site-header { padding-top: 24px; }
@@ -271,6 +352,8 @@
       .coming-soon { margin-top: 13px; font-size: clamp(1.85rem, 9.5vw, 3.1rem); }
       .pulse-divider { margin-top: 13px; }
       .intro { line-height: 1.62; }
+      .preparation { margin-top: 30px; }
+      .feature-panel { margin-top: 28px; border-radius: 22px; }
       .message-card { margin-top: 30px; padding: 19px 18px; border-radius: 20px; }
       .cross-one { left: 2%; }
       .cross-two { right: 2%; }
@@ -289,9 +372,11 @@
     <header class="site-header">
       <div class="brand" aria-label="SHËNDETI IM">
         <svg class="brand-mark" viewBox="0 0 80 80" role="img" aria-label="Logoja SHËNDETI IM">
-          <defs><linearGradient id="brandGradient" x1="8" y1="8" x2="72" y2="72" gradientUnits="userSpaceOnUse"><stop stop-color="#1476f3"/><stop offset="1" stop-color="#20d0d2"/></linearGradient></defs>
-          <path d="M40 67C20 55 10 44 10 29c0-9 7-16 16-16 6 0 11 3 14 8 3-5 8-8 14-8 9 0 16 7 16 16 0 15-10 26-30 38Z" fill="none" stroke="url(#brandGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M40 31v20M30 41h20" stroke="#20cfd2" stroke-width="7" stroke-linecap="round"/>
+          <defs><linearGradient id="brandGradient" x1="13" y1="8" x2="67" y2="69" gradientUnits="userSpaceOnUse"><stop stop-color="#257cf3"/><stop offset="1" stop-color="#1598ef"/></linearGradient></defs>
+          <circle cx="40" cy="10" r="7" fill="url(#brandGradient)"/>
+          <path d="M40 69C25 58 14 47 14 34c0-9 7-15 16-15 5 0 9 2 12 6 3-4 7-6 12-6 8 0 14 6 14 15 0 4-1 8-3 11" fill="none" stroke="url(#brandGradient)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M42 25c-4-5-8-7-12-7M42 25c4-5 8-7 12-7" fill="none" stroke="#257cf3" stroke-width="5" stroke-linecap="round"/>
+          <path d="M59 43v22M48 54h22" stroke="#20cfd2" stroke-width="8" stroke-linecap="round"/>
         </svg>
         <p class="brand-name">SHËNDETI <span>IM</span></p>
         <p class="brand-kicker">PLATFORMA DIGJITALE SHËNDETËSORE</p>
@@ -311,6 +396,34 @@
       <p class="intro">Diçka e re për shëndetin tuaj po vjen së shpejti.<br><br><strong>SHËNDETI IM</strong> është një platformë moderne digjitale që synon ta bëjë menaxhimin e termineve dhe shërbimeve shëndetësore më të thjeshtë, më të shpejtë dhe më të sigurt.</p>
 
       <div class="status" role="status"><span class="status-dot" aria-hidden="true"></span>NË ZHVILLIM</div>
+
+      <div class="preparation" aria-label="Platforma është në përgatitje">
+        <p class="preparation-title">PËRGATITJA PËR JU</p>
+        <div class="progress-track" aria-hidden="true"><span class="progress-fill"></span></div>
+      </div>
+
+      <section class="feature-panel" aria-label="Përfitimet e platformës">
+        <article class="feature">
+          <svg class="feature-icon" viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="10" width="34" height="31" rx="5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M15 6v9M33 6v9M7 20h34M16 27h1M24 27h1M32 27h1M16 34h1M24 34h1" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+          <h2>Termine të thjeshta</h2>
+          <p>Menaxhim më i lehtë i termineve shëndetësore.</p>
+        </article>
+        <article class="feature">
+          <svg class="feature-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 5 39 11v10c0 10-6 17-15 22C15 38 9 31 9 21V11l15-6Z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="m17 24 5 5 10-11" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h2>Të dhëna të mbrojtura</h2>
+          <p>Privatësia dhe siguria janë pjesë e platformës.</p>
+        </article>
+        <article class="feature">
+          <svg class="feature-icon" viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="15" r="8" fill="none" stroke="currentColor" stroke-width="3"/><path d="M10 42c0-9 5-14 14-14s14 5 14 14M24 32v10M18 37h12" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>
+          <h2>Qasje e lehtë</h2>
+          <p>Përvojë e qartë për pacientë dhe profesionistë.</p>
+        </article>
+        <article class="feature">
+          <svg class="feature-icon" viewBox="0 0 48 48" aria-hidden="true"><path d="M8 39V26M18 39V20M28 39V13M38 39V7M6 39h36M9 18l9-7 9 4L39 5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <h2>Shërbime moderne</h2>
+          <p>Mjete digjitale për një përvojë më të mirë.</p>
+        </article>
+      </section>
 
       <section class="message-card" aria-label="Njoftim për publikimin">
         <p>Platforma është duke u përgatitur për publikim.<br><strong>Ju faleminderit për durimin.</strong></p>

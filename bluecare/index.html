@@ -2198,14 +2198,13 @@
                 
                 if(!subview || subview === 'dashboard') {
                     const myName = user.name || 'Pacient';
-                    const myApps = (Array.isArray(appointments) ? appointments : []).filter(a => normalizePersonName(a.patient || '') === normalizePersonName(myName));
 
                     view.innerHTML = `
                         <div style="margin-bottom:20px;">
                             <p style="color:var(--gray);">Mirësere, <b>${escapeHtml(myName)}</b> 👋</p>
                         </div>
                         <div class="grid-3">
-                            <div class="card metric-card"><h3>Terminet</h3><h2 style="color:var(--primary);">${myApps.length}</h2></div>
+                            <div class="card metric-card"><h3>Terminet</h3><h2 id="patientAppointmentCount" style="color:var(--primary);">—</h2></div>
                             <div class="card metric-card"><h3>Receta</h3><h2 style="color:var(--success);">--</h2></div>
                             <div class="card metric-card"><h3>Historia Mjekësore</h3><h2 style="color:var(--warning);">--</h2></div>
                         </div>
@@ -2220,10 +2219,11 @@
                             <h3>📋 Terminet e Mia</h3>
                             <table>
                                 <thead><tr><th>Doktori</th><th>Data</th><th>Ora</th><th>Pritje</th><th>Statusi</th></tr></thead>
-                                <tbody>${myApps.length === 0 ? '<tr><td colspan="5" style="text-align:center; color:var(--gray);">Ska termine të regjistruar</td></tr>' : myApps.map(a => `<tr><td>${escapeHtml(a.doc || '')}</td><td>${escapeHtml(a.date || '')}</td><td>${escapeHtml(a.time || '')}</td><td>${escapeHtml(a.wait || '~30 min')}</td><td><span class="status-pill status-waiting">${escapeHtml(a.status || '')}</span></td></tr>`).join('')}</tbody>
+                                <tbody id="patientDashboardAppointmentsBody"><tr><td colspan="5" style="text-align:center; color:var(--gray);">Duke ngarkuar terminet...</td></tr></tbody>
                             </table>
                         </div>
                     `;
+                    fetchAndRenderPatientAppointments();
                 }
                 else if(subview === 'symptoms') {
                     view.innerHTML = `
@@ -3739,11 +3739,41 @@
 
         function toSqAppointmentStatus(status) {
             const k = String(status || '').toLowerCase();
-            if (k === 'pending') return 'Pritje';
-            if (k === 'confirmed') return 'Aprovuar';
-            if (k === 'cancelled') return 'Anuluar';
-            if (k === 'completed') return 'Përfunduar';
+            if (k === 'pending') return 'PRITJE';
+            if (k === 'approved') return 'APROVUAR';
+            if (k === 'confirmed') return 'KONFIRMUAR';
+            if (k === 'cancelled') return 'ANULUAR';
+            if (k === 'rejected') return 'REFUZUAR';
+            if (k === 'in-progress') return 'NË PROCES';
+            if (k === 'completed') return 'PËRFUNDUAR';
             return status || '';
+        }
+
+        function patientAppointmentDisplay(item) {
+            const when = new Date(item?.scheduledAt);
+            const validDate = !Number.isNaN(when.getTime());
+            const status = String(item?.status || '').toLowerCase();
+            const date = validDate ? new Intl.DateTimeFormat('sq-AL', { day:'2-digit', month:'2-digit', year:'numeric' }).format(when) : '—';
+            const time = validDate ? new Intl.DateTimeFormat('sq-AL', { hour:'2-digit', minute:'2-digit', hour12:false }).format(when) : '—';
+            const canCancel = validDate && when > new Date() && ['pending', 'approved', 'confirmed'].includes(status);
+            const pill = ['confirmed', 'completed'].includes(status) ? 'status-success' : ['cancelled', 'rejected'].includes(status) ? 'status-danger' : 'status-waiting';
+            const waitMinutes = item?.queue?.estimatedWaitMinutes;
+            const wait = validDate && when > new Date() && ['pending', 'approved', 'confirmed', 'in-progress'].includes(status) && typeof waitMinutes === 'number' && Number.isFinite(waitMinutes)
+                ? `~${Math.max(0, Math.round(waitMinutes))} min`
+                : '—';
+            return { when, status, date, time, canCancel, pill, wait };
+        }
+
+        function patientSpecializationLabel(value) {
+            const key = String(value || '').toLowerCase();
+            const labels = {
+                cardiology: 'Cardiology / Kardiologji', neurology: 'Neurology / Neurologji',
+                orthopedics: 'Orthopedics / Ortopedi', general: 'General / Mjekësi e përgjithshme',
+                pediatrics: 'Pediatrics / Pediatri', psychiatry: 'Psychiatry / Psikiatri',
+                dermatology: 'Dermatology / Dermatologji', emergency: 'Emergency / Urgjencë',
+                pulmonology: 'Pulmonology / Pulmonologji', gynecology: 'Gynecology / Gjinekologji'
+            };
+            return labels[key] || value || '—';
         }
 
         async function cancelAppointmentFromDashboard(id, actor, actionButton) {
@@ -3799,8 +3829,9 @@
         }
 
         async function fetchAndRenderPatientAppointments() {
-            const body = document.getElementById('patientAppointmentsBody');
-            if (!body) return;
+            const scheduleBody = document.getElementById('patientAppointmentsBody');
+            const dashboardBody = document.getElementById('patientDashboardAppointmentsBody');
+            if (!scheduleBody && !dashboardBody) return;
             const token = localStorage.getItem('token');
             if (!token) return;
             try {
@@ -3808,15 +3839,21 @@
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(data.error || 'Terminet nuk u ngarkuan');
                 const list = Array.isArray(data.appointments) ? data.appointments : [];
-                body.innerHTML = list.length ? list.map((item) => {
-                    const when = new Date(item.scheduledAt);
-                    const status = String(item.status || '').toLowerCase();
-                    const canCancel = !['cancelled', 'completed'].includes(status);
-                    const pill = status === 'confirmed' ? 'status-success' : status === 'cancelled' ? 'status-danger' : 'status-waiting';
-                    return `<tr><td>${escapeHtml(item.doctor?.name || '—')}</td><td>${escapeHtml(item.doctor?.specialization || '—')}</td><td>${escapeHtml(when.toLocaleDateString())}</td><td>${escapeHtml(when.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }))}</td><td><span class="status-pill ${pill}">${escapeHtml(toSqAppointmentStatus(status))}</span></td><td>${canCancel ? `<button class="btn btn-danger" onclick="cancelAppointmentFromDashboard('${escapeHtml(item.id)}','patient')">Anulo terminin</button>` : '—'}</td></tr>`;
-                }).join('') : '<tr><td colspan="6" style="text-align:center;color:var(--gray);">Nuk ka termine.</td></tr>';
+                const empty = 'Nuk keni ende termine.';
+                if (dashboardBody) dashboardBody.innerHTML = list.length ? list.map((item) => {
+                    const display = patientAppointmentDisplay(item);
+                    return `<tr><td>${escapeHtml(item.doctor?.name || '—')}</td><td>${escapeHtml(display.date)}</td><td>${escapeHtml(display.time)}</td><td>${escapeHtml(display.wait)}</td><td><span class="status-pill ${display.pill}">${escapeHtml(toSqAppointmentStatus(display.status))}</span></td></tr>`;
+                }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--gray);">${empty}</td></tr>`;
+                if (scheduleBody) scheduleBody.innerHTML = list.length ? list.map((item) => {
+                    const display = patientAppointmentDisplay(item);
+                    return `<tr><td>${escapeHtml(item.doctor?.name || '—')}</td><td>${escapeHtml(patientSpecializationLabel(item.doctor?.specialization))}</td><td>${escapeHtml(display.date)}</td><td>${escapeHtml(display.time)}</td><td><span class="status-pill ${display.pill}">${escapeHtml(toSqAppointmentStatus(display.status))}</span></td><td>${display.canCancel ? `<button class="btn btn-danger" onclick="cancelAppointmentFromDashboard('${escapeHtml(item.id)}','patient',this)">Anulo terminin</button>` : '—'}</td></tr>`;
+                }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--gray);">${empty}</td></tr>`;
+                const count = document.getElementById('patientAppointmentCount');
+                if (count) count.textContent = String(list.length);
             } catch (error) {
-                body.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);">${escapeHtml(error.message)}</td></tr>`;
+                const message = 'Nuk u arrit të ngarkohen terminet. Provo përsëri.';
+                if (dashboardBody) dashboardBody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--danger);">${message}</td></tr>`;
+                if (scheduleBody) scheduleBody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);">${message}</td></tr>`;
             }
         }
 
@@ -4984,7 +5021,7 @@
                     }
 
                     const patientName = me?.name || 'Pacient';
-                    const localApp = { id: Date.now(), doctorId: normalizedDoctorId, doc: doctorName, date, time, status: 'Pritje', wait: '~30 min', patient: patientName };
+                    const localApp = { id: Date.now(), doctorId: normalizedDoctorId, doc: doctorName, date, time, status: 'Pritje', patient: patientName };
                     if (data?.appointment?.id) localApp.dbId = data.appointment.id;
 
                     appointments.unshift(localApp);

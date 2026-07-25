@@ -30,6 +30,15 @@ private_uploads/
 private-uploads/
 storage/private/
 
+# Migration state and reconciliation artifacts
+.migration-state/
+migration-state/
+scripts/migration/state/
+scripts/migration/reports/
+*.id-map.json
+*.migration-report.json
+*.checksum-report.json
+
 # Database dumps, exports, and backups
 dump/
 dumps/

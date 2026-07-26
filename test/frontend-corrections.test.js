@@ -12,16 +12,22 @@ const adminRoute = fs.readFileSync(path.join(root, 'src', 'routes', 'admin.js'),
 const doctorRoute = fs.readFileSync(path.join(root, 'src', 'routes', 'doctor.js'), 'utf8');
 const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
 
-test('public authentication is role-free and keeps optional Google actions hidden until configured', () => {
+test('public authentication is role-free and uses one semantic email/password form', () => {
     assert.doesNotMatch(mainHtml, /class="[^"]*role-tabs/);
     assert.doesNotMatch(mainHtml, /setRole\(/);
-    assert.match(mainHtml, /id="googleLoginButton" hidden style="display:none/);
-    assert.match(mainHtml, /id="googleRegisterButton" hidden style="display:none/);
-    assert.match(mainHtml, /if \(!config\?\.enabled \|\| !config\?\.clientId \|\| !window\.google\?\.accounts\?\.id\) return/);
-    assert.match(mainHtml, /el\.hidden = false;[\s\S]*?el\.style\.display = 'flex'/);
-    assert.doesNotMatch(mainHtml, /showGoogleConfigurationMessage/);
+    assert.match(mainHtml, /<form id="login-form">/);
+    assert.match(mainHtml, /id="loginSubmitButton" type="submit"/);
+    assert.match(mainHtml, /login-form'\)\?\.addEventListener\('submit'/);
+    assert.doesNotMatch(mainHtml, /googleLoginButton|googleRegisterButton|accounts\.google\.com|\/api\/auth\/google/);
     assert.match(mainHtml, /Nuk ke llogari\?[\s\S]*?Regjistrohu/);
     assert.match(mainHtml, /Ke llogari\?[\s\S]*?Kyçu/);
+});
+
+test('patient navigation computes active state and keeps the symptom checker route', () => {
+    assert.match(mainHtml, /class="nav-link \$\{subview==='symptoms'\?'active':''\}"[\s\S]*?Symptoma/);
+    assert.match(mainHtml, /allowedSections[\s\S]*?patient: new Set\(\['dashboard', 'symptoms', 'schedule', 'messages', 'prescriptions', 'history'\]\)/);
+    assert.match(mainHtml, /\/api\/ai\/analyze-symptoms/);
+    assert.doesNotMatch(mainHtml, /\/api\/ai\/chat|chat-btn|chat-box/);
 });
 
 test('booking UI keeps the backend ISO instant and exposes count and occupied help', () => {

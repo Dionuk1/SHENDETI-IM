@@ -25,7 +25,7 @@ async function analyzeSymptoms(req, res, next) {
 
         // Department suggestion (rule-based + optional Gemini refinement)
         const deptSuggestion = await suggestDepartmentFromSymptoms(symptoms, age, medicalHistory);
-        
+
         const analysis = {
             valid: true,
             symptoms: symptoms,

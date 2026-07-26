@@ -1,7 +1,7 @@
 /**
  * Gemini AI Integration Service
  * Provides advanced AI responses using Google's Gemini API
- * 
+ *
  * Setup:
  * 1. npm install @google/generative-ai
  * 2. Add GEMINI_API_KEY to .env file
@@ -149,7 +149,7 @@ Provide response in JSON format:
 
         const result = await model.generateContent(prompt);
         const responseText = await result.response.text();
-        
+
         // Parse JSON response
         const jsonMatch = responseText.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
@@ -206,14 +206,14 @@ function generateRuleBasedAnalysis(symptoms, age, medicalHistory) {
  */
 function getPrimaryConcern(symptoms) {
     const symptomLower = symptoms.toLowerCase();
-    
+
     if (symptomLower.includes('chest') || symptomLower.includes('heart')) return 'Cardiovascular';
     if (symptomLower.includes('head') || symptomLower.includes('migraine')) return 'Neurological';
     if (symptomLower.includes('bone') || symptomLower.includes('joint')) return 'Orthopedic';
     if (symptomLower.includes('mental') || symptomLower.includes('stress')) return 'Psychiatric';
     if (symptomLower.includes('skin')) return 'Dermatological';
     if (symptomLower.includes('stomach') || symptomLower.includes('digestive')) return 'Gastrointestinal';
-    
+
     return 'General Health';
 }
 

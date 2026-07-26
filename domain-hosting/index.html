@@ -4,11 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHËNDETI IM | Pro Edition 2026</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <script src="/js/config.js"></script>
+
     <style>
         :root {
             --primary: #0062ff;
@@ -716,7 +717,7 @@
         <div class="modal-box animate__animated animate__zoomIn">
             <div class="brand-lockup modal-brand"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><span class="brand-name">SHËNDETI IM</span></div>
             <h2 id="authModalTitle" style="text-align:center; margin-bottom:20px;">Mirësevini përsëri</h2>
-            
+
             <!-- Login Form -->
             <form id="login-form">
                 <input type="email" id="loginEmail" class="input" placeholder="Adresa e emailit" autocomplete="email">
@@ -734,7 +735,7 @@
                 <button id="loginSubmitButton" type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Kyçu</button>
                 <p style="text-align:center; margin-top:14px; color:var(--gray);">Nuk ke llogari? <button type="button" style="border:0;background:none;color:var(--primary);font-weight:700;cursor:pointer;" onclick="showRegisterForm()">Regjistrohu</button></p>
             </form>
-            
+
             <!-- Registration Form -->
             <div id="register-form" class="hidden">
                 <input type="text" id="regName" class="input" placeholder="Emri i plotë" autocomplete="name">
@@ -764,7 +765,7 @@
                 <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="registerUser()">Regjistrohu</button>
                 <p style="text-align:center; margin-top:14px; color:var(--gray);">Ke llogari? <button type="button" style="border:0;background:none;color:var(--primary);font-weight:700;cursor:pointer;" onclick="showLoginForm()">Kyçu</button></p>
             </div>
-            
+
             <p style="text-align:center; margin-top:15px; cursor:pointer; color:var(--gray);" onclick="toggleModal('loginModal')">Anulo</p>
         </div>
     </div>
@@ -1243,8 +1244,8 @@
             }
         }, 0);
 
-        function toggleModal(id) { 
-            document.getElementById(id).classList.toggle('hidden'); 
+        function toggleModal(id) {
+            document.getElementById(id).classList.toggle('hidden');
             if(id === 'loginModal' && !document.getElementById(id).classList.contains('hidden')) {
                 showLoginForm(); // Reset to login form when opening
             }
@@ -1517,12 +1518,12 @@
 
             setInlineNoticeAfterField(emailEl, 'loginEmailNotice', 'error', '');
             setInlineNoticeAfterField(passEl, 'loginPassNotice', 'error', '');
-            
+
             if(!email || !pass) {
                 setInlineNoticeAfterField(passEl, 'loginPassNotice', 'error', 'Plotësoni email dhe fjalëkalimin.');
                 return;
             }
-            
+
             const submitButton = document.getElementById('loginSubmitButton');
             loginSubmissionInFlight = true;
             setButtonLoading(submitButton, true, 'Duke u kyçur...');
@@ -1535,17 +1536,17 @@
                         password: pass
                     })
                 });
-                
+
                 if(!response.ok) {
                     setInlineNoticeAfterField(passEl, 'loginPassNotice', 'error', 'Kredencialet e gabuara ose ndodhi gabim në server.');
                     return;
                 }
-                
+
                 const data = await response.json();
                 completeAuthentication(data);
                 addLog(`${data.user.role} u identifikua`, email);
             } catch(err) {
-                setInlineNoticeAfterField(passEl, 'loginPassNotice', 'warn', 'Gabim lidhje: ' + err.message + '. Sigurohuni se serveri funksionon në localhost:5500');
+                setInlineNoticeAfterField(passEl, 'loginPassNotice', 'warn', 'Gabim lidhje: ' + err.message + '. Shërbimi API nuk u arrit.');
             } finally {
                 loginSubmissionInFlight = false;
                 setButtonLoading(submitButton, false);
@@ -1585,35 +1586,35 @@
             setInlineNoticeAfterField(emailEl, 'regEmailNotice', 'error', '');
             setInlineNoticeAfterField(passEl, 'regPassNotice', 'error', '');
             setInlineNoticeAfterField(passConfirmEl, 'regPassConfirmNotice', 'error', '');
-            
+
             if(!name || !email || !pass || !passConfirm) {
                 setInlineNoticeAfterField(passConfirmEl, 'regPassConfirmNotice', 'error', 'Plotësoni të gjitha fushat.');
                 return;
             }
-            
+
             if(pass !== passConfirm) {
                 setInlineNoticeAfterField(passConfirmEl, 'regPassConfirmNotice', 'error', 'Fjalëkalimet nuk përputhen.');
                 return;
             }
-            
+
             try {
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         name: name.trim(),
                         email: email.toLowerCase().trim(),
                         password: pass,
                         passwordConfirm: passConfirm
                     })
                 });
-                
+
                 if(!response.ok) {
                     const error = await response.json();
                     setInlineNoticeAfterField(passConfirmEl, 'regPassConfirmNotice', 'error', (error.error || 'Regjistrimi dështoi'));
                     return;
                 }
-                
+
                 const data = await response.json();
                 completeAuthentication(data);
                 showToast('success', 'Regjistrimi u krye me sukses.');
@@ -1685,7 +1686,7 @@
             const specKey = normalizeApiKey(spec);
             if (!specKey) return [];
 
-            const url = `http://localhost:5500/api/appointments/doctors/${encodeURIComponent(spec)}`;
+            const url = `/api/appointments/doctors/${encodeURIComponent(spec)}`;
             const key = `doctors:${specKey}`;
 
             const payload = await cachedFetchJson(apiCache.doctorsBySpec, key, API_TTL_DOCTORS_MS, async () => {
@@ -1702,7 +1703,7 @@
             if (!id) return { estimatedWaitMinutes: 15, activeAppointments: 0, busyLevel: 'low' };
 
             const key = `queue:${id}`;
-            const url = `http://localhost:5500/api/appointments/queue-status/${encodeURIComponent(id)}`;
+            const url = `/api/appointments/queue-status/${encodeURIComponent(id)}`;
 
             const payload = await cachedFetchJson(apiCache.queueStatus, key, API_TTL_QUEUE_STATUS_MS, async () => {
                 const res = await fetch(url);
@@ -1841,25 +1842,25 @@
                 showToast('warn', 'Shkruani një simptomë.');
                 return;
             }
-            
+
             try {
-                const response = await fetch('http://localhost:5500/api/appointments/check-symptoms', {
+                const response = await fetch('/api/appointments/check-symptoms', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ symptoms: normalizeSymptomsForApi(symptomInput) })
                 });
-                
+
                 if(!response.ok) throw new Error('Symptom check failed');
-                
+
                 const result = await response.json();
-                
+
                 if(!result.valid) {
                     showToast('warn', result.error || 'Simptoma nuk u pranua.');
                     return;
                 }
 
                 showToast('success', `Departamenti: ${(result.suggestedDepartment || 'N/A').toString().toUpperCase()} | Urgjenca: ${(result.urgencyLevel || 'N/A').toString().toUpperCase()}`);
-                      
+
                 return result;
             } catch(err) {
                 console.error('Symptom check error:', err);
@@ -2002,20 +2003,20 @@
         function checkAuthAndNavigate(section) {
             const token = localStorage.getItem('token');
             const user = JSON.parse(localStorage.getItem('user') || '{}');
-            
+
             if(!token) {
                 showToast('error', 'Duhet të jeni i kyçur fillimisht.');
                 toggleModal('loginModal');
                 return;
             }
-            
+
             // Check role for restricted sections
             const role = localStorage.getItem('role');
             if(section === 'admin' && role !== 'admin') {
                 showToast('error', 'Vetëm admin ka akses.');
                 return;
             }
-            
+
             showToast('success', `Duke hapur ${section} si ${user.name || 'User'}`);
             // Navigate or update view
         }
@@ -2113,7 +2114,7 @@
                     <div class="nav-link ${subview==='prescriptions'?'active':''}" onclick="refreshView('patient', 'prescriptions')"><i class="fas fa-pills"></i> Receptet</div>
                     <div class="nav-link ${subview==='history'?'active':''}" onclick="refreshView('patient', 'history')"><i class="fas fa-notes-medical"></i> Historia Mjekësore</div>
                 `;
-                
+
                 if(!subview || subview === 'dashboard') {
                     const myName = user.name || 'Pacient';
 
@@ -2252,7 +2253,7 @@
                     `;
                     loadMedicalHistory();
                 }
-            } 
+            }
             else if(type === 'admin') {
                 document.getElementById('dash-title').innerText = "SHËNDETI IM — Admin";
                 sidebar.innerHTML = `
@@ -2354,7 +2355,7 @@
                     <div class="nav-link ${subview==='messages'?'active':''}" onclick="refreshView('doctor', 'messages')"><i class="fas fa-envelope"></i> Mesazhet</div>
                     <div class="nav-link ${subview==='profile'?'active':''}" onclick="refreshView('doctor', 'profile')"><i class="fas fa-user-circle"></i> Profili</div>
                 `;
-                
+
                 if(!subview || subview === 'dashboard') {
                     const msgCount = getDoctorIncomingMessagesCount(user);
 
@@ -2586,7 +2587,7 @@
                 }
                 let succeeded = false;
                 try {
-                    const response = await fetch(`http://localhost:5500/api/doctor/appointments/${encodeURIComponent(String(id))}`, {
+                    const response = await fetch(`/api/doctor/appointments/${encodeURIComponent(String(id))}`, {
                         method: 'PATCH',
                         headers: {
                             'Authorization': `Bearer ${token}`,
@@ -3060,7 +3061,7 @@
             const modal = document.getElementById('doctorPatientHistoryModal');
             if (modal) modal.classList.remove('hidden');
 
-            fetch(`http://localhost:5500/api/patients/${encodeURIComponent(pid)}/history`, {
+            fetch(`/api/patients/${encodeURIComponent(pid)}/history`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -3131,7 +3132,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5500/api/doctor/appointments', {
+                const response = await fetch('/api/doctor/appointments', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -3234,7 +3235,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5500/api/doctor/appointments', {
+                const response = await fetch('/api/doctor/appointments', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -3562,7 +3563,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5500/api/doctors/schedule', {
+                const response = await fetch('/api/doctors/schedule', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -3628,7 +3629,7 @@
             if (saveBtn) saveBtn.disabled = true;
 
             try {
-                const response = await fetch('http://localhost:5500/api/doctors/schedule', {
+                const response = await fetch('/api/doctors/schedule', {
                     method: 'PATCH',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -3783,7 +3784,7 @@
             if (!token) return;
 
             try {
-                const response = await fetch(`http://localhost:5500/api/admin/appointments/${encodeURIComponent(String(id))}`, {
+                const response = await fetch(`/api/admin/appointments/${encodeURIComponent(String(id))}`, {
                     method: 'PATCH',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -3818,7 +3819,7 @@
             }
 
             try {
-                const response = await fetch('http://localhost:5500/api/admin/appointments', {
+                const response = await fetch('/api/admin/appointments', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -3879,7 +3880,7 @@
             if (!token) return;
 
             try {
-                const response = await fetch('http://localhost:5500/api/admin/stats', {
+                const response = await fetch('/api/admin/stats', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -3948,7 +3949,7 @@
             if (!token) return;
 
             try {
-                const response = await fetch('http://localhost:5500/api/admin/health', {
+                const response = await fetch('/api/admin/health', {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -4040,7 +4041,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:5500/api/admin/users/${encodeURIComponent(id)}`, {
+                const response = await fetch(`/api/admin/users/${encodeURIComponent(id)}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -4213,7 +4214,7 @@
             }
 
             try {
-                const response = await fetch(`http://localhost:5500/api/admin/users/${encodeURIComponent(userId)}`, {
+                const response = await fetch(`/api/admin/users/${encodeURIComponent(userId)}`, {
                     method: 'PATCH',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -4264,7 +4265,7 @@
                     document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray);">❌ Nuk keni autentifikimi</td></tr>';
                     return;
                 }
-                
+
                 const usersList = [];
                 let page = 1;
                 let totalPages = 1;
@@ -4288,12 +4289,12 @@
                     totalPages = Math.max(0, Number(data.pagination?.totalPages ?? data.pagination?.pages ?? 1));
                     page += 1;
                 }
-                
+
                 if(usersList.length === 0) {
                     document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--gray);">Nuk ka përdorues të regjistruar</td></tr>';
                     return;
                 }
-                
+
                 // Store in local users array for editing
                 users = [...new Map(usersList.map((u) => [String(u.id || u._id), u])).values()].map(u => ({
                     _id: u._id || u.id,
@@ -4302,7 +4303,7 @@
                     email: u.email,
                     role: u.role
                 }));
-                
+
                 usersLoaded = true; // Mark as loaded so we don't refetch
                 renderUsersTableFromLocal();
             } catch(err) {
@@ -4387,7 +4388,7 @@
                 persistAppointmentsToStorage();
             } catch (e) {
                 console.error('Create appointment (DB) failed:', e);
-                showToast('warn', 'Gabim lidhje: ' + e.message + '. Sigurohuni se serveri funksionon në localhost:5500');
+                showToast('warn', 'Gabim lidhje: ' + e.message + '. Shërbimi API nuk u arrit.');
                 return;
             }
 
@@ -4505,16 +4506,16 @@
 
             checkSymptomsInFlight = true;
             setButtonLoading(btn, true, 'Duke analizuar...');
-            
+
             try {
-                const response = await fetch('http://localhost:5500/api/appointments/check-symptoms', {
+                const response = await fetch('/api/appointments/check-symptoms', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ symptoms: normalizeSymptomsForApi(cleaned.value) })
                 });
-                
+
                 if(!response.ok) throw new Error('Gabim në analizën e simptomave');
-                
+
                 const result = await response.json();
                 const resultDiv = document.getElementById('symptomResult');
 
@@ -4565,16 +4566,16 @@
 
             analyzeSymptomsInFlight = true;
             setButtonLoading(btn, true, 'Duke analizuar...');
-            
+
             try {
-                const response = await fetch('http://localhost:5500/api/appointments/check-symptoms', {
+                const response = await fetch('/api/appointments/check-symptoms', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ symptoms: normalizeSymptomsForApi(cleaned.value) })
                 });
-                
+
                 if(!response.ok) throw new Error('Gabim');
-                
+
                 const result = await response.json();
                 const token = localStorage.getItem('token');
 
@@ -4587,11 +4588,11 @@
                 const urgencyLabel = toSqUrgencyLabel(urgencyKey) || (result.urgencyLevel ? result.urgencyLevel.toString().toUpperCase() : 'N/A');
 
                 const advice = toSqRecommendedAction(result.recommendedAction) || (result.recommendedAction || '');
-                
+
                 // Get recommended doctors
                 const doctorsForDept = await fetchDoctorsBySpecCached(deptKey);
                 const docData = { doctors: doctorsForDept };
-                
+
                 const resultDiv = document.getElementById('analysisResult');
 
                 const urgencyVar = urgencyKey === 'high' ? 'var(--danger)' : urgencyKey === 'medium' ? 'var(--warning)' : 'var(--success)';
@@ -5215,15 +5216,15 @@
             const resultsDiv = document.getElementById('analysisResult') || document.getElementById('analysisResults');
             if (!resultsDiv) return;
 
-            const urgencyColor = analysis.urgencyLevel === 'high' ? '#ef4444' : 
+            const urgencyColor = analysis.urgencyLevel === 'high' ? '#ef4444' :
                                 analysis.urgencyLevel === 'medium' ? '#f59e0b' : '#10b981';
 
             let html = `
                 <div style="background:#f0f7ff; padding:20px; border-radius:12px; border-left:4px solid var(--primary);">
                     <h3 style="color:var(--primary); margin-top:0;">📋 Rezultati i Analizës</h3>
-                    
+
                     <p style="margin:10px 0;"><b>🏥 Problemi Kryesor:</b> ${analysis.primaryConcern || 'Unknown'}</p>
-                    
+
                     <p style="margin:10px 0;"><b>🏢 Departamentet e Sugjeruar:</b></p>
                     <div style="margin-left:20px; margin-bottom:10px;">
             `;
@@ -5234,15 +5235,15 @@
 
             html += `
                     </div>
-                    
-                    <p style="margin:10px 0;"><b>⚠️ Niveli i Urgjencës:</b> 
+
+                    <p style="margin:10px 0;"><b>⚠️ Niveli i Urgjencës:</b>
                         <span style="display:inline-block; padding:5px 12px; border-radius:20px; background:${urgencyColor}30; color:${urgencyColor}; font-weight:bold;">
                             ${(analysis.urgencyLevel || 'low').toUpperCase()}
                         </span>
                     </p>
-                    
+
                     <p style="margin:10px 0;"><b>📊 Besueshmëria:</b> ${analysis.confidence || 0}%</p>
-                    
+
                     <p style="margin:10px 0;"><b>💡 Rekomandimet:</b></p>
                     <ul style="margin:5px 0 5px 25px; padding:0;">
             `;
@@ -5253,7 +5254,7 @@
 
             html += `
                     </ul>
-                    
+
                     <p style="font-size:12px; color:#666; font-style:italic; margin-top:15px; padding-top:15px; border-top:1px solid #ddd;">
                         ⚠️ ${analysis.disclaimer || 'Kjo është një analizë e ndihmuar nga AI. Konsultohuni gjithmonë me një mjek të kualifikuar.'}
                     </p>
@@ -5298,13 +5299,13 @@
             let html = `
                 <div style="padding:10px; background:${busyColor}20; border-left:4px solid ${busyColor}; border-radius:4px; font-size:0.9rem;">
                     <p style="margin:5px 0;">
-                        <b>⏱️ Pritje e Pritur:</b> ${prediction.estimatedWait} min | 
+                        <b>⏱️ Pritje e Pritur:</b> ${prediction.estimatedWait} min |
                         <b>Statusi:</b> <span style="color:${busyColor}; font-weight:bold;">${prediction.busyLevel.toUpperCase()}</span>
                     </p>
                     <p style="margin:5px 0; font-size:12px; color:#666;">
                         ${prediction.recommendation}
                     </p>
-                    ${prediction.optimalSlots && prediction.optimalSlots.length > 0 ? 
+                    ${prediction.optimalSlots && prediction.optimalSlots.length > 0 ?
                         `<p style="margin:5px 0; font-size:12px;">💡 Kohët më të mira: ${prediction.optimalSlots.join(', ')}</p>` : ''}
                 </div>
             `;

@@ -49,7 +49,6 @@ Required:
 
 Optional:
 
-- `GOOGLE_CLIENT_ID` — enables the existing Google ID-token login
 - `GEMINI_API_KEY`
 - `GEMINI_MODEL=auto`
 - `MAX_REQUESTS_PER_MINUTE`

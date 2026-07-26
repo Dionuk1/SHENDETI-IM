@@ -13,7 +13,6 @@ function makeLimiter(windowMs, limit, message) {
 
 const loginLimiter = makeLimiter(15 * 60 * 1000, 10, 'Too many login attempts. Please try again later.');
 const registerLimiter = makeLimiter(60 * 60 * 1000, 10, 'Too many registration attempts. Please try again later.');
-const googleAuthLimiter = makeLimiter(15 * 60 * 1000, 15, 'Too many Google authentication attempts. Please try again later.');
 const appointmentCreateLimiter = makeLimiter(10 * 60 * 1000, 20, 'Too many appointment requests. Please try again later.');
 
-module.exports = { loginLimiter, registerLimiter, googleAuthLimiter, appointmentCreateLimiter };
+module.exports = { loginLimiter, registerLimiter, appointmentCreateLimiter };

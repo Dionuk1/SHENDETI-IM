@@ -1,11 +1,10 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { OAuth2Client } = require('google-auth-library');
 
 const User = require('../models/User');
 const { requireAuth, getJwtSecret } = require('../middleware/auth');
-const { loginLimiter, registerLimiter, googleAuthLimiter } = require('../middleware/rateLimits');
+const { loginLimiter, registerLimiter } = require('../middleware/rateLimits');
 const { writeAudit } = require('../utils/audit');
 
 const router = express.Router();
@@ -51,11 +50,6 @@ async function sendPasswordLogin(req, res, requiredRole) {
     await writeAudit(req, { userId: user._id, role: user.role, action: 'auth.login', resourceType: 'user', resourceId: user._id, status: 'success' });
     return res.json({ token, user: user.toSafeJson() });
 }
-
-router.get('/google-config', (req, res) => {
-    const clientId = String(process.env.GOOGLE_CLIENT_ID || '').trim();
-    res.json({ enabled: Boolean(clientId), clientId: clientId || null });
-});
 
 router.post('/register', registerLimiter, async (req, res, next) => {
     try {
@@ -123,66 +117,6 @@ router.post('/admin-login', loginLimiter, async (req, res, next) => {
         return await sendPasswordLogin(req, res, 'admin');
     } catch (e) {
         return next(e);
-    }
-});
-
-router.post('/google', googleAuthLimiter, async (req, res, next) => {
-    try {
-        const credential = String(req.body?.credential || '').trim();
-        const clientId = String(process.env.GOOGLE_CLIENT_ID || '').trim();
-        if (!clientId) return res.status(503).json({ error: 'Google login is not configured' });
-        if (!credential || credential.length > 10000) return res.status(400).json({ error: 'Invalid Google credential' });
-
-        let payload;
-        try {
-            const ticket = await new OAuth2Client(clientId).verifyIdToken({ idToken: credential, audience: clientId });
-            payload = ticket.getPayload();
-        } catch {
-            await writeAudit(req, { action: 'auth.google_login', status: 'failure' });
-            return res.status(401).json({ error: 'Google authentication failed' });
-        }
-
-        if (!payload?.sub || !payload?.email || payload.email_verified !== true) {
-            await writeAudit(req, { action: 'auth.google_login', status: 'failure' });
-            return res.status(401).json({ error: 'Google authentication failed' });
-        }
-
-        const email = String(payload.email).toLowerCase().trim();
-        let user = await User.findOne({ $or: [{ googleId: payload.sub }, { email }] }).select('+googleId');
-        if (user?.isActive === false) {
-            await writeAudit(req, { userId: user._id, role: user.role, action: 'auth.google_login', status: 'failure' });
-            return res.status(401).json({ error: 'Google authentication failed' });
-        }
-        if (user?.role === 'admin') {
-            await writeAudit(req, { userId: user._id, role: user.role, action: 'auth.google_login', status: 'failure' });
-            return res.status(401).json({ error: 'Google authentication failed' });
-        }
-        if (user?.googleId && user.googleId !== payload.sub) {
-            await writeAudit(req, { userId: user._id, role: user.role, action: 'auth.google_login', status: 'failure' });
-            return res.status(409).json({ error: 'This email is linked to a different Google account' });
-        }
-
-        if (!user) {
-            user = await User.create({
-                name: String(payload.name || email.split('@')[0]).trim().slice(0, 120),
-                email,
-                role: 'patient',
-                authProvider: 'google',
-                googleId: payload.sub,
-                profileImage: payload.picture ? String(payload.picture).slice(0, 2048) : null,
-            });
-        } else if (!user.googleId) {
-            user.googleId = payload.sub;
-            if (payload.picture && !user.profileImage) user.profileImage = String(payload.picture).slice(0, 2048);
-            await user.save();
-        }
-
-        const token = issueToken(user);
-        await writeAudit(req, { userId: user._id, role: user.role, action: 'auth.google_login', resourceType: 'user', resourceId: user._id, status: 'success' });
-        return res.json({ token, user: user.toSafeJson() });
-    } catch (error) {
-        if (error?.code === 11000) return res.status(409).json({ error: 'Google account is already linked' });
-        return next(error);
     }
 });
 

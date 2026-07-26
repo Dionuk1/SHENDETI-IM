@@ -4,10 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SHËNDETI IM | Pro Edition 2026</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <script src="https://accounts.google.com/gsi/client" async defer onload="initializeGoogleAuthentication()"></script>
     
     <style>
         :root {
@@ -127,6 +127,16 @@
         /* --- NAVIGATION --- */
         nav { display: flex; justify-content: space-between; align-items: center; padding: 15px 8%; position: fixed; width: 100%; top: 0; z-index: 1000; transition: 0.3s; }
         nav.scrolled { background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .brand-lockup { display:inline-flex; align-items:center; gap:9px; color:var(--primary); font-weight:800; text-decoration:none; line-height:1; }
+        .brand-lockup img { width:auto; height:42px; object-fit:contain; flex:0 0 auto; }
+        .brand-lockup .brand-name { font-size:1.25rem; white-space:nowrap; }
+        .brand-lockup.modal-brand { display:flex; justify-content:center; margin-bottom:8px; }
+        .brand-lockup.modal-brand img { height:58px; }
+        .brand-lockup.sidebar-brand { margin-bottom:25px; }
+        .brand-lockup.sidebar-brand img { height:44px; }
+        .brand-lockup.sidebar-brand .brand-name { font-size:1rem; }
+        .prescription-brand { display:flex; align-items:center; gap:12px; }
+        .prescription-brand img { width:auto; height:64px; object-fit:contain; }
 
         /* --- EMERGENCY TOGGLE (UI ONLY) --- */
         #emergency-toggle {
@@ -333,20 +343,6 @@
             border-bottom-color: rgba(148, 163, 184, 0.08);
         }
 
-        body.emergency-mode .chat-box {
-            background: rgba(2, 6, 23, 0.85);
-            border: 1px solid var(--em-border);
-        }
-
-        body.emergency-mode .chat-messages {
-            background: rgba(2, 6, 23, 0.35);
-        }
-
-        body.emergency-mode .msg.bot {
-            background: rgba(148, 163, 184, 0.18);
-            color: #e5e7eb;
-        }
-
         body.emergency-mode a {
             color: #93c5fd;
         }
@@ -486,6 +482,8 @@
         }
 
         @media (max-width: 600px) {
+            .brand-lockup img { height:36px; }
+            .brand-lockup .brand-name { font-size:1rem; }
             .home-info-section { padding: 58px 5%; }
             .home-section-heading { font-size: 2rem; margin-bottom: 28px; }
             .feature-grid { grid-template-columns: 1fr; }
@@ -599,16 +597,6 @@
             color: rgba(191, 219, 254, 0.98);
         }
 
-        /* --- LIVE CHAT --- */
-        .chat-btn { position: fixed; bottom: 30px; right: 30px; width: 65px; height: 65px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 10px 25px rgba(0,98,255,0.3); z-index: 1500; }
-        .chat-box { position: fixed; bottom: 105px; right: 30px; width: 350px; height: 480px; background: white; border-radius: 24px; box-shadow: var(--shadow); z-index: 1500; flex-direction: column; overflow: hidden; display: none; }
-        .chat-box.active { display: flex; }
-        .chat-header { background: var(--primary); color: white; padding: 20px; font-weight: 700; }
-        .chat-messages { flex: 1; padding: 20px; background: #f8fafc; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        .msg { padding: 10px 15px; border-radius: 14px; font-size: 0.9rem; max-width: 80%; }
-        .msg.bot { background: #e2e8f0; align-self: flex-start; }
-        .msg.user { background: var(--primary); color: white; align-self: flex-end; }
-        
         /* Table Styles */
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th { text-align: left; color: var(--gray); padding: 10px 5px; font-size: 0.85rem; border-bottom: 1px solid #eee; }
@@ -632,7 +620,7 @@
 <body>
 
     <nav id="nav" class="glass">
-        <div style="font-weight: 800; font-size: 1.5rem; color: var(--primary);">SHËNDETI<span style="color:var(--dark)"> IM</span></div>
+        <a class="brand-lockup" href="/" aria-label="SHËNDETI IM — Faqja kryesore"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><span class="brand-name">SHËNDETI IM</span></a>
         <div style="display:flex; gap:25px; align-items:center;">
             <a href="#doctors" style="text-decoration:none; font-weight:600; color:var(--dark);">Doktorët</a>
             <div
@@ -726,11 +714,11 @@
 
     <div id="loginModal" class="modal hidden">
         <div class="modal-box animate__animated animate__zoomIn">
-            <div style="text-align:center; color:var(--primary); font-weight:800; margin-bottom:8px;">SHËNDETI IM</div>
+            <div class="brand-lockup modal-brand"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><span class="brand-name">SHËNDETI IM</span></div>
             <h2 id="authModalTitle" style="text-align:center; margin-bottom:20px;">Mirësevini përsëri</h2>
             
             <!-- Login Form -->
-            <div id="login-form">
+            <form id="login-form">
                 <input type="email" id="loginEmail" class="input" placeholder="Adresa e emailit" autocomplete="email">
                 <div class="password-field">
                     <input type="password" id="loginPass" class="input" placeholder="Fjalëkalimi" autocomplete="current-password">
@@ -743,10 +731,9 @@
                         onclick="toggleLoginPasswordVisibility()"
                     ><i id="loginPassToggleIcon" class="fa-regular fa-eye"></i></button>
                 </div>
-                <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="auth()">Kyçu</button>
-                <div id="googleLoginButton" hidden style="display:none; justify-content:center; margin-top:12px;"></div>
+                <button id="loginSubmitButton" type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Kyçu</button>
                 <p style="text-align:center; margin-top:14px; color:var(--gray);">Nuk ke llogari? <button type="button" style="border:0;background:none;color:var(--primary);font-weight:700;cursor:pointer;" onclick="showRegisterForm()">Regjistrohu</button></p>
-            </div>
+            </form>
             
             <!-- Registration Form -->
             <div id="register-form" class="hidden">
@@ -775,7 +762,6 @@
                     ><i id="regPassConfirmToggleIcon" class="fa-regular fa-eye"></i></button>
                 </div>
                 <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="registerUser()">Regjistrohu</button>
-                <div id="googleRegisterButton" hidden style="display:none; justify-content:center; margin-top:12px;"></div>
                 <p style="text-align:center; margin-top:14px; color:var(--gray);">Ke llogari? <button type="button" style="border:0;background:none;color:var(--primary);font-weight:700;cursor:pointer;" onclick="showLoginForm()">Kyçu</button></p>
             </div>
             
@@ -857,7 +843,7 @@
 
     <div id="app-shell" class="app-shell hidden">
         <aside class="sidebar">
-            <div style="font-weight: 800; color: var(--primary); margin-bottom:25px; font-size:1.2rem;">SHËNDETI IM</div>
+            <div class="brand-lockup sidebar-brand"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><span class="brand-name">SHËNDETI IM</span></div>
             <div id="sidebar-links"></div>
             <div id="logoutLink" class="nav-link" style="margin-top:auto; color:var(--danger);" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Dil</div>
         </aside>
@@ -870,17 +856,6 @@
         </main>
     </div>
 
-    <div class="chat-btn" onclick="document.getElementById('chat-box').classList.toggle('active')"><i class="fas fa-robot"></i></div>
-    <div id="chat-box" class="chat-box">
-        <div class="chat-header">Asistenti AI</div>
-        <div id="chat-msgs" class="chat-messages">
-            <div class="msg bot">Përshëndetje! Si mund t'ju ndihmoj me shëndetin sot?</div>
-        </div>
-        <div style="padding:15px; display:flex; gap:10px; border-top:1px solid #eee;">
-            <input type="text" id="chatInput" placeholder="Shkruaj këtu..." style="flex:1; border:none; outline:none;" onkeydown="if(event.key==='Enter') sendChat()">
-            <button class="btn btn-primary" style="padding:8px 12px;" onclick="sendChat()"><i class="fas fa-paper-plane"></i></button>
-        </div>
-    </div>
 
     <script>
         let isRegisterMode = false;
@@ -1268,47 +1243,6 @@
             }
         }, 0);
 
-        // Chat UI: add a close (X) button without changing CSS files
-        (function ensureChatCloseButton() {
-            const chatBox = document.getElementById('chat-box');
-            const header = chatBox ? chatBox.querySelector('.chat-header') : null;
-            if (!chatBox || !header) return;
-            if (header.querySelector('#chat-close-btn')) return;
-
-            const titleText = header.textContent;
-            header.textContent = '';
-            header.style.display = 'flex';
-            header.style.alignItems = 'center';
-            header.style.justifyContent = 'space-between';
-
-            const title = document.createElement('div');
-            title.textContent = titleText;
-
-            const btn = document.createElement('button');
-            btn.id = 'chat-close-btn';
-            btn.type = 'button';
-            btn.innerText = '×';
-            btn.setAttribute('aria-label', 'Mbyll chat-in');
-            btn.style.background = 'transparent';
-            btn.style.border = 'none';
-            btn.style.color = 'white';
-            btn.style.fontSize = '22px';
-            btn.style.cursor = 'pointer';
-            btn.style.lineHeight = '1';
-            btn.style.padding = '0 2px';
-
-            btn.addEventListener('click', (e) => {
-                // Prevent any bubbling/toggles and also clear inline display set by other code paths.
-                e.preventDefault();
-                e.stopPropagation();
-                chatBox.style.display = '';
-                chatBox.classList.remove('active');
-            });
-
-            header.appendChild(title);
-            header.appendChild(btn);
-        })();
-
         function toggleModal(id) { 
             document.getElementById(id).classList.toggle('hidden'); 
             if(id === 'loginModal' && !document.getElementById(id).classList.contains('hidden')) {
@@ -1570,44 +1504,10 @@
             setTimeout(restorePendingBookingAfterAuth, 0);
         }
 
-        async function handleGoogleCredential(response) {
-            try {
-                const result = await fetch('/api/auth/google', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ credential: response?.credential || '' }),
-                });
-                const data = await result.json().catch(() => ({}));
-                if (!result.ok) throw new Error(data.error || 'Kyçja me Google dështoi');
-                completeAuthentication(data);
-                showToast('success', 'Kyçja me Google u krye me sukses.');
-            } catch (error) {
-                showToast('error', error.message || 'Kyçja me Google dështoi');
-            }
-        }
-
-        async function initializeGoogleAuthentication() {
-            try {
-                const configResponse = await fetch('/api/auth/google-config');
-                if (!configResponse.ok) return;
-                const config = await configResponse.json().catch(() => ({}));
-                if (!config?.enabled || !config?.clientId || !window.google?.accounts?.id) return;
-                google.accounts.id.initialize({ client_id: config.clientId, callback: handleGoogleCredential });
-                ['googleLoginButton', 'googleRegisterButton'].forEach((id) => {
-                    const el = document.getElementById(id);
-                    if (el) {
-                        el.innerHTML = '';
-                        el.hidden = false;
-                        el.style.display = 'flex';
-                        google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', text: 'continue_with', width: 300 });
-                    }
-                });
-            } catch {
-                // Google login is optional; email/password authentication remains available.
-            }
-        }
+        let loginSubmissionInFlight = false;
 
         async function auth() {
+            if (loginSubmissionInFlight) return;
             // Security best-practice: always restore password masking on submit.
             try { ensureLoginPasswordHidden(); } catch (e) { /* ignore */ }
             const email = document.getElementById('loginEmail').value;
@@ -1623,6 +1523,9 @@
                 return;
             }
             
+            const submitButton = document.getElementById('loginSubmitButton');
+            loginSubmissionInFlight = true;
+            setButtonLoading(submitButton, true, 'Duke u kyçur...');
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -1643,6 +1546,9 @@
                 addLog(`${data.user.role} u identifikua`, email);
             } catch(err) {
                 setInlineNoticeAfterField(passEl, 'loginPassNotice', 'warn', 'Gabim lidhje: ' + err.message + '. Sigurohuni se serveri funksionon në localhost:5500');
+            } finally {
+                loginSubmissionInFlight = false;
+                setButtonLoading(submitButton, false);
             }
         }
 
@@ -2182,18 +2088,30 @@
             const view = document.getElementById('dash-view');
             const user = JSON.parse(localStorage.getItem('user') || '{}');
 
+            const normalizedType = type === 'user' ? 'patient' : type;
+            const authenticatedRole = String(user.role || localStorage.getItem('role') || '').toLowerCase();
+            const allowedSections = {
+                patient: new Set(['dashboard', 'symptoms', 'schedule', 'messages', 'prescriptions', 'history']),
+                doctor: new Set(['dashboard', 'patients', 'prescriptions', 'schedule', 'messages', 'profile']),
+                admin: new Set(['dashboard', 'health', 'app', 'docs', 'users']),
+            };
+            if (normalizedType !== authenticatedRole || !allowedSections[normalizedType]?.has(subview)) {
+                showToast('error', 'Ky seksion nuk lejohet për rolin tuaj.');
+                return;
+            }
+
             stopAdminLiveUpdates();
             stopDoctorLiveUpdates();
 
             if(type === 'user' || type === 'patient') {
                 document.getElementById('dash-title').innerText = "SHËNDETI IM";
                 sidebar.innerHTML = `
-                    <div class="nav-link active" onclick="refreshView('patient', 'dashboard')"><i class="fas fa-columns"></i> Dashboard</div>
-                    <div class="nav-link" onclick="refreshView('patient', 'symptoms')"><i class="fas fa-heartbeat"></i> Symptoma</div>
-                    <div class="nav-link" onclick="refreshView('patient', 'schedule')"><i class="fas fa-calendar"></i> Orari Im</div>
-                    <div class="nav-link" onclick="refreshView('patient', 'messages')"><i class="fas fa-envelope"></i> Mesazhet</div>
-                    <div class="nav-link" onclick="refreshView('patient', 'prescriptions')"><i class="fas fa-pills"></i> Receptet</div>
-                    <div class="nav-link" onclick="refreshView('patient', 'history')"><i class="fas fa-notes-medical"></i> Historia Mjekësore</div>
+                    <div class="nav-link ${subview==='dashboard'?'active':''}" onclick="refreshView('patient', 'dashboard')"><i class="fas fa-columns"></i> Dashboard</div>
+                    <div class="nav-link ${subview==='symptoms'?'active':''}" onclick="refreshView('patient', 'symptoms')"><i class="fas fa-heartbeat"></i> Symptoma</div>
+                    <div class="nav-link ${subview==='schedule'?'active':''}" onclick="refreshView('patient', 'schedule')"><i class="fas fa-calendar"></i> Orari Im</div>
+                    <div class="nav-link ${subview==='messages'?'active':''}" onclick="refreshView('patient', 'messages')"><i class="fas fa-envelope"></i> Mesazhet</div>
+                    <div class="nav-link ${subview==='prescriptions'?'active':''}" onclick="refreshView('patient', 'prescriptions')"><i class="fas fa-pills"></i> Receptet</div>
+                    <div class="nav-link ${subview==='history'?'active':''}" onclick="refreshView('patient', 'history')"><i class="fas fa-notes-medical"></i> Historia Mjekësore</div>
                 `;
                 
                 if(!subview || subview === 'dashboard') {
@@ -2591,6 +2509,10 @@
         // Initial render (in case a session exists)
         document.addEventListener('DOMContentLoaded', async () => {
             updateGlobalIdentityDisplay();
+            document.getElementById('login-form')?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                auth();
+            });
             const bookDate = document.getElementById('bookDate');
             if (bookDate) {
                 const now = new Date();
@@ -2599,7 +2521,6 @@
                 if (!bookDate.value) bookDate.value = today;
                 bookDate.addEventListener('change', () => loadBookingSlots());
             }
-            initializeGoogleAuthentication();
             loadNotificationCount();
             if (new URLSearchParams(window.location.search).get('admin') === '1') {
                 const token = localStorage.getItem('token');
@@ -4476,62 +4397,6 @@
             if(!document.getElementById('app-shell').classList.contains('hidden')) refreshView(meRole || 'patient');
         }
 
-        async function sendChat() {
-            const input = document.getElementById('chatInput');
-            const msgs = document.getElementById('chat-msgs');
-            const message = String(input?.value || '').trim();
-
-            if (!message) return;
-
-            const uMsg = document.createElement('div');
-            uMsg.className = 'msg user';
-            uMsg.innerText = message;
-            msgs.appendChild(uMsg);
-
-            input.value = '';
-
-            const bMsg = document.createElement('div');
-            bMsg.className = 'msg bot';
-            bMsg.innerText = '...';
-            msgs.appendChild(bMsg);
-            msgs.scrollTop = msgs.scrollHeight;
-
-            const token = localStorage.getItem('token');
-            if (!token) {
-                bMsg.innerText = '❌ Ju lutem kyçuni që të përdorni Asistentin AI.';
-                return;
-            }
-
-            if (!chatConversationId) {
-                chatConversationId = Date.now().toString();
-            }
-
-            try {
-                const response = await fetch('/api/ai/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        message,
-                        conversationId: chatConversationId,
-                    }),
-                });
-
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                    throw new Error(data?.error || `Gabim (${response.status})`);
-                }
-
-                bMsg.innerText = data?.aiResponse || 'Nuk mora përgjigje.';
-                msgs.scrollTop = msgs.scrollHeight;
-            } catch (e) {
-                console.error('Chat error:', e);
-                bMsg.innerText = '❌ Gabim lidhje. Provoni përsëri.';
-            }
-        }
-
         // ===== PREMIUM FEATURES =====
 
         function toSqUrgencyLabel(level) {
@@ -5129,8 +4994,7 @@
                 const appointmentDate = prescription.appointment?.scheduledAt ? new Date(prescription.appointment.scheduledAt).toLocaleString() : '—';
                 host.innerHTML = `
                     <div style="border-bottom:2px solid var(--primary); padding-bottom:14px; margin-bottom:18px;">
-                        <div style="font-weight:800; color:var(--primary); font-size:1.2rem;">SHËNDETI IM</div>
-                        <h2 style="margin-top:6px;">Recept Digjital</h2>
+                        <div class="prescription-brand"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><div><div style="font-weight:800; color:var(--primary); font-size:1.2rem;">SHËNDETI IM</div><h2 style="margin-top:6px;">Recept Digjital</h2></div></div>
                         <p style="color:var(--gray);">Referenca: ${escapeHtml(prescription.referenceNumber || '—')}</p>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px;">
@@ -5399,106 +5263,6 @@
             resultsDiv.innerHTML = html;
         }
 
-        // ========== 2. AI MEDICAL CHATBOT ==========
-        let chatConversationId = null;
-
-        async function openAIChatbot() {
-            chatConversationId = new Date().getTime().toString();
-            const chatModal = document.getElementById('aiChatModal') || document.getElementById('chat-box');
-            if (chatModal) {
-                // Prefer the CSS-driven toggle for the built-in chat box.
-                if (chatModal.id === 'chat-box') {
-                    chatModal.style.display = '';
-                    chatModal.classList.add('active');
-                } else {
-                    chatModal.style.display = 'block';
-                }
-
-                const chatBox = document.getElementById('chatBox') || document.getElementById('chat-msgs');
-                if (chatBox && chatBox.innerHTML.includes('Përshëndetje') === false) {
-                    addChatMessage('assistant', '👋 Përshëndetje! Unë jam asistenti AI i BlueCare. Si mund t\'ju ndihmoj sot? 🏥');
-                }
-            }
-        }
-
-        async function sendChatMessage() {
-            const chatInput = document.getElementById('chatInput');
-            const userMessage = chatInput?.value;
-
-            if (!userMessage) return;
-
-            // Display user message
-            addChatMessage('user', userMessage);
-            chatInput.value = '';
-
-            try {
-                const response = await fetch('/api/ai/chat', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    },
-                    body: JSON.stringify({
-                        message: userMessage,
-                        conversationId: chatConversationId
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.valid || data.aiResponse) {
-                    const aiResponse = data.aiResponse || data.aiResponse;
-                    addChatMessage('assistant', aiResponse);
-
-                    // Show sources if available
-                    if (data.dataUsed && data.dataUsed.length > 0) {
-                        const sourcesText = `📚 Të dhënat: ${data.dataUsed.join(', ')}`;
-                        addChatMessage('info', sourcesText, true);
-                    }
-                }
-            } catch (e) {
-                console.error('Chat error:', e);
-                addChatMessage('assistant', '❌ Gabim lidhje. Provoni përsëri.');
-            }
-        }
-
-        function addChatMessage(role, content, isSmall = false) {
-            const chatBox = document.getElementById('chatBox') || document.getElementById('chat-msgs');
-            if (!chatBox) return;
-
-            const messageDiv = document.createElement('div');
-            messageDiv.style.marginBottom = '10px';
-            messageDiv.style.padding = '10px';
-            messageDiv.style.borderRadius = '6px';
-            messageDiv.style.fontSize = isSmall ? '12px' : '14px';
-            messageDiv.style.maxWidth = '90%';
-            messageDiv.style.wordWrap = 'break-word';
-
-            if (role === 'user') {
-                messageDiv.style.background = 'var(--primary)';
-                messageDiv.style.color = 'white';
-                messageDiv.style.marginLeft = 'auto';
-                messageDiv.style.marginRight = '0';
-                messageDiv.style.textAlign = 'right';
-                messageDiv.innerHTML = content;
-            } else if (role === 'assistant') {
-                messageDiv.style.background = '#e2e8f0';
-                messageDiv.style.color = '#202124';
-                messageDiv.style.marginRight = 'auto';
-                messageDiv.style.marginLeft = '0';
-                messageDiv.innerHTML = content;
-            } else if (role === 'info') {
-                messageDiv.style.background = '#fef3c7';
-                messageDiv.style.color = '#92400e';
-                messageDiv.style.fontSize = '12px';
-                messageDiv.style.margin = '10px auto';
-                messageDiv.innerHTML = content;
-            }
-
-            chatBox.appendChild(messageDiv);
-            chatBox.scrollTop = chatBox.scrollHeight;
-        }
-
         // ========== 3. SMART QUEUE PREDICTION ==========
         async function getQueuePrediction(doctorId, date) {
             try {
@@ -5616,32 +5380,6 @@
             html += `</div>`;
             resultsDiv.innerHTML = html;
         }
-
-        // ========== 5. AI INITIALIZATION ==========
-        function initializeAI() {
-            // Check if user is logged in
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            // Initialize chatbot
-            const chatButton = document.querySelector('.chat-btn');
-            if (chatButton) {
-                chatButton.addEventListener('click', openAIChatbot);
-            }
-
-            // Send chat functionality
-            const chatInput = document.getElementById('chatInput');
-            if (chatInput) {
-                chatInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') sendChatMessage();
-                });
-            }
-
-            console.log('✨ AI Features Initialized');
-        }
-
-        // Auto-initialize AI when page loads
-        document.addEventListener('DOMContentLoaded', initializeAI);
 
         document.querySelectorAll('.faq-question').forEach((button) => {
             button.addEventListener('click', () => {

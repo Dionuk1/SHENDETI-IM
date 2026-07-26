@@ -413,8 +413,8 @@ test('real authentication, scheduling, cancellation, notifications, audit logs, 
         assert.equal(audit.response.status, 200);
         assert.ok(audit.data.logs.length > 0);
 
-        const googleFailure = await request('/api/auth/google', { method: 'POST', body: { credential: 'invalid-token' } });
-        assert.ok([401, 503].includes(googleFailure.response.status));
+        const removedGoogleRoute = await request('/api/auth/google', { method: 'POST', body: { credential: 'invalid-token' } });
+        assert.equal(removedGoogleRoute.response.status, 404);
     } finally {
         const ids = userIds.map((id) => new mongoose.Types.ObjectId(String(id)));
         await Appointment.deleteMany({ patientId: { $in: ids } });

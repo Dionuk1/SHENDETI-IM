@@ -165,66 +165,6 @@ Provide response in JSON format:
 }
 
 /**
- * Chat with medical context using Gemini API
- * Retrieves data from MongoDB and uses it in conversation
- */
-async function chatWithGemini(message, context) {
-    if (!geminiClient || !geminiAvailable) {
-        return generateRuleBasedChat(message, context);
-    }
-
-    try {
-        const modelName = await resolveGeminiModelName();
-        const model = geminiClient.getGenerativeModel({ model: modelName || GEMINI_MODEL_FALLBACK });
-
-        // Build context from retrieved data
-        let contextString = 'AVAILABLE DATA:\n';
-
-        if (context.doctors && context.doctors.length > 0) {
-            contextString += 'Doctors: ' + context.doctors.map(d =>
-                `${d.name} (${d.specialization}, Rating: ${d.rating || 'N/A'}/5)`
-            ).join(', ') + '\n';
-        }
-
-        if (context.appointments && context.appointments.length > 0) {
-            contextString += 'User Appointments: ' + context.appointments.map(a =>
-                `${new Date(a.scheduledAt).toLocaleDateString()} with Dr. ${a.doctorId?.name}`
-            ).join(', ') + '\n';
-        }
-
-        if (context.services && context.services.length > 0) {
-            contextString += 'Available Services: ' + context.services.join(', ') + '\n';
-        }
-
-        const prompt = `
-Je një asistent i dobishëm mjekësor për BlueCare Medical Center. Përdor informacionin e dhënë për t'u përgjigjur saktë.
-
-${contextString}
-
-Pyetja e përdoruesit: "${message}"
-
-Udhëzime:
-1. Përdor të dhëna reale nga databaza kur janë në dispozicion
-2. Ji profesional dhe miqësor
-3. Jep informacion të saktë dhe të përgjithshëm (jo diagnozë përfundimtare)
-4. Nëse nuk je i sigurt, sugjero kontaktimin e BlueCare support ose një mjeku
-5. Gjithmonë jep përparësi sigurisë së përdoruesit
-6. Përgjigju vetëm në gjuhën shqipe
-
-Përgjigja:`;
-
-        const result = await model.generateContent(prompt);
-        const responseText = await result.response.text();
-
-        return responseText;
-    } catch (e) {
-        console.error('⚠️  Gemini API error:', e.message);
-        console.error('Falling back to rule-based chat...');
-        return generateRuleBasedChat(message, context);
-    }
-}
-
-/**
  * Fallback: Rule-based symptom analysis
  */
 function generateRuleBasedAnalysis(symptoms, age, medicalHistory) {
@@ -259,52 +199,6 @@ function generateRuleBasedAnalysis(symptoms, age, medicalHistory) {
         ],
         disclaimer: 'This is AI-assisted analysis. Always consult with a qualified medical professional.'
     };
-}
-
-/**
- * Fallback: Rule-based chatbot
- */
-function generateRuleBasedChat(message, context) {
-    const msgLower = String(message || '').toLowerCase();
-
-    // Doctor availability (English + Albanian)
-    if (
-        msgLower.includes('free') ||
-        msgLower.includes('available') ||
-        msgLower.includes('doktor') ||
-        msgLower.includes('mjek') ||
-        msgLower.includes('i lir') ||
-        msgLower.includes('në dispozicion')
-    ) {
-        if (context.doctors && context.doctors.length > 0) {
-            const doc = context.doctors[0];
-            const spec = doc.specialization ? ` (${doc.specialization})` : '';
-            return `Po, ${doc.name}${spec} është në dispozicion. Dëshiron të rezervosh një termin?`;
-        }
-        return 'Mjekët tanë janë në dispozicion gjatë orarit të punës. Dëshiron të rezervosh një termin?';
-    }
-
-    // Appointments (English + Albanian)
-    if (msgLower.includes('appointment') || msgLower.includes('termin') || msgLower.includes('termine') || msgLower.includes('orari')) {
-        const count = (context.appointments || []).length;
-        if (count > 0) {
-            return `Ju keni ${count} termin(e) të ardhshëm. A doni t'i shihni apo t'i ndryshoni?`;
-        }
-        return 'Aktualisht nuk keni asnjë termin të rezervuar. Dëshiron të bësh një rezervim?';
-    }
-
-    // Services
-    if (msgLower.includes('service') || msgLower.includes('services') || msgLower.includes('treatment') || msgLower.includes('shërbim') || msgLower.includes('sherbim')) {
-        const services = Array.isArray(context.services) ? context.services : [];
-        if (services.length > 0) {
-            return `Ne ofrojmë shërbime si: ${services.slice(0, 3).join(', ')}, dhe të tjera.`;
-        }
-        return 'Ne ofrojmë shërbime të ndryshme mjekësore. Si mund të të ndihmoj?';
-    }
-
-    // Default (Albanian)
-    const preview = String(message || '').trim().slice(0, 80);
-    return `E kuptova. Po pyet për: "${preview}". A mund të ma sqarosh pak (p.sh. termin, mjek/specializim, ose simptoma)?`;
 }
 
 /**
@@ -402,8 +296,6 @@ function isGeminiAvailable() {
 module.exports = {
     analyzeSymptomWithGemini,
     classifyClinicSymptomsWithGemini,
-    chatWithGemini,
     isGeminiAvailable,
-    generateRuleBasedAnalysis,
-    generateRuleBasedChat
+    generateRuleBasedAnalysis
 };

@@ -1,5 +1,5 @@
 /**
- * AI Routes - Symptom Analysis, Document Analysis, and Chatbot
+ * AI Routes - Symptom Analysis, Document Analysis, and queue prediction
  * Integrates with Gemini API for intelligent health insights
  */
 
@@ -31,14 +31,6 @@ router.post('/symptom-department', requireAuth, aiController.suggestDepartment);
  * Returns: Extracted data, anomalies detected, recommendations
  */
 router.post('/analyze-document', requireAuth, aiController.analyzeDocument);
-
-/**
- * AI Medical Chatbot with RAG
- * POST /api/ai/chat
- * Body: { message: string, conversationId: string }
- * Returns: AI response with real data from MongoDB
- */
-router.post('/chat', requireAuth, aiController.chatWithRAG);
 
 /**
  * Get Smart Queue Prediction

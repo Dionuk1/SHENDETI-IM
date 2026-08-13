@@ -1,14 +1,13 @@
 /**
  * SHËNDETI IM Frontend Client
- * Wraps API calls with JWT + role-based UI
+ * Legacy clinical API compatibility only. Authentication is handled by appwrite-auth.js.
  */
 
 const API_BASE = `${window.SHENDETI_IM_CONFIG?.API_BASE_URL || ''}/api`;
 
 class HealthFlowClient {
     constructor() {
-        this.token = localStorage.getItem('hf_token');
-        this.user = this.token ? JSON.parse(localStorage.getItem('hf_user') || '{}') : null;
+        this.user = null;
     }
 
     async request(method, path, body = null) {
@@ -16,10 +15,6 @@ class HealthFlowClient {
             method,
             headers: { 'Content-Type': 'application/json' },
         };
-
-        if (this.token) {
-            opts.headers.Authorization = `Bearer ${this.token}`;
-        }
 
         if (body) {
             opts.body = JSON.stringify(body);
@@ -37,45 +32,27 @@ class HealthFlowClient {
     }
 
     async register(name, email, password) {
-        const data = await this.request('POST', '/auth/register', { name, email, password });
-        this.setToken(data.token, data.user);
-        return data.user;
+        return window.ShendetiAuth.registerPatient(name, email, password);
     }
 
     async login(email, password, role) {
-        const data = await this.request('POST', '/auth/login', { email, password, role });
-        this.setToken(data.token, data.user);
-        return data.user;
+        return window.ShendetiAuth.login(email, password, role);
     }
 
     async googleLogin(credential) {
-        const data = await this.request('POST', '/auth/google', { credential });
-        this.setToken(data.token, data.user);
-        return data.user;
+        throw new Error('Google Auth nuk është pjesë e Phase 6A.');
     }
 
     async me() {
-        if (!this.token) return null;
-        try {
-            const data = await this.request('GET', '/auth/me');
-            return data.user;
-        } catch {
-            return null;
-        }
+        return window.ShendetiAuth.restore();
     }
 
     async logout() {
-        this.token = null;
-        this.user = null;
-        localStorage.removeItem('hf_token');
-        localStorage.removeItem('hf_user');
+        await window.ShendetiAuth.logout();
     }
 
     setToken(token, user) {
-        this.token = token;
-        this.user = user;
-        localStorage.setItem('hf_token', token);
-        localStorage.setItem('hf_user', JSON.stringify(user));
+        throw new Error('Legacy JWT storage is disabled.');
     }
 
     // Patient routes
@@ -118,7 +95,6 @@ class HealthFlowClient {
 
         const opts = {
             method: 'POST',
-            headers: { Authorization: `Bearer ${this.token}` },
             body: form,
         };
 
@@ -132,13 +108,7 @@ class HealthFlowClient {
     }
 
     async downloadRecord(id, originalName) {
-        if (!this.token) {
-            throw new Error('Not authenticated');
-        }
-
-        const res = await fetch(`${API_BASE}/patient/records/${id}/download`, {
-            headers: { Authorization: `Bearer ${this.token}` },
-        });
+        const res = await fetch(`${API_BASE}/patient/records/${id}/download`);
 
         if (!res.ok) {
             throw new Error('Download failed');
@@ -241,7 +211,7 @@ class HealthFlowClient {
 
     // Appointment & Queue Management (Public endpoints)
     async checkSymptoms(symptoms) {
-        const data = await this.request('POST', '/appointments/check-symptoms', { symptoms });
+        const data = await this.request('POST', '/ai-triage/analyze-symptoms', { symptoms });
         return data;
     }
 

@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/theme.js"></script>
     <title>SHËNDETI IM | Administrim</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <script src="/js/config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@26.2.0"></script>
+    <script src="/js/appwrite-auth.js"></script>
     <style>
         :root { --primary:#0062ff; --dark:#0f172a; --bg:#f8fbff; --gray:#64748b; --danger:#ef4444; }
         * { box-sizing:border-box; font-family:Arial,sans-serif; }
@@ -20,9 +23,22 @@
         button { width:100%; margin-top:20px; padding:13px; border:0; border-radius:12px; background:var(--primary); color:white; font-weight:700; cursor:pointer; }
         #notice { min-height:20px; color:var(--danger); text-align:center; margin-top:12px; font-size:.9rem; }
         a { display:block; text-align:center; margin-top:14px; color:var(--gray); text-decoration:none; }
+        @media (max-width:480px) {
+            body { padding:12px; }
+            main { padding:24px 18px; border-radius:18px; }
+            .brand { flex-wrap:wrap; text-align:center; }
+            .brand img { height:46px; }
+            h1 { font-size:clamp(1.35rem,7vw,1.6rem); overflow-wrap:anywhere; }
+            input, button { min-height:44px; font-size:16px; }
+        }
     </style>
+    <link rel="stylesheet" href="/css/theme.css">
 </head>
 <body>
+    <button class="theme-toggle" type="button" data-theme-toggle onclick="window.ShendetiTheme.toggle()" aria-label="Aktivizo modalitetin e erret" style="position:fixed;top:16px;right:16px;z-index:10;">
+        <span class="theme-toggle-icon theme-toggle-sun"><span aria-hidden="true">☀</span></span>
+        <span class="theme-toggle-icon theme-toggle-moon"><span aria-hidden="true">☾</span></span>
+    </button>
     <main>
         <div class="brand"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><span>SHËNDETI IM</span></div>
         <h1>Hyrja e administrimit</h1>
@@ -37,6 +53,17 @@
         <a href="/">Anulo</a>
     </main>
     <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const restoredAdmin = await window.ShendetiAuth.restore('admin');
+            if (restoredAdmin?.role === 'admin') {
+                window.location.replace('/?admin=1');
+                return;
+            }
+            if (window.ShendetiAuth.state.reason === 'route-role-blocked') {
+                document.getElementById('notice').textContent = 'Kjo hyrje lejohet vetem per administratoret.';
+            }
+        });
+
         document.getElementById('adminLoginForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const form = event.currentTarget;
@@ -47,19 +74,11 @@
             const notice = document.getElementById('notice');
             notice.textContent = '';
             try {
-                const response = await fetch('/api/auth/admin-login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: document.getElementById('email').value.trim().toLowerCase(),
-                        password: document.getElementById('password').value,
-                    }),
-                });
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok || data?.user?.role !== 'admin') throw new Error('Kredencialet janë të pavlefshme.');
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('user', JSON.stringify(data.user));
-                localStorage.setItem('role', data.user.role);
+                await window.ShendetiAuth.login(
+                    document.getElementById('email').value,
+                    document.getElementById('password').value,
+                    'admin'
+                );
                 window.location.replace('/?admin=1');
             } catch (error) {
                 notice.textContent = error.message || 'Hyrja dështoi.';

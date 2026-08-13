@@ -26,6 +26,28 @@ function safePrescriptionError(error) {
     };
 }
 
+async function requireActiveDoctorProfile(req) {
+    const doctor = await Doctor.findOne({
+        email: String(req.user.email || '').toLowerCase().trim(),
+        isActive: true,
+    }).select('_id name');
+    if (!doctor) {
+        const error = new Error('Active doctor profile required');
+        error.statusCode = 403;
+        throw error;
+    }
+    return doctor;
+}
+
+function editablePrescriptionContent(input) {
+    const content = prescriptionContentFromInput(input || {});
+    if (content.legacy || !content.diagnosis || !content.medicationName || !content.dosage
+        || !content.frequency || !content.duration || !content.instructions) {
+        return null;
+    }
+    return content;
+}
+
 router.use(requireAuth, requireRole('doctor'));
 
 router.get('/appointments', async (req, res, next) => {
@@ -132,23 +154,22 @@ router.delete('/appointments/:id', async (req, res, next) => {
 
 router.get('/prescriptions', async (req, res, next) => {
     try {
+        await requireActiveDoctorProfile(req);
         const items = await Prescription.find({ doctorId: req.user._id })
             .populate('patientId', 'name email')
             .sort({ createdAt: -1 })
             .limit(200);
 
         res.json({
-            prescriptions: items.map((p) => ({
-                id: p._id.toString(),
-                title: p.title,
-                patient: p.patientId
-                    ? { id: p.patientId._id.toString(), name: p.patientId.name, email: p.patientId.email }
-                    : null,
-                createdAt: p.createdAt,
-                issuedAt: p.createdAt,
-                status: p.status || 'active',
-                referenceNumber: prescriptionReference(p),
-            })),
+            prescriptions: items.map((p) => {
+                const content = decryptPrescriptionContent(p.bodyEncrypted);
+                return {
+                    id: p._id.toString(), title: p.title,
+                    patient: p.patientId ? { id: p.patientId._id.toString(), name: p.patientId.name } : null,
+                    content, createdAt: p.createdAt, issuedAt: p.createdAt,
+                    status: p.status || 'active', referenceNumber: prescriptionReference(p),
+                };
+            }),
         });
     } catch (e) {
         next(e);
@@ -157,6 +178,7 @@ router.get('/prescriptions', async (req, res, next) => {
 
 router.get('/prescriptions/:id', async (req, res, next) => {
     try {
+        await requireActiveDoctorProfile(req);
         if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid prescription id' });
         const p = await Prescription.findOne({ _id: req.params.id, doctorId: req.user._id })
             .populate('patientId', 'name email')
@@ -184,6 +206,46 @@ router.get('/prescriptions/:id', async (req, res, next) => {
     } catch (e) {
         next(e);
     }
+});
+
+router.patch('/prescriptions/:id', async (req, res, next) => {
+    try {
+        await requireActiveDoctorProfile(req);
+        if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid prescription id' });
+        const allowed = ['diagnosis', 'medicationName', 'dosage', 'frequency', 'duration', 'instructions', 'additionalNotes'];
+        if (Object.keys(req.body || {}).some((key) => !allowed.includes(key))) return res.status(400).json({ error: 'Invalid prescription fields' });
+        const content = editablePrescriptionContent(req.body);
+        if (!content) return res.status(400).json({ error: 'Missing required prescription fields' });
+        const existing = await Prescription.findOne({ _id: req.params.id, doctorId: req.user._id }).select('status');
+        if (!existing) return res.status(404).json({ error: 'Prescription not found' });
+        if (existing.status === 'cancelled') return res.status(409).json({ error: 'Archived prescription cannot be edited' });
+        const prescription = await Prescription.findOneAndUpdate(
+            { _id: req.params.id, doctorId: req.user._id },
+            { $set: { bodyEncrypted: encryptPrescriptionContent(content) } },
+            { new: true, runValidators: true }
+        );
+        if (!prescription) return res.status(404).json({ error: 'Prescription not found' });
+        await writeAudit(req, { action: 'prescription.edit', resourceType: 'prescription', resourceId: prescription._id, status: 'success' });
+        res.json({ prescription: { id: prescription._id.toString(), content, status: prescription.status, updatedAt: prescription.updatedAt } });
+    } catch (error) { next(error); }
+});
+
+router.delete('/prescriptions/:id', async (req, res, next) => {
+    try {
+        await requireActiveDoctorProfile(req);
+        if (!mongoose.isValidObjectId(req.params.id)) return res.status(400).json({ error: 'Invalid prescription id' });
+        const existing = await Prescription.findOne({ _id: req.params.id, doctorId: req.user._id }).select('status');
+        if (!existing) return res.status(404).json({ error: 'Prescription not found' });
+        if (existing.status === 'cancelled') return res.status(409).json({ error: 'Prescription is already archived' });
+        const prescription = await Prescription.findOneAndUpdate(
+            { _id: req.params.id, doctorId: req.user._id },
+            { $set: { status: 'cancelled' } },
+            { new: true, runValidators: true }
+        );
+        if (!prescription) return res.status(404).json({ error: 'Prescription not found' });
+        await writeAudit(req, { action: 'prescription.archive', resourceType: 'prescription', resourceId: prescription._id, status: 'success' });
+        res.json({ ok: true, prescriptionId: prescription._id.toString(), status: prescription.status });
+    } catch (error) { next(error); }
 });
 
 router.post('/prescriptions', async (req, res, next) => {

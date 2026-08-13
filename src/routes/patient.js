@@ -192,16 +192,19 @@ router.get('/prescriptions', async (req, res, next) => {
             .limit(200);
 
         res.json({
-            prescriptions: items.map((p) => ({
-                id: p._id.toString(),
-                title: p.title,
-                doctor: p.doctorId ? { id: p.doctorId._id.toString(), name: p.doctorId.name } : null,
-                createdAt: p.createdAt,
-                issuedAt: p.createdAt,
-                appointmentDate: p.appointmentId?.scheduledAt || null,
-                status: p.status || 'active',
-                referenceNumber: prescriptionReference(p),
-            })),
+            prescriptions: items.map((p) => {
+                let content = null;
+                try { content = decryptPrescriptionContent(p.bodyEncrypted); } catch { content = null; }
+                const doctorName = String(p.doctorId?.name || '').trim();
+                return {
+                    id: p._id.toString(), title: p.title,
+                    doctor: doctorName && !doctorName.includes('@') ? { name: doctorName } : null,
+                    content,
+                    createdAt: p.createdAt, issuedAt: p.createdAt,
+                    appointmentDate: p.appointmentId?.scheduledAt || null,
+                    status: p.status || 'active', referenceNumber: prescriptionReference(p),
+                };
+            }),
         });
     } catch (e) {
         next(e);

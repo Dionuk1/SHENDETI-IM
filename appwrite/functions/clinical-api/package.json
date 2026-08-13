@@ -1,0 +1,12 @@
+{
+  "name": "shendeti-clinical-api-health",
+  "version": "0.0.0-development",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "node-appwrite": "27.1.0"
+  }
+}

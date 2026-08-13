@@ -9,6 +9,7 @@ const { writeAudit } = require('../utils/audit');
 
 const router = express.Router();
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ADMIN_MAIN_GUIDANCE = 'Llogarite e administratorit duhet te kycen vetem ne panelin /admin.';
 
 function issueToken(user) {
     const nowSec = Math.floor(Date.now() / 1000);
@@ -41,9 +42,14 @@ async function sendPasswordLogin(req, res, requiredRole) {
     }
 
     const user = await authenticatePassword(email, password);
-    if (!user || (requiredRole && user.role !== requiredRole) || (!requiredRole && user.role === 'admin')) {
+    if (!user || (requiredRole && user.role !== requiredRole)) {
         await writeAudit(req, { userId: user?._id, role: user?.role, action: 'auth.login', resourceType: user ? 'user' : undefined, resourceId: user?._id, status: 'failure' });
         return res.status(401).json({ error: 'Invalid credentials' });
+    }
+
+    if (!requiredRole && user.role === 'admin') {
+        await writeAudit(req, { userId: user._id, role: user.role, action: 'auth.login', resourceType: 'user', resourceId: user._id, status: 'failure' });
+        return res.status(403).json({ error: ADMIN_MAIN_GUIDANCE });
     }
 
     const token = issueToken(user);

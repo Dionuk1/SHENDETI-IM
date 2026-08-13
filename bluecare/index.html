@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/theme.js"></script>
     <title>SHËNDETI IM | Pro Edition 2026</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
@@ -516,6 +517,10 @@
         /* --- MODALS --- */
         .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
         .modal-box { background: white; width: 480px; padding: 35px; border-radius: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        body.modal-open { overflow:hidden; }
+        #bookModal { padding:16px; }
+        #bookModal .modal-box { max-width:100%; max-height:calc(100dvh - 32px); overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+        #bookModal .modal-mobile-close { display:none; }
         .modal-box.modal-dark { background: var(--modal-bg); color: var(--modal-text); border: 1px solid var(--modal-border); }
         .modal-box.modal-dark .input { background: var(--modal-field-bg); border-color: var(--modal-field-border); color: var(--modal-field-text); }
         .modal-box.modal-dark .input::placeholder { color: var(--modal-field-placeholder); }
@@ -525,6 +530,24 @@
         .modal-box.modal-dark .modal-row > div { flex: 1; }
         .input { width: 100%; padding: 14px; border-radius: 12px; border: 2px solid #f1f5f9; margin-bottom: 15px; outline: none; transition: 0.3s; }
         .input:focus { border-color: var(--primary); }
+
+        /* --- LOCAL MESSAGES PRESENTATION --- */
+        .message-conversation { border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:15px; background:#f8fafc; }
+        .message-date-separator { display:flex; align-items:center; gap:10px; margin:16px 0 12px; color:var(--gray); font-size:0.78rem; font-weight:800; }
+        .message-date-separator::before,
+        .message-date-separator::after { content:""; height:1px; flex:1; background:#dbe3ee; }
+        .message-entry { margin-bottom:12px; overflow-wrap:anywhere; }
+        .message-entry:last-child { margin-bottom:0; }
+        .message-entry__sender { margin-bottom:4px; font-weight:700; }
+        .message-entry__text { color:var(--gray); white-space:pre-wrap; }
+        .message-entry__time { display:block; margin-top:4px; color:#7c8798; font-size:0.75rem; }
+        .message-sending-slot { min-height:22px; margin:-5px 0 10px; }
+        .message-sending-indicator { display:inline-flex; align-items:center; gap:3px; color:var(--gray); font-size:0.82rem; font-weight:700; }
+        .message-sending-indicator[hidden] { display:none; }
+        .message-sending-dot { width:5px; height:5px; border-radius:50%; background:currentColor; animation:messageSendingPulse 900ms ease-in-out infinite; }
+        .message-sending-dot:nth-child(2) { animation-delay:150ms; }
+        .message-sending-dot:nth-child(3) { animation-delay:300ms; }
+        @keyframes messageSendingPulse { 0%, 60%, 100% { opacity:.35; transform:translateY(0); } 30% { opacity:1; transform:translateY(-2px); } }
 
         /* Focus/hover states inside modals (date/time/select) */
         .modal-box .input:hover { border-color: rgba(0, 98, 255, 0.22); }
@@ -607,6 +630,25 @@
         .slot-btn.selected { background:var(--primary); color:white; box-shadow:0 0 0 3px rgba(79,70,229,.15); }
         .slot-btn.occupied, .slot-btn.occupied:hover { border-color:#cbd5e1; background:#f1f5f9; color:#94a3b8; cursor:not-allowed; opacity:.7; transform:none; }
         .notification-badge { min-width:20px; height:20px; border-radius:10px; background:var(--danger); color:white; display:inline-flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:800; }
+        @media (max-width: 900px) {
+            #bookModal { align-items:flex-start; padding:max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom)); overflow-y:auto; }
+            #bookModal .modal-box { width:min(100%, 720px); max-height:calc(100dvh - 32px); padding:clamp(22px, 5vw, 35px); border-radius:20px; }
+            #bookModal .modal-mobile-close { display:inline-flex; position:sticky; top:0; z-index:2; float:right; width:44px; height:44px; padding:0; align-items:center; justify-content:center; background:#eef2ff; color:var(--dark); border:0; border-radius:12px; cursor:pointer; }
+            #bookModal .input { min-width:0; font-size:16px; }
+            #bookModal .btn { min-height:44px; white-space:normal; text-align:center; justify-content:center; }
+            #bookModal .slot-grid { grid-template-columns:repeat(auto-fit, minmax(72px, 1fr)); }
+            #bookModal .slot-btn { min-height:44px; }
+        }
+        @media (max-width: 600px) {
+            #bookModal { padding-inline:10px; }
+            #bookModal .modal-box { max-height:calc(100dvh - 20px); padding:20px 16px; border-radius:16px; }
+            .message-conversation { padding:12px; }
+            .message-date-separator { margin:14px 0 10px; }
+            .message-entry__text { font-size:0.93rem; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .message-sending-dot { animation:none; opacity:.7; }
+        }
         @media print {
             body.print-prescription * { visibility: hidden !important; }
             body.print-prescription #prescriptionDetailsModal,
@@ -616,6 +658,7 @@
             body.print-prescription .prescription-print-hide { display:none !important; }
         }
     </style>
+    <link rel="stylesheet" href="/css/theme.css">
 </head>
 <body>
 
@@ -623,17 +666,10 @@
         <a class="brand-lockup" href="/" aria-label="SHËNDETI IM — Faqja kryesore"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><span class="brand-name">SHËNDETI IM</span></a>
         <div style="display:flex; gap:25px; align-items:center;">
             <a href="#doctors" style="text-decoration:none; font-weight:600; color:var(--dark);">Doktorët</a>
-            <div
-                id="emergency-toggle"
-                role="switch"
-                aria-checked="false"
-                tabindex="0"
-                onclick="toggleEmergencyMode()"
-                onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleEmergencyMode();}"
-            >
-                <span>Emergency</span>
-                <div id="toggle-switch"><div></div></div>
-            </div>
+            <button class="theme-toggle" type="button" data-theme-toggle onclick="window.ShendetiTheme.toggle()" aria-label="Aktivizo modalitetin e erret">
+                <span class="theme-toggle-icon theme-toggle-sun"><i class="fas fa-sun" aria-hidden="true"></i></span>
+                <span class="theme-toggle-icon theme-toggle-moon"><i class="fas fa-moon" aria-hidden="true"></i></span>
+            </button>
             <button class="btn btn-primary" onclick="toggleModal('loginModal')">Kyçu</button>
         </div>
     </nav>
@@ -715,7 +751,7 @@
     <div id="loginModal" class="modal hidden">
         <div class="modal-box animate__animated animate__zoomIn">
             <div class="brand-lockup modal-brand"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><span class="brand-name">SHËNDETI IM</span></div>
-            <h2 id="authModalTitle" style="text-align:center; margin-bottom:20px;">Mirësevini përsëri</h2>
+            <h2 id="authModalTitle" style="text-align:center; margin-bottom:20px;">Kyçuni në llogarinë tuaj</h2>
             
             <!-- Login Form -->
             <form id="login-form">
@@ -771,6 +807,7 @@
 
     <div id="bookModal" class="modal hidden">
         <div class="modal-box animate__animated animate__bounceIn">
+            <button class="modal-mobile-close" type="button" aria-label="Mbyll rezervimin" onclick="closeModal('bookModal')"><i class="fas fa-times" aria-hidden="true"></i></button>
             <h2>Rezervo termin të ri</h2>
             <p style="color:var(--gray); margin-bottom:20px;">Zgjidhni orarin që ju përshtatet.</p>
             <label style="font-size:0.8rem; font-weight:700;">DOKTORI</label>
@@ -787,7 +824,7 @@
             <div id="bookSlotCount" style="font-weight:700; color:var(--primary); margin-top:8px;" aria-live="polite"></div>
             <div id="bookSlots" class="slot-grid" aria-live="polite"><span style="color:var(--gray);">Zgjidhni doktorin dhe datën.</span></div>
             <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="saveBooking()">Konfirmo rezervimin</button>
-            <p style="text-align:center; margin-top:15px; cursor:pointer;" onclick="toggleModal('bookModal')">Anulo</p>
+            <p style="text-align:center; margin-top:15px; cursor:pointer;" onclick="closeModal('bookModal')">Anulo</p>
         </div>
     </div>
 
@@ -812,7 +849,6 @@
                 <select id="editUserRole" class="input">
                     <option value="patient">Pacient</option>
                     <option value="doctor">Doktor</option>
-                    <option value="admin">Admin</option>
                 </select>
             </div>
             <button class="btn btn-primary" style="width:100%; margin-top:15px;" onclick="saveUserEdit()">Ruaj Ndryshimet</button>
@@ -850,7 +886,7 @@
         <main class="main-content">
             <div style="display:flex; justify-content:space-between; align-items:center;">
                 <h1 id="dash-title">Dashboard</h1>
-                <div style="display:flex; gap:10px; align-items:center;"><button class="btn" onclick="openNotificationCenter()"><i class="fas fa-bell"></i> <span id="notificationCount" class="notification-badge" style="display:none;">0</span></button><div id="security-badge" class="status-pill status-success"><i class="fas fa-shield-alt"></i> AES-256 ACTIVE</div></div>
+                <div style="display:flex; gap:10px; align-items:center;"><button class="theme-toggle" type="button" data-theme-toggle onclick="window.ShendetiTheme.toggle()" aria-label="Aktivizo modalitetin e erret"><span class="theme-toggle-icon theme-toggle-sun"><i class="fas fa-sun" aria-hidden="true"></i></span><span class="theme-toggle-icon theme-toggle-moon"><i class="fas fa-moon" aria-hidden="true"></i></span></button><button class="btn" onclick="openNotificationCenter()"><i class="fas fa-bell"></i> <span id="notificationCount" class="notification-badge" style="display:none;">0</span></button><div id="security-badge" class="status-pill status-success"><i class="fas fa-shield-alt"></i> AES-256 ACTIVE</div></div>
             </div>
             <div id="dash-view" style="margin-top:30px;"></div>
         </main>
@@ -867,6 +903,17 @@
         let landingDoctorsShowAll = false;
         let landingDoctorsLoaded = false;
         let landingDoctorsLoadPromise = null;
+        let trustedLocalRole = null;
+        let adminDashboardEntryAuthorized = false;
+        const ADMIN_MAIN_GUIDANCE = 'Llogarite e administratorit duhet te kycen vetem ne panelin /admin.';
+
+        function clearLocalAuthState() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('role');
+            trustedLocalRole = null;
+            adminDashboardEntryAuthorized = false;
+        }
 
         function renderLandingDoctorsGrid() {
             const grid = document.getElementById('landing-doctor-grid');
@@ -1021,13 +1068,11 @@
         function getLoggedInIdentityInfo() {
             const token = localStorage.getItem('token') || '';
             const user = getCurrentUserSafe();
-            const storedRole = localStorage.getItem('role') || '';
 
             const payload = token ? decodeJwtPayloadSafe(token) : null;
-            const payloadRole = payload?.role || payload?.user?.role || payload?.data?.role || '';
             const payloadName = payload?.name || payload?.user?.name || payload?.fullName || '';
 
-            let resolvedRole = String(user?.role || storedRole || payloadRole || '').toLowerCase().trim();
+            let resolvedRole = String(trustedLocalRole || '').toLowerCase().trim();
             if (resolvedRole === 'user') resolvedRole = 'patient';
             const resolvedName = String(user?.name || payloadName || '').trim();
 
@@ -1115,10 +1160,9 @@
         }
 
         function logout() {
+            clearPatientPrescriptionState();
             try {
-                // Session cleanup (requested: token + user)
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                clearLocalAuthState();
             } catch (e) {
                 // ignore
             }
@@ -1137,8 +1181,8 @@
             const loginModal = document.getElementById('loginModal');
             const bookModal = document.getElementById('bookModal');
 
-            if (loginModal) loginModal.classList.add('hidden');
-            if (bookModal) bookModal.classList.add('hidden');
+            if (loginModal) closeModal('loginModal');
+            if (bookModal) closeModal('bookModal');
 
             if (appShell) appShell.classList.add('hidden');
             if (landing) landing.classList.remove('hidden');
@@ -1193,6 +1237,131 @@
             }).slice().reverse();
         }
 
+        function getMessageLocalDateKey(value) {
+            if (value === null || value === undefined || (typeof value === 'string' && !value.trim())) return '';
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return '';
+            return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        }
+
+        function formatMessageTime(value) {
+            if (value === null || value === undefined || (typeof value === 'string' && !value.trim())) return '';
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return '';
+            return new Intl.DateTimeFormat('en-US', { hour:'numeric', minute:'2-digit', hour12:true }).format(date);
+        }
+
+        function formatMessageDateLabel(value, now = new Date()) {
+            if (!getMessageLocalDateKey(value)) return '';
+            const date = value instanceof Date ? value : new Date(value);
+            const current = now instanceof Date ? now : new Date(now);
+            if (Number.isNaN(date.getTime()) || Number.isNaN(current.getTime())) return '';
+
+            const todayKey = getMessageLocalDateKey(current);
+            if (getMessageLocalDateKey(date) === todayKey) return 'Sot';
+
+            const yesterday = new Date(current.getFullYear(), current.getMonth(), current.getDate());
+            yesterday.setDate(yesterday.getDate() - 1);
+            if (getMessageLocalDateKey(date) === getMessageLocalDateKey(yesterday)) return 'Dje';
+
+            return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+        }
+
+        function renderConversationMessages(messages, currentRole, now = new Date()) {
+            let previousDateKey = '';
+            return (Array.isArray(messages) ? messages : []).map((message) => {
+                const dateKey = getMessageLocalDateKey(message?.at);
+                const dateLabel = dateKey && dateKey !== previousDateKey ? formatMessageDateLabel(message.at, now) : '';
+                if (dateKey) previousDateKey = dateKey;
+                const separator = dateLabel
+                    ? `<div class="message-date-separator" role="separator"><span>${escapeHtml(dateLabel)}</span></div>`
+                    : '';
+                const sender = message?.fromRole === currentRole ? 'Ju' : (currentRole === 'patient' ? 'Doktori' : 'Pacienti');
+                const time = formatMessageTime(message?.at);
+                return `${separator}<div class="message-entry">
+                    <p class="message-entry__sender">${sender}:</p>
+                    <p class="message-entry__text">${escapeHtml(message?.text || '')}</p>
+                    ${time ? `<time class="message-entry__time" datetime="${escapeHtml(message.at)}">${escapeHtml(time)}</time>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        const LOCAL_MESSAGE_SENDING_INDICATOR_MIN_MS = 300;
+        const messageSendingIndicatorVisibleUntil = { patient: 0, doctor: 0 };
+        const messageSendingIndicatorHideTimers = new Map();
+
+        function messageSendingIndicatorMarkup(role) {
+            const hidden = Date.now() >= Number(messageSendingIndicatorVisibleUntil[role] || 0) ? ' hidden' : '';
+            return `<div class="message-sending-slot"><span id="${role}MessageSendingIndicator" class="message-sending-indicator" role="status" aria-live="polite"${hidden}>Duke dërguar <span class="message-sending-dot" aria-hidden="true"></span><span class="message-sending-dot" aria-hidden="true"></span><span class="message-sending-dot" aria-hidden="true"></span></span></div>`;
+        }
+
+        function hideMessageSendingIndicatorAfterMinimum(role) {
+            const remaining = Number(messageSendingIndicatorVisibleUntil[role] || 0) - Date.now();
+            if (remaining > 0) {
+                const timer = setTimeout(() => hideMessageSendingIndicatorAfterMinimum(role), remaining);
+                messageSendingIndicatorHideTimers.set(role, timer);
+                return;
+            }
+            const indicator = document.getElementById(`${role}MessageSendingIndicator`);
+            if (indicator) indicator.hidden = true;
+            messageSendingIndicatorVisibleUntil[role] = 0;
+            messageSendingIndicatorHideTimers.delete(role);
+        }
+
+        function setMessageSendingIndicator(role, visible) {
+            const existingTimer = messageSendingIndicatorHideTimers.get(role);
+            if (existingTimer) clearTimeout(existingTimer);
+            messageSendingIndicatorHideTimers.delete(role);
+
+            const indicator = document.getElementById(`${role}MessageSendingIndicator`);
+            if (visible) {
+                messageSendingIndicatorVisibleUntil[role] = Date.now() + LOCAL_MESSAGE_SENDING_INDICATOR_MIN_MS;
+                if (indicator) indicator.hidden = false;
+                return;
+            }
+
+            if (indicator) indicator.hidden = false;
+            hideMessageSendingIndicatorAfterMinimum(role);
+        }
+
+        const directMessageSendsInFlight = new Set();
+
+        async function sendDirectMessageFromUi(payload, role, actionButton, input) {
+            const counterpart = role === 'patient' ? payload?.doctorName : payload?.patientName;
+            const actionKey = `${role}:${normalizePersonName(counterpart)}`;
+            if (directMessageSendsInFlight.has(actionKey)) return false;
+
+            directMessageSendsInFlight.add(actionKey);
+            if (actionButton) actionButton.disabled = true;
+            setMessageSendingIndicator(role, true);
+            try {
+                const sent = await Promise.resolve(sendDirectMessage(payload));
+                if (!sent) return false;
+                if (input) input.value = '';
+                refreshView(role, 'messages');
+                return true;
+            } catch (error) {
+                showToast('error', 'Mesazhi nuk u dërgua. Provo përsëri.');
+                return false;
+            } finally {
+                directMessageSendsInFlight.delete(actionKey);
+                setMessageSendingIndicator(role, false);
+                if (actionButton?.isConnected) actionButton.disabled = false;
+            }
+        }
+
+        function handleMessageComposerKeydown(event, role) {
+            if (!event || event.key !== 'Enter' || event.shiftKey || event.isComposing || event.keyCode === 229) return false;
+            const input = event.currentTarget;
+            if (!String(input?.value || '').trim()) return false;
+            event.preventDefault();
+            const actionButton = input?.nextElementSibling;
+            if (actionButton?.disabled) return false;
+            return role === 'doctor'
+                ? doctorSendManualMessage(actionButton)
+                : patientSendManualMessage(actionButton);
+        }
+
         function getAppointmentDoctorDisplayName(doc) {
             return String(doc || '')
                 .replace(/\s*\([^)]*\)\s*/g, ' ')
@@ -1230,7 +1399,7 @@
         loadDirectMessagesFromStorage();
 
         let logs = [
-            { time: new Date().toLocaleTimeString(), action: 'Sistemi u inicializua', user: 'System' }
+            { time: formatAppTime(new Date()), action: 'Sistemi u inicializua', user: 'System' }
         ];
 
         // LOAD INITIAL DATA
@@ -1243,9 +1412,33 @@
             }
         }, 0);
 
-        function toggleModal(id) { 
-            document.getElementById(id).classList.toggle('hidden'); 
-            if(id === 'loginModal' && !document.getElementById(id).classList.contains('hidden')) {
+        function syncModalBodyLock() {
+            document.body.classList.toggle('modal-open', Boolean(document.querySelector('.modal:not(.hidden)')));
+        }
+
+        function openModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+            syncModalBodyLock();
+            if (id === 'loginModal') showLoginForm();
+        }
+
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            syncModalBodyLock();
+        }
+
+        function toggleModal(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            const opening = modal.classList.contains('hidden');
+            if (opening) openModal(id); else closeModal(id);
+            if(id === 'loginModal' && opening) {
                 showLoginForm(); // Reset to login form when opening
             }
         }
@@ -1494,11 +1687,17 @@
 
         function completeAuthentication(data) {
             if (!data?.token || !data?.user) throw new Error('Përgjigje e pavlefshme autentifikimi');
+            const userRole = String(data.user.role || '').toLowerCase();
+            if (!['patient', 'doctor'].includes(userRole)) {
+                clearLocalAuthState();
+                throw new Error(userRole === 'admin' ? ADMIN_MAIN_GUIDANCE : 'Përgjigje e pavlefshme autentifikimi');
+            }
+            trustedLocalRole = userRole;
+            adminDashboardEntryAuthorized = false;
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            localStorage.setItem('role', data.user.role || 'patient');
-            const userRole = data.user.role || 'patient';
-            renderDashboard(userRole);
+            localStorage.setItem('role', userRole);
+            if (!renderDashboard(userRole)) throw new Error('Roli i llogarise nuk lejohet ne kete hyrje.');
             updateGlobalIdentityDisplay();
             loadNotificationCount();
             setTimeout(restorePendingBookingAfterAuth, 0);
@@ -1537,7 +1736,11 @@
                 });
                 
                 if(!response.ok) {
-                    setInlineNoticeAfterField(passEl, 'loginPassNotice', 'error', 'Kredencialet e gabuara ose ndodhi gabim në server.');
+                    const error = await response.json().catch(() => ({}));
+                    const message = response.status === 403 && error?.error === ADMIN_MAIN_GUIDANCE
+                        ? ADMIN_MAIN_GUIDANCE
+                        : 'Kredencialet e gabuara ose ndodhi gabim në server.';
+                    setInlineNoticeAfterField(passEl, 'loginPassNotice', 'error', message);
                     return;
                 }
                 
@@ -1560,7 +1763,7 @@
             if(tab === 'login') {
                 loginForm.classList.remove('hidden');
                 registerForm.classList.add('hidden');
-                if (title) title.textContent = 'Mirësevini përsëri';
+                if (title) title.textContent = 'Kyçuni në llogarinë tuaj';
             } else {
                 loginForm.classList.add('hidden');
                 registerForm.classList.remove('hidden');
@@ -1628,7 +1831,7 @@
         }
 
         function addLog(action, user) {
-            logs.unshift({ time: new Date().toLocaleTimeString(), action, user });
+            logs.unshift({ time: formatAppTime(new Date()), action, user });
         }
 
         // ===== API FRIENDLY MODE (CACHE + DEDUPE) =====
@@ -1909,10 +2112,10 @@
 
         function requirePatientAuthenticationForBooking(state) {
             preservePendingBooking(state);
-            document.getElementById('bookModal')?.classList.add('hidden');
-            document.getElementById('symptomBookingModal')?.classList.add('hidden');
+            closeModal('bookModal');
+            closeModal('symptomBookingModal');
             showLoginForm();
-            document.getElementById('loginModal')?.classList.remove('hidden');
+            openModal('loginModal');
             window.location.hash = 'login';
             document.getElementById('loginEmail')?.focus();
         }
@@ -1941,7 +2144,7 @@
                 if (service && state.service) service.value = state.service;
                 if (date) date.value = state.date || date.value;
                 const restored = await loadBookingSlots(state.time);
-                document.getElementById('bookModal')?.classList.remove('hidden');
+                openModal('bookModal');
                 if (!restored?.selected && state.time) showToast('warn', 'Orari i zgjedhur ndërkohë është zënë. Ju lutem zgjidhni një orar tjetër.');
             }
             showToast('info', 'Zgjedhjet u rikthyen. Ju lutem konfirmoni terminin.');
@@ -2021,8 +2224,15 @@
         }
 
         function renderDashboard(type) {
+            const normalizedType = type === 'user' ? 'patient' : String(type || '').toLowerCase();
+            const isAllowed = trustedLocalRole === normalizedType
+                && (normalizedType !== 'admin' || adminDashboardEntryAuthorized === true);
+            if (!isAllowed) {
+                showToast('error', trustedLocalRole === 'admin' ? ADMIN_MAIN_GUIDANCE : 'Ky dashboard nuk lejohet per rolin tuaj.');
+                return false;
+            }
             document.getElementById('landing-page').classList.add('hidden');
-            document.getElementById('loginModal').classList.add('hidden');
+            closeModal('loginModal');
             document.querySelector('nav').classList.add('hidden');
             document.getElementById('app-shell').classList.remove('hidden');
 
@@ -2030,6 +2240,7 @@
             refreshView(type);
             updateGlobalIdentityDisplay();
             loadNotificationCount();
+            return true;
         }
 
         async function loadNotificationCount() {
@@ -2062,7 +2273,7 @@
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(data.error || 'Njoftimet nuk u ngarkuan');
                 const items = Array.isArray(data.notifications) ? data.notifications : [];
-                host.innerHTML = items.length ? items.map((item) => `<button class="card" style="width:100%;text-align:left;box-shadow:none;margin-bottom:8px;border:1px solid ${item.read ? '#e2e8f0' : 'var(--primary)'};" onclick="markNotificationRead('${escapeHtml(item._id)}', this)"><b>${escapeHtml(item.message)}</b><br><small style="color:var(--gray);">${escapeHtml(new Date(item.createdAt).toLocaleString())}</small></button>`).join('') : '<p style="color:var(--gray);">Nuk ka njoftime.</p>';
+                host.innerHTML = items.length ? items.map((item) => `<button class="card" style="width:100%;text-align:left;box-shadow:none;margin-bottom:8px;border:1px solid ${item.read ? '#e2e8f0' : 'var(--primary)'};" onclick="markNotificationRead('${escapeHtml(item._id)}', this)"><b>${escapeHtml(item.message)}</b><br><small style="color:var(--gray);">${escapeHtml(formatAppDateTime(item.createdAt))}</small></button>`).join('') : '<p style="color:var(--gray);">Nuk ka njoftime.</p>';
                 loadNotificationCount();
             } catch (error) { host.textContent = error.message; }
         }
@@ -2089,10 +2300,10 @@
             const user = JSON.parse(localStorage.getItem('user') || '{}');
 
             const normalizedType = type === 'user' ? 'patient' : type;
-            const authenticatedRole = String(user.role || localStorage.getItem('role') || '').toLowerCase();
+            const authenticatedRole = String(trustedLocalRole || '').toLowerCase();
             const allowedSections = {
                 patient: new Set(['dashboard', 'symptoms', 'schedule', 'messages', 'prescriptions', 'history']),
-                doctor: new Set(['dashboard', 'patients', 'prescriptions', 'schedule', 'messages', 'profile']),
+                doctor: new Set(['dashboard', 'patients', 'prescriptions', 'patient-prescriptions', 'schedule', 'messages', 'profile']),
                 admin: new Set(['dashboard', 'health', 'app', 'docs', 'users']),
             };
             if (normalizedType !== authenticatedRole || !allowedSections[normalizedType]?.has(subview)) {
@@ -2205,25 +2416,21 @@
                             </div>
 
                             ${selected ? `
-                                <div style="border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:15px; background:#f8fafc;">
+                                <div class="message-conversation" style="background:#f8fafc;">
                                     <p style="font-weight:700; margin-bottom:8px;">Doktori: ${escapeHtml(selected)}</p>
-                                    ${convo.length === 0 ? '<p style="color:var(--gray);">Nuk ka mesazhe ende.</p>' : convo.map(m => `
-                                        <div style="margin-bottom:10px;">
-                                            <p style="margin-bottom:4px; font-weight:700;">${m.fromRole === 'patient' ? 'Ju' : 'Doktori'}:</p>
-                                            <p style="color:var(--gray);">${escapeHtml(m.text || '')}</p>
-                                            <small style="color:#999;">${m.at ? new Date(m.at).toLocaleString() : ''}</small>
-                                        </div>
-                                    `).join('')}
+                                    ${convo.length === 0 ? '<p style="color:var(--gray);">Nuk ka mesazhe ende.</p>' : renderConversationMessages(convo, 'patient')}
                                 </div>
+
+                                ${messageSendingIndicatorMarkup('patient')}
 
                                 <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
-                                    <button class="btn btn-primary" onclick="patientQuickReply('Në rregull, faleminderit.')">🙏 Faleminderit</button>
-                                    <button class="btn btn-primary" onclick="patientQuickReply('Në rregull, do t’ju njoftoj.')">✅ Do t’ju njoftoj</button>
-                                    <button class="btn btn-primary" onclick="patientQuickReply('OK, e kuptova. A ka diçka tjetër që duhet të bëj?')">❓ Pyetje</button>
+                                    <button class="btn btn-primary" onclick="patientQuickReply('Në rregull, faleminderit.', this)">🙏 Faleminderit</button>
+                                    <button class="btn btn-primary" onclick="patientQuickReply('Në rregull, do t’ju njoftoj.', this)">✅ Do t’ju njoftoj</button>
+                                    <button class="btn btn-primary" onclick="patientQuickReply('OK, e kuptova. A ka diçka tjetër që duhet të bëj?', this)">❓ Pyetje</button>
                                 </div>
 
-                                <textarea id="patientReplyText" class="input" placeholder="Shkruaj mesazh..." style="min-height:100px;"></textarea>
-                                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="patientSendManualMessage()">Dërgo</button>
+                                <textarea id="patientReplyText" class="input" placeholder="Shkruaj mesazh..." style="min-height:100px;" onkeydown="handleMessageComposerKeydown(event, 'patient')"></textarea>
+                                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="patientSendManualMessage(this)">Dërgo</button>
                             ` : ''}
                         </div>
                     `;
@@ -2350,6 +2557,7 @@
                     <div class="nav-link ${subview==='dashboard'?'active':''}" onclick="refreshView('doctor', 'dashboard')"><i class="fas fa-columns"></i> Dashboard</div>
                     <div class="nav-link ${subview==='patients'?'active':''}" onclick="refreshView('doctor', 'patients')"><i class="fas fa-user-injured"></i> Pacientët e Mij</div>
                     <div class="nav-link ${subview==='prescriptions'?'active':''}" onclick="refreshView('doctor', 'prescriptions')"><i class="fas fa-prescription"></i> Recept i ri</div>
+                    <div class="nav-link ${subview==='patient-prescriptions'?'active':''}" onclick="refreshView('doctor', 'patient-prescriptions')"><i class="fas fa-prescription"></i> Receptat e Pacientëve</div>
                     <div class="nav-link ${subview==='schedule'?'active':''}" onclick="refreshView('doctor', 'schedule')"><i class="fas fa-calendar-alt"></i> Orari im</div>
                     <div class="nav-link ${subview==='messages'?'active':''}" onclick="refreshView('doctor', 'messages')"><i class="fas fa-envelope"></i> Mesazhet</div>
                     <div class="nav-link ${subview==='profile'?'active':''}" onclick="refreshView('doctor', 'profile')"><i class="fas fa-user-circle"></i> Profili</div>
@@ -2409,6 +2617,14 @@
                         </div>
                     `;
                     loadDoctorPrescriptionOptions();
+                } else if(subview === 'patient-prescriptions') {
+                    view.innerHTML = `
+                        <div class="card">
+                            <h2>💊 Receptat e Pacientëve</h2>
+                            <div id="doctorPrescriptionList" style="margin-top:18px;"><p style="color:var(--gray);">Duke ngarkuar receptat...</p></div>
+                        </div>
+                    `;
+                    loadDoctorPrescriptionManagement();
                 } else if(subview === 'schedule') {
                     view.innerHTML = `
                         <div class="card">
@@ -2457,25 +2673,21 @@
                             </div>
 
                             ${selected ? `
-                                <div style="border:1px solid #e2e8f0; padding:15px; border-radius:12px; margin-bottom:15px; background:#f8fafc;">
+                                <div class="message-conversation" style="background:#f8fafc;">
                                     <p style="font-weight:700; margin-bottom:8px;">Pacienti: ${escapeHtml(selected)}</p>
-                                    ${convo.length === 0 ? '<p style="color:var(--gray);">Nuk ka bisedë ende.</p>' : convo.map(m => `
-                                        <div style="margin-bottom:10px;">
-                                            <p style="margin-bottom:4px; font-weight:700;">${m.fromRole === 'doctor' ? 'Ju' : 'Pacienti'}:</p>
-                                            <p style="color:var(--gray);">${escapeHtml(m.text || '')}</p>
-                                            <small style="color:#999;">${m.at ? new Date(m.at).toLocaleString() : ''}</small>
-                                        </div>
-                                    `).join('')}
+                                    ${convo.length === 0 ? '<p style="color:var(--gray);">Nuk ka bisedë ende.</p>' : renderConversationMessages(convo, 'doctor')}
                                 </div>
+
+                                ${messageSendingIndicatorMarkup('doctor')}
 
                                 <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
-                                    <button class="btn btn-primary" onclick="doctorQuickReply('Po, mundeni nesër. Ju lutem zgjidhni një orar që ju përshtatet.')">✅ Po, nesër</button>
-                                    <button class="btn btn-primary" onclick="doctorQuickReply('Ju lutem nëse keni dhimbje të forta, temperaturë ose përkeqësim, paraqituni menjëherë në urgjencë.')">⚠️ Urgjencë</button>
-                                    <button class="btn btn-primary" onclick="doctorQuickReply('Ju lutem më dërgoni më shumë detaje: sa kohë ka filluar dhimbja dhe a keni simptoma tjera?')">❓ Më shumë detaje</button>
+                                    <button class="btn btn-primary" onclick="doctorQuickReply('Po, mundeni nesër. Ju lutem zgjidhni një orar që ju përshtatet.', this)">✅ Po, nesër</button>
+                                    <button class="btn btn-primary" onclick="doctorQuickReply('Ju lutem nëse keni dhimbje të forta, temperaturë ose përkeqësim, paraqituni menjëherë në urgjencë.', this)">⚠️ Urgjencë</button>
+                                    <button class="btn btn-primary" onclick="doctorQuickReply('Ju lutem më dërgoni më shumë detaje: sa kohë ka filluar dhimbja dhe a keni simptoma tjera?', this)">❓ Më shumë detaje</button>
                                 </div>
 
-                                <textarea id="doctorReplyText" class="input" placeholder="Shkruaj përgjigjen..." style="min-height:100px;"></textarea>
-                                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="doctorSendManualMessage()">Dërgo Përgjigje</button>
+                                <textarea id="doctorReplyText" class="input" placeholder="Shkruaj përgjigjen..." style="min-height:100px;" onkeydown="handleMessageComposerKeydown(event, 'doctor')"></textarea>
+                                <button class="btn btn-primary" style="width:100%; margin-top:10px;" onclick="doctorSendManualMessage(this)">Dërgo Përgjigje</button>
                             ` : ''}
                         </div>
                     `;
@@ -2508,6 +2720,12 @@
 
         // Initial render (in case a session exists)
         document.addEventListener('DOMContentLoaded', async () => {
+            document.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape') return;
+                const openModals = [...document.querySelectorAll('.modal:not(.hidden)')];
+                const modal = openModals.at(-1);
+                if (modal) closeModal(modal.id);
+            });
             updateGlobalIdentityDisplay();
             document.getElementById('login-form')?.addEventListener('submit', (event) => {
                 event.preventDefault();
@@ -2521,24 +2739,42 @@
                 if (!bookDate.value) bookDate.value = today;
                 bookDate.addEventListener('change', () => loadBookingSlots());
             }
-            loadNotificationCount();
-            if (new URLSearchParams(window.location.search).get('admin') === '1') {
-                const token = localStorage.getItem('token');
+            const adminEntryRequested = new URLSearchParams(window.location.search).get('admin') === '1';
+            const token = localStorage.getItem('token');
+            if (token) {
                 try {
-                    const response = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token || ''}` } });
+                    const response = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
                     const data = await response.json().catch(() => ({}));
-                    if (!response.ok || data?.user?.role !== 'admin') throw new Error('Admin session required');
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    localStorage.setItem('role', data.user.role);
-                    renderDashboard('admin');
-                    window.history.replaceState({}, '', '/');
+                    if (!response.ok || !data?.user) throw new Error('Session required');
+                    const resolvedRole = String(data.user.role || '').toLowerCase();
+                    const routeAllowed = adminEntryRequested
+                        ? resolvedRole === 'admin'
+                        : ['patient', 'doctor'].includes(resolvedRole);
+                    if (!routeAllowed) {
+                        clearLocalAuthState();
+                        if (!adminEntryRequested && resolvedRole === 'admin') {
+                            showToast('error', ADMIN_MAIN_GUIDANCE, { ttlMs: 6500 });
+                        }
+                        if (adminEntryRequested) {
+                            window.history.replaceState({}, '', '/');
+                            showToast('error', 'Kjo hyrje lejohet vetem per administratoret.', { ttlMs: 5200 });
+                        }
+                    } else {
+                        trustedLocalRole = resolvedRole;
+                        adminDashboardEntryAuthorized = adminEntryRequested && resolvedRole === 'admin';
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        localStorage.setItem('role', resolvedRole);
+                        renderDashboard(resolvedRole);
+                        if (adminDashboardEntryAuthorized) window.history.replaceState({}, '', '/');
+                    }
                 } catch {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('role');
-                    window.location.replace('/admin');
+                    clearLocalAuthState();
+                    if (adminEntryRequested) window.history.replaceState({}, '', '/');
                 }
+            } else if (adminEntryRequested) {
+                window.history.replaceState({}, '', '/');
             }
+            loadNotificationCount();
         });
 
         function handleDoctorAppointmentAuthFailure(status) {
@@ -2546,7 +2782,7 @@
             showToast('error', 'Sesioni ka skaduar. Ju lutem kyçuni përsëri.', { ttlMs: 3600 });
             logout();
             showLoginForm();
-            document.getElementById('loginModal')?.classList.remove('hidden');
+            openModal('loginModal');
             document.getElementById('loginEmail')?.focus();
             return true;
         }
@@ -2683,14 +2919,14 @@
             refreshView('doctor', 'messages');
         }
 
-        function doctorQuickReply(text) {
+        async function doctorQuickReply(text, actionButton) {
             const u = getCurrentUserSafe();
             const doctorId = String(u._id || u.id || '').trim();
             const doctorName = u.name || 'Doktor';
             const patientName = String(window.doctorSelectedPatient || '').trim();
             if (!patientName) return;
 
-            const ok = sendDirectMessage({
+            await sendDirectMessageFromUi({
                 fromRole: 'doctor',
                 fromName: doctorName,
                 toRole: 'patient',
@@ -2699,12 +2935,10 @@
                 doctorName,
                 patientName,
                 text,
-            });
-
-            if (ok) refreshView('doctor', 'messages');
+            }, 'doctor', actionButton, null);
         }
 
-        function doctorSendManualMessage() {
+        async function doctorSendManualMessage(actionButton) {
             const u = getCurrentUserSafe();
             const doctorId = String(u._id || u.id || '').trim();
             const doctorName = u.name || 'Doktor';
@@ -2715,7 +2949,7 @@
             if (!patientName) return;
             if (!text) return;
 
-            const ok = sendDirectMessage({
+            await sendDirectMessageFromUi({
                 fromRole: 'doctor',
                 fromName: doctorName,
                 toRole: 'patient',
@@ -2724,12 +2958,7 @@
                 doctorName,
                 patientName,
                 text,
-            });
-
-            if (ok) {
-                if (input) input.value = '';
-                refreshView('doctor', 'messages');
-            }
+            }, 'doctor', actionButton, input);
         }
 
         function selectPatientDoctor(encodedDoctorName) {
@@ -2754,7 +2983,7 @@
             return String(fromList?.id || '').trim();
         }
 
-        function patientQuickReply(text) {
+        async function patientQuickReply(text, actionButton) {
             const u = getCurrentUserSafe();
             const patientName = u.name || 'Pacient';
             const doctorName = String(window.patientSelectedDoctor || '').trim();
@@ -2762,7 +2991,7 @@
 
             const doctorId = resolveDoctorIdForPatient(doctorName, patientName);
 
-            const ok = sendDirectMessage({
+            await sendDirectMessageFromUi({
                 fromRole: 'patient',
                 fromName: patientName,
                 toRole: 'doctor',
@@ -2771,12 +3000,10 @@
                 doctorName,
                 patientName,
                 text,
-            });
-
-            if (ok) refreshView('patient', 'messages');
+            }, 'patient', actionButton, null);
         }
 
-        function patientSendManualMessage() {
+        async function patientSendManualMessage(actionButton) {
             const u = getCurrentUserSafe();
             const patientName = u.name || 'Pacient';
             const doctorName = String(window.patientSelectedDoctor || '').trim();
@@ -2788,7 +3015,7 @@
 
             const doctorId = resolveDoctorIdForPatient(doctorName, patientName);
 
-            const ok = sendDirectMessage({
+            await sendDirectMessageFromUi({
                 fromRole: 'patient',
                 fromName: patientName,
                 toRole: 'doctor',
@@ -2797,12 +3024,7 @@
                 doctorName,
                 patientName,
                 text,
-            });
-
-            if (ok) {
-                if (input) input.value = '';
-                refreshView('patient', 'messages');
-            }
+            }, 'patient', actionButton, input);
         }
 
         // ADMIN ACTIONS
@@ -2927,6 +3149,30 @@
                 if (isDoctor) { await Promise.all([updateLandingDoctors(true), fetchAndDisplayAdminDoctors()]); }
                 else { usersLoaded = false; refreshView('admin', 'users'); }
             } catch (error) { showToast('error', error.message); }
+        }
+
+        function formatAppDate(value) {
+            if (typeof value === 'string') {
+                const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+                if (dateOnly) return `${Number(dateOnly[3])}/${Number(dateOnly[2])}/${dateOnly[1]}`;
+            }
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return '—';
+            const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Belgrade', day:'numeric', month:'numeric', year:'numeric' }).formatToParts(date);
+            const part = (type) => parts.find((item) => item.type === type)?.value || '';
+            return `${Number(part('day'))}/${Number(part('month'))}/${part('year')}`;
+        }
+
+        function formatAppTime(value) {
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return '';
+            return new Intl.DateTimeFormat('en-US', { timeZone: 'Europe/Belgrade', hour:'2-digit', minute:'2-digit', hour12:true }).format(date);
+        }
+
+        function formatAppDateTime(value) {
+            const date = value instanceof Date ? value : new Date(value);
+            if (Number.isNaN(date.getTime())) return '—';
+            return `${formatAppDate(date)} ${formatAppTime(date)}`;
         }
 
         function escapeHtml(value) {
@@ -3084,8 +3330,8 @@
                     const rows = list
                         .map((h) => {
                             const when = h?.date ? new Date(h.date) : null;
-                            const dateStr = when ? when.toLocaleDateString() : '—';
-                            const timeStr = when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                            const dateStr = when ? formatAppDate(when) : '—';
+                            const timeStr = when ? formatAppTime(when) : '';
 
                             const symptoms = String(h?.symptoms || '').trim() || '—';
 
@@ -3194,7 +3440,7 @@
                         <tr>
                             <td>${escapeHtml(p.name)}</td>
                             <td>${escapeHtml(p.email)}</td>
-                            <td>${p.lastVisitMs ? escapeHtml(new Date(p.lastVisitMs).toLocaleDateString()) : '—'}</td>
+                            <td>${p.lastVisitMs ? escapeHtml(formatAppDate(p.lastVisitMs)) : '—'}</td>
                             <td>
                                 ${String(p.id || '').trim()
                                     ? `<button class="btn btn-primary js-patient-history" data-patient-id="${escapeHtml(String(p.id))}" data-patient-name="${encodeURIComponent(String(p.name || 'Pacient'))}">Shiko Historinë</button>`
@@ -3267,14 +3513,14 @@
                         const id = String(a.id || '');
                         const patientName = a.patient?.name || 'Pacient';
                         const when = a.scheduledAt ? new Date(a.scheduledAt) : null;
-                        const dateStr = when ? when.toLocaleDateString() : '';
-                        const timeStr = when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                        const dateStr = when ? formatAppDate(when) : '';
+                        const timeStr = when ? formatAppTime(when) : '';
                         const statusLabel = toSqAppointmentStatus(a.status);
                         const pill = String(a.status || '').toLowerCase() === 'confirmed' ? 'status-success' : 'status-waiting';
 
                         const approveBtn = id && String(a.status || '').toLowerCase() === 'pending'
                             ? `<button class="btn btn-success js-doctor-approve" onclick="approveDoctorApp('${id}', this)">Aprovo</button>`
-                            : `<button class="btn btn-success" disabled>Aprovo</button>`;
+                            : '';
                         const completeBtn = id && String(a.status || '').toLowerCase() === 'confirmed'
                             ? `<button class="btn btn-success js-doctor-complete" onclick="completeDoctorAppointment('${id}', this)">Përfundo vizitën</button>`
                             : '';
@@ -3843,8 +4089,8 @@
                         const patientName = a.patient?.name || '—';
                         const doctorName = a.doctorId?.name || a.doctor?.name || 'Doktor i paemëruar';
                         const when = a.scheduledAt ? new Date(a.scheduledAt) : null;
-                        const dateStr = when ? when.toLocaleDateString() : '—';
-                        const timeStr = when ? when.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '—';
+                        const dateStr = when ? formatAppDate(when) : '—';
+                        const timeStr = when ? formatAppTime(when) : '—';
                         const statusLabel = toSqAppointmentStatus(a.status);
 
                         const approveBtn = id && !['cancelled', 'completed'].includes(String(a.status || '').toLowerCase())
@@ -3934,7 +4180,7 @@
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error(data.error || 'Audit logs nuk u ngarkuan');
                 const items = Array.isArray(data.logs) ? data.logs : [];
-                host.innerHTML = items.length ? `<table><thead><tr><th>Koha</th><th>Roli</th><th>Veprimi</th><th>Statusi</th><th>Burimi</th></tr></thead><tbody>${items.map((item) => `<tr><td>${escapeHtml(new Date(item.timestamp).toLocaleString())}</td><td>${escapeHtml(item.role)}</td><td>${escapeHtml(item.action)}</td><td>${escapeHtml(item.status)}</td><td>${escapeHtml(item.resourceType || '—')}</td></tr>`).join('')}</tbody></table>` : 'Nuk ka audit logs për filtrat e zgjedhur.';
+                host.innerHTML = items.length ? `<table><thead><tr><th>Koha</th><th>Roli</th><th>Veprimi</th><th>Statusi</th><th>Burimi</th></tr></thead><tbody>${items.map((item) => `<tr><td>${escapeHtml(formatAppDateTime(item.timestamp))}</td><td>${escapeHtml(item.role)}</td><td>${escapeHtml(item.action)}</td><td>${escapeHtml(item.status)}</td><td>${escapeHtml(item.resourceType || '—')}</td></tr>`).join('')}</tbody></table>` : 'Nuk ka audit logs për filtrat e zgjedhur.';
                 const p = data.pagination || {};
                 const pagination = document.getElementById('auditPagination');
                 if (pagination) pagination.innerHTML = `<button class="btn" ${p.page <= 1 ? 'disabled' : ''} onclick="fetchAuditLogs(${Math.max(1, Number(p.page || 1) - 1)})">Mbrapa</button><span style="padding:10px;">${Number(p.page || 1)} / ${Math.max(1, Number(p.pages || 1))}</span><button class="btn" ${p.page >= p.pages ? 'disabled' : ''} onclick="fetchAuditLogs(${Number(p.page || 1) + 1})">Para</button>`;
@@ -3990,16 +4236,17 @@
             const html = users
                 .map((u) => {
                     const id = String(u.id || u._id || '');
+                    const protectedAdmin = u.role === 'admin';
 
-                    const editBtn = id
+                    const editBtn = id && !protectedAdmin
                         ? `<button class="btn btn-primary" onclick="openEditUserModal('${id}')">Redakto</button>`
                         : `<button class="btn btn-primary" disabled title="Mungon ID e përdoruesit">Redakto</button>`;
 
-                    const deleteBtn = id
+                    const deleteBtn = id && !protectedAdmin
                         ? `<button class="btn btn-danger" onclick="deleteUserById('${id}')">Fshij</button>`
                         : `<button class="btn btn-danger" disabled title="Mungon ID e përdoruesit">Fshij</button>`;
 
-                    const passwordBtn = id
+                    const passwordBtn = id && !protectedAdmin
                         ? `<button class="btn" onclick="openPasswordResetModal('${id}')">Fjalëkalimi</button>`
                         : `<button class="btn" disabled title="Mungon ID e përdoruesit">Fjalëkalimi</button>`;
 
@@ -4007,8 +4254,8 @@
                         <tr>
                             <td>${escapeHtml(u.name || 'N/A')}</td>
                             <td>${escapeHtml(u.email || 'N/A')}</td>
-                            <td>${escapeHtml(u.role || 'patient')}</td>
-                            <td>${editBtn} ${passwordBtn} ${deleteBtn}</td>
+                            <td>${escapeHtml(protectedAdmin ? 'Super Administrator' : (u.role || 'patient'))}</td>
+                            <td>${protectedAdmin ? '<span style="color:var(--gray);">Super Administratori nuk modifikohet</span>' : `${editBtn} ${passwordBtn} ${deleteBtn}`}</td>
                         </tr>
                     `;
                 })
@@ -4020,6 +4267,8 @@
         async function deleteUserById(userId) {
             const id = String(userId || '');
             if (!id) return;
+            const target = (Array.isArray(users) ? users : []).find((user) => String(user.id || user._id || '') === id);
+            if (!target || !['patient', 'doctor'].includes(target.role)) return showToast('error', 'Super Administratori nuk mund të modifikohet.');
 
             const ok = confirm('A jeni i sigurt që doni ta fshini këtë përdorues?');
             if (!ok) return;
@@ -4077,6 +4326,11 @@
             } else {
                 source = (Array.isArray(users) ? users : []).find((u) => String(u.id || u._id || '') === id) || {};
             }
+            const trustedTarget = (Array.isArray(users) ? users : []).find((u) => String(u.id || u._id || '') === id);
+            if (source.role === 'admin' || trustedTarget?.role === 'admin') {
+                showToast('error', 'Super Administratori nuk mund të modifikohet.');
+                return;
+            }
 
             document.getElementById('editUserName').value = source.name || '';
 
@@ -4113,7 +4367,7 @@
         function openPasswordResetModal(userId) {
             const id = String(userId || '');
             const target = (Array.isArray(users) ? users : []).find((user) => String(user.id || user._id || '') === id);
-            if (!id || !target || !isMongoObjectId(id)) {
+            if (!id || !target || !isMongoObjectId(id) || !['patient', 'doctor'].includes(target.role)) {
                 showToast('error', 'Përdoruesi nuk mund të përditësohet pa një ID të vlefshme.');
                 return;
             }
@@ -4148,7 +4402,7 @@
                 showToast('error', 'Fjalëkalimet nuk përputhen.');
                 return;
             }
-            if (window.passwordResetUserRole === 'admin' && !confirm('Po ndryshoni fjalëkalimin e një administratori. Dëshironi të vazhdoni?')) return;
+            if (!['patient', 'doctor'].includes(window.passwordResetUserRole)) return showToast('error', 'Super Administratori nuk mund të modifikohet.');
 
             const token = localStorage.getItem('token');
             if (!token) {
@@ -4185,8 +4439,10 @@
                 showToast('error', 'Gabim: mungon ID e përdoruesit!');
                 return;
             }
+            const target = (Array.isArray(users) ? users : []).find((user) => String(user.id || user._id || '') === userId);
+            if (target?.role === 'admin') return showToast('error', 'Super Administratori nuk mund të modifikohet.');
 
-            if (!newName || !newRole) {
+            if (!newName || !['patient', 'doctor'].includes(newRole)) {
                 showToast('error', 'Plotësoni të gjitha fushat!');
                 return;
             }
@@ -4918,17 +5174,52 @@
             return 'Aktiv';
         }
 
+        let patientPrescriptionRequestId = 0;
+        let patientPrescriptionItems = [];
+        const prescriptionSyncChannel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('shendeti-prescription-refresh') : null;
+
+        function currentPrescriptionPatientId() {
+            try {
+                const user = JSON.parse(localStorage.getItem('user') || '{}');
+                return String(user.role || '').toLowerCase() === 'patient' ? String(user._id || user.id || '') : '';
+            } catch { return ''; }
+        }
+
+        function clearPatientPrescriptionState() {
+            patientPrescriptionRequestId += 1;
+            patientPrescriptionItems = [];
+            const host = document.getElementById('prescriptionsList');
+            if (host) host.innerHTML = '';
+        }
+
+        function notifyPrescriptionUpdated() {
+            window.dispatchEvent(new Event('shendeti:prescription-updated'));
+            prescriptionSyncChannel?.postMessage({ type:'prescription-updated' });
+        }
+
+        function refreshActivePatientPrescriptions() {
+            if (currentPrescriptionPatientId() && document.getElementById('prescriptionsList')) loadPrescriptions();
+        }
+
+        window.addEventListener('shendeti:prescription-updated', refreshActivePatientPrescriptions);
+        prescriptionSyncChannel?.addEventListener('message', (event) => { if (event.data?.type === 'prescription-updated') refreshActivePatientPrescriptions(); });
+
         async function loadPrescriptions() {
             const listDiv = document.getElementById('prescriptionsList');
             if (!listDiv) return;
+            const ownerId = currentPrescriptionPatientId();
+            const requestId = ++patientPrescriptionRequestId;
+            if (!ownerId) { clearPatientPrescriptionState(); return; }
             listDiv.innerHTML = '<p style="color:var(--gray); text-align:center;">Duke ngarkuar receptet...</p>';
             try {
                 const token = localStorage.getItem('token');
                 const response = await fetch('/api/patient/prescriptions', { headers: { 'Authorization': `Bearer ${token || ''}` } });
                 const data = await response.json().catch(() => ({}));
                 if (!response.ok) throw new Error('Prescription list request failed');
+                if (requestId !== patientPrescriptionRequestId || ownerId !== currentPrescriptionPatientId() || !listDiv.isConnected) return;
 
                 const prescriptions = Array.isArray(data.prescriptions) ? data.prescriptions : [];
+                patientPrescriptionItems = prescriptions;
                 if (prescriptions.length === 0) {
                     listDiv.innerHTML = '<p style="color:var(--gray); text-align:center;">Nuk keni ende receta digjitale.</p>';
                     return;
@@ -4938,9 +5229,9 @@
                     <div style="padding:15px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px; background:#fafbfc;">
                         <div style="display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap;">
                             <div>
-                                <p><b>${escapeHtml(prescription.title || 'Recept digjital')}</b></p>
+                                <p><b>${escapeHtml(prescription.content?.medicationName || prescription.title || 'Recept digjital')}</b></p>
                                 <p style="color:var(--gray); font-size:0.9rem;">${escapeHtml(prescription.referenceNumber || '')}</p>
-                                <p style="color:var(--gray); font-size:0.9rem;">Dr. ${escapeHtml(prescription.doctor?.name || '—')} · ${escapeHtml(new Date(prescription.issuedAt || prescription.createdAt).toLocaleDateString())}</p>
+                                <p style="color:var(--gray); font-size:0.9rem;">${prescription.doctor?.name ? `Dr. ${escapeHtml(prescription.doctor.name)}` : 'Doktori nuk është i disponueshëm'} · ${escapeHtml(formatAppDate(prescription.issuedAt || prescription.createdAt))}</p>
                             </div>
                             <span class="status-pill ${String(prescription.status).toLowerCase() === 'cancelled' ? 'status-danger' : 'status-success'}">${escapeHtml(prescriptionStatusLabel(prescription.status))}</span>
                         </div>
@@ -4948,6 +5239,7 @@
                     </div>
                 `).join('');
             } catch {
+                if (requestId !== patientPrescriptionRequestId || ownerId !== currentPrescriptionPatientId() || !listDiv.isConnected) return;
                 listDiv.innerHTML = '<p style="color:var(--danger); text-align:center;">Gabim në kërkimin e recetave.</p>';
             }
         }
@@ -4991,14 +5283,14 @@
                     return;
                 }
                 const content = prescription.content || {};
-                const appointmentDate = prescription.appointment?.scheduledAt ? new Date(prescription.appointment.scheduledAt).toLocaleString() : '—';
+                const appointmentDate = prescription.appointment?.scheduledAt ? formatAppDateTime(prescription.appointment.scheduledAt) : '—';
                 host.innerHTML = `
                     <div style="border-bottom:2px solid var(--primary); padding-bottom:14px; margin-bottom:18px;">
                         <div class="prescription-brand"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><div><div style="font-weight:800; color:var(--primary); font-size:1.2rem;">SHËNDETI IM</div><h2 style="margin-top:6px;">Recept Digjital</h2></div></div>
                         <p style="color:var(--gray);">Referenca: ${escapeHtml(prescription.referenceNumber || '—')}</p>
                     </div>
                     <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px;">
-                        <p><b>Data e lëshimit:</b><br>${escapeHtml(new Date(prescription.issuedAt || prescription.createdAt).toLocaleString())}</p>
+                        <p><b>Data e lëshimit:</b><br>${escapeHtml(formatAppDateTime(prescription.issuedAt || prescription.createdAt))}</p>
                         <p><b>Statusi:</b><br>${escapeHtml(prescriptionStatusLabel(prescription.status))}</p>
                         <p><b>Pacienti:</b><br>${escapeHtml(prescription.patient?.name || '—')}</p>
                         <p><b>Doktori:</b><br>${escapeHtml(prescription.doctor?.name || '—')}</p>
@@ -5046,7 +5338,7 @@
                     const prescriptions = Array.isArray(entry.prescriptions) ? entry.prescriptions : [];
                     return `
                         <div class="card" style="box-shadow:none; border:1px solid #e2e8f0; margin-bottom:12px;">
-                            <p style="color:var(--primary); font-weight:800;">${escapeHtml(when.toLocaleDateString())} · ${escapeHtml(when.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }))}</p>
+                            <p style="color:var(--primary); font-weight:800;">${escapeHtml(formatAppDate(when))} · ${escapeHtml(formatAppTime(when))}</p>
                             <h3 style="margin-top:6px;">Vizitë te ${escapeHtml(entry.doctor?.name || 'Doktori')}</h3>
                             <p style="color:var(--gray);">${escapeHtml(entry.doctor?.specialization || '')}</p>
                             <p><b>Shërbimi:</b> ${escapeHtml(entry.service || '—')}</p>
@@ -5070,6 +5362,81 @@
         }
 
         let doctorPrescriptionAppointments = [];
+        let doctorPrescriptionMutationInFlight = false;
+        let managedDoctorPrescriptions = [];
+
+        function doctorPrescriptionRequestHeaders(json = false) {
+            const headers = json ? { 'Content-Type':'application/json' } : {};
+            const token = localStorage.getItem('token');
+            if (token && !window.ShendetiAuth) headers.Authorization = `Bearer ${token}`;
+            return headers;
+        }
+
+        async function loadDoctorPrescriptionManagement() {
+            const host = document.getElementById('doctorPrescriptionList');
+            if (!host) return;
+            host.innerHTML = '<p style="color:var(--gray);">Duke ngarkuar receptat...</p>';
+            try {
+                const response = await fetch('/api/doctor/prescriptions', { headers: doctorPrescriptionRequestHeaders() });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !Array.isArray(data.prescriptions)) throw new Error('Receptat nuk mund të ngarkohen.');
+                managedDoctorPrescriptions = data.prescriptions;
+                host.innerHTML = managedDoctorPrescriptions.length ? managedDoctorPrescriptions.map((item) => {
+                    const content = item.content || {};
+                    return `<div class="card" style="box-shadow:none;border:1px solid #e2e8f0;margin-bottom:12px;">
+                        <div style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap;">
+                            <div><h3 style="margin:0 0 8px;">${escapeHtml(item.patient?.name || 'Pacient')}</h3>
+                            <p><b>Ilaçi:</b> ${escapeHtml(content.medicationName || '—')}</p><p><b>Doza:</b> ${escapeHtml(content.dosage || '—')}</p>
+                            <p><b>Shpeshtësia:</b> ${escapeHtml(content.frequency || '—')}</p><p><b>Data:</b> ${escapeHtml(formatAppDate(item.issuedAt || item.createdAt))}</p>
+                            <p><b>Statusi:</b> ${escapeHtml(prescriptionStatusLabel(item.status))}</p></div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" class="btn btn-primary" onclick="openDoctorPrescriptionEdit('${escapeHtml(item.id)}')">✏️ Edito</button>
+                            <button type="button" class="btn" style="background:var(--danger);color:white;" onclick="deleteDoctorPrescription('${escapeHtml(item.id)}')">🗑️ Fshi</button></div>
+                        </div></div>`;
+                }).join('') : '<p style="color:var(--gray);">Nuk ka receta për menaxhim.</p>';
+            } catch { host.innerHTML = '<p style="color:var(--danger);">Receptat nuk mund të ngarkohen tani. Provoni përsëri.</p>'; }
+        }
+
+        function ensureDoctorPrescriptionEditModal() {
+            if (document.getElementById('doctorPrescriptionEditModal')) return;
+            const modal = document.createElement('div'); modal.id = 'doctorPrescriptionEditModal'; modal.className = 'modal hidden';
+            modal.setAttribute('data-backdrop-close', 'true');
+            modal.innerHTML = `<div class="modal-box"><h2>✏️ Edito receptin</h2><form id="doctorPrescriptionEditForm" onsubmit="submitDoctorPrescriptionEdit(event)">
+                <input type="hidden" id="editPrescriptionId"><label>Diagnoza</label><textarea id="editPrescriptionDiagnosis" class="input" maxlength="500" required></textarea>
+                <label>Emri i ilaçit</label><input id="editPrescriptionMedication" class="input" maxlength="300" required><label>Doza</label><input id="editPrescriptionDosage" class="input" maxlength="200" required>
+                <label>Shpeshtësia</label><input id="editPrescriptionFrequency" class="input" maxlength="200" required><label>Kohëzgjatja</label><input id="editPrescriptionDuration" class="input" maxlength="200" required>
+                <label>Udhëzimet</label><textarea id="editPrescriptionInstructions" class="input" maxlength="2000" required></textarea><label>Shënime shtesë</label><textarea id="editPrescriptionNotes" class="input" maxlength="2000"></textarea>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;"><button id="editPrescriptionSubmit" class="btn btn-primary" type="submit">Ruaj ndryshimet</button><button class="btn" type="button" onclick="closeModal('doctorPrescriptionEditModal')">Anulo</button></div>
+            </form></div>`; document.body.appendChild(modal);
+        }
+
+        function openDoctorPrescriptionEdit(id) {
+            const item = managedDoctorPrescriptions.find((entry) => String(entry.id) === String(id)); if (!item) return;
+            ensureDoctorPrescriptionEditModal(); const content = item.content || {};
+            document.getElementById('editPrescriptionId').value = item.id;
+            for (const [field, value] of [['Diagnosis',content.diagnosis],['Medication',content.medicationName],['Dosage',content.dosage],['Frequency',content.frequency],['Duration',content.duration],['Instructions',content.instructions],['Notes',content.additionalNotes]]) document.getElementById(`editPrescription${field}`).value = value || '';
+            document.getElementById('doctorPrescriptionEditModal').classList.remove('hidden');
+        }
+
+        async function submitDoctorPrescriptionEdit(event) {
+            event.preventDefault(); if (doctorPrescriptionMutationInFlight) return;
+            const id = document.getElementById('editPrescriptionId').value;
+            const payload = { diagnosis:document.getElementById('editPrescriptionDiagnosis').value.trim(), medicationName:document.getElementById('editPrescriptionMedication').value.trim(), dosage:document.getElementById('editPrescriptionDosage').value.trim(), frequency:document.getElementById('editPrescriptionFrequency').value.trim(), duration:document.getElementById('editPrescriptionDuration').value.trim(), instructions:document.getElementById('editPrescriptionInstructions').value.trim(), additionalNotes:document.getElementById('editPrescriptionNotes').value.trim() };
+            if (Object.entries(payload).some(([key,value]) => key !== 'additionalNotes' && !value)) return showToast('error','Plotësoni të gjitha fushat e kërkuara.');
+            doctorPrescriptionMutationInFlight = true; const button = document.getElementById('editPrescriptionSubmit'); setButtonLoading(button,true,'Duke ruajtur...');
+            try { const response = await fetch(`/api/doctor/prescriptions/${encodeURIComponent(id)}`, { method:'PATCH', headers:doctorPrescriptionRequestHeaders(true), body:JSON.stringify(payload) }); const data=await response.json().catch(()=>({})); if(!response.ok) throw new Error(data.error || 'Ndryshimi dështoi.'); closeModal('doctorPrescriptionEditModal'); showToast('success','Recepti u përditësua.'); notifyPrescriptionUpdated(); await loadDoctorPrescriptionManagement(); }
+            catch(error){ showToast('error',error.message || 'Ndryshimi dështoi.'); }
+            finally { doctorPrescriptionMutationInFlight=false; setButtonLoading(button,false); }
+        }
+
+        async function deleteDoctorPrescription(id) {
+            if (doctorPrescriptionMutationInFlight) return; const item=managedDoctorPrescriptions.find((entry)=>String(entry.id)===String(id));
+            if (!item || !confirm(`Fshi receptin ${item.referenceNumber || ''} për ${item.patient?.name || 'pacientin'}?`)) return;
+            doctorPrescriptionMutationInFlight=true;
+            try { const response=await fetch(`/api/doctor/prescriptions/${encodeURIComponent(id)}`,{method:'DELETE',headers:doctorPrescriptionRequestHeaders()}); const data=await response.json().catch(()=>({})); if(!response.ok) throw new Error(data.error || 'Fshirja dështoi.'); showToast('success','Recepti u arkivua.'); await loadDoctorPrescriptionManagement(); }
+            catch(error){ showToast('error',error.message || 'Fshirja dështoi.'); }
+            finally { doctorPrescriptionMutationInFlight=false; }
+        }
+
         let prescriptionSubmissionInFlight = false;
 
         async function loadDoctorPrescriptionOptions() {
@@ -5101,7 +5468,7 @@
             if (!appointmentSelect) return;
             const matches = doctorPrescriptionAppointments.filter((appointment) => String(appointment.patient?.id || '') === patientId);
             appointmentSelect.innerHTML = matches.length
-                ? `<option value="">Zgjidhni terminin</option>${matches.map((appointment) => `<option value="${escapeHtml(appointment.id)}">${escapeHtml(new Date(appointment.scheduledAt).toLocaleString())} · ${escapeHtml(toSqAppointmentStatus(appointment.status))}</option>`).join('')}`
+                ? `<option value="">Zgjidhni terminin</option>${matches.map((appointment) => `<option value="${escapeHtml(appointment.id)}">${escapeHtml(formatAppDateTime(appointment.scheduledAt))} · ${escapeHtml(toSqAppointmentStatus(appointment.status))}</option>`).join('')}`
                 : '<option value="">Zgjidhni pacientin</option>';
             if (matches.length === 1) appointmentSelect.value = String(matches[0].id || '');
         }

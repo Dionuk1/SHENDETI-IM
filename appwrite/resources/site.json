@@ -1,0 +1,22 @@
+[
+  {
+    "$id": "shendeti-im-dev-site",
+    "name": "SHENDETI IM Development",
+    "enabled": true,
+    "logging": true,
+    "framework": "other",
+    "buildRuntime": "node-22",
+    "timeout": 30,
+    "installCommand": "",
+    "buildCommand": "",
+    "startCommand": "",
+    "outputDirectory": "./",
+    "adapter": "static",
+    "fallbackFile": "index.html",
+    "providerSilentMode": false,
+    "buildSpecification": "s-2vcpu-2gb",
+    "runtimeSpecification": "s-1vcpu-512mb",
+    "deploymentRetention": 7,
+    "path": "../../domain-hosting"
+  }
+]

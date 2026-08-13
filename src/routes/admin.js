@@ -162,9 +162,12 @@ router.patch('/users/:id', async (req, res, next) => {
     try {
         const { role, name } = req.body || {};
         const update = {};
+        const existingUser = await User.findById(req.params.id).select('role');
+        if (!existingUser) return res.status(404).json({ error: 'Not found' });
+        if (existingUser.role === 'admin') return res.status(403).json({ error: 'Super Administrator cannot be modified' });
 
         if (role) {
-            if (!['patient', 'doctor', 'admin'].includes(String(role))) {
+            if (!['patient', 'doctor'].includes(String(role))) {
                 return res.status(400).json({ error: 'Invalid role' });
             }
             update.role = String(role);
@@ -206,6 +209,7 @@ router.patch('/users/:id/password', async (req, res, next) => {
 
         const user = await User.findById(id).select('_id role');
         if (!user) return res.status(404).json({ error: 'Not found' });
+        if (user.role === 'admin') return res.status(403).json({ error: 'Super Administrator cannot be modified' });
 
         const passwordHash = await bcrypt.hash(newPassword, 12);
         await User.updateOne(
@@ -235,8 +239,9 @@ router.delete('/users/:id', async (req, res, next) => {
             return res.status(400).json({ error: 'Invalid id' });
         }
 
-        const user = await User.findById(id).select('email');
+        const user = await User.findById(id).select('email role');
         if (!user) return res.status(404).json({ error: 'Not found' });
+        if (user.role === 'admin') return res.status(403).json({ error: 'Super Administrator cannot be modified' });
         if (String(req.user._id) === id) return res.status(409).json({ error: 'You cannot delete your own active admin account.' });
 
         const [appointments, cancellations, prescriptionsAsPatient, prescriptionsAsDoctor, medicalRecords, notifications, auditLogs, doctorProfiles] = await Promise.all([

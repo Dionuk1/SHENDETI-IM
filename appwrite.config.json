@@ -1,0 +1,13 @@
+{
+  "organizationId": "69ba051fc0077da6cc5e",
+  "projectId": "6a66216909c3398b7265",
+  "projectName": "SHENDETI-IM-DEV",
+  "endpoint": "https://fra.cloud.appwrite.io/v1",
+  "includes": {
+    "tablesDB": "appwrite/resources/database.json",
+    "tables": "appwrite/resources/tables.json",
+    "buckets": "appwrite/resources/storage.json",
+    "functions": "appwrite/resources/functions.json",
+    "sites": "appwrite/resources/site.json"
+  }
+}

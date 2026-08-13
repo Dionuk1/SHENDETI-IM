@@ -1,0 +1,15 @@
+[
+  {
+    "$id": "medical-pdfs",
+    "$permissions": [],
+    "name": "Medical PDFs Development",
+    "fileSecurity": true,
+    "enabled": true,
+    "maximumFileSize": 10485760,
+    "allowedFileExtensions": ["pdf"],
+    "compression": "none",
+    "encryption": true,
+    "antivirus": false,
+    "transformations": false
+  }
+]

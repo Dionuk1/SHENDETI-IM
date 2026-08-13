@@ -1,0 +1,226 @@
+[
+  {
+    "$id": "messages",
+    "$permissions": [],
+    "databaseId": "shendeti",
+    "name": "messages",
+    "enabled": true,
+    "rowSecurity": true,
+    "columns": [
+      { "key": "senderAuthUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "receiverAuthUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "conversationKey", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 73 },
+      { "key": "content", "type": "longtext", "required": true, "array": false, "encrypt": false },
+      { "key": "readAt", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "clientRequestId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 64 },
+      { "key": "legacyMongoId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 24, "default": null },
+      { "key": "createdAtLegacy", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "migrationBatchId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 64, "default": null }
+    ],
+    "indexes": [
+      { "key": "idx_conversation_created", "type": "key", "attributes": ["conversationKey", "$createdAt"], "orders": ["ASC", "ASC"] },
+      { "key": "idx_receiver_read", "type": "key", "attributes": ["receiverAuthUserId", "readAt"], "orders": ["ASC", "ASC"] },
+      { "key": "uniq_sender_request", "type": "unique", "attributes": ["senderAuthUserId", "clientRequestId"], "orders": ["ASC", "ASC"] },
+      { "key": "uniq_legacy_message", "type": "unique", "attributes": ["legacyMongoId"], "orders": ["ASC"] }
+    ]
+  },
+  {
+    "$id": "profiles",
+    "$permissions": [],
+    "databaseId": "shendeti",
+    "name": "profiles",
+    "enabled": true,
+    "rowSecurity": true,
+    "columns": [
+      { "key": "authUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36, "encrypt": false },
+      { "key": "name", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 120, "encrypt": false },
+      { "key": "email", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 255 },
+      { "key": "role", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 16 },
+      { "key": "authProvider", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 16 },
+      { "key": "profileImage", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 2048, "default": null },
+      { "key": "isActive", "type": "boolean", "required": true, "array": false },
+      { "key": "legacyMongoId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 24, "default": null },
+      { "key": "createdAtLegacy", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "updatedAtLegacy", "type": "datetime", "required": false, "array": false, "default": null }
+    ],
+    "indexes": [
+      { "key": "uniq_auth_user", "type": "unique", "attributes": ["authUserId"], "orders": ["ASC"] },
+      { "key": "uniq_email", "type": "unique", "attributes": ["email"], "orders": ["ASC"] },
+      { "key": "idx_role", "type": "key", "attributes": ["role"], "orders": ["ASC"] },
+      { "key": "idx_active", "type": "key", "attributes": ["isActive"], "orders": ["ASC"] }
+    ]
+  },
+  {
+    "$id": "doctor_profiles",
+    "$permissions": [],
+    "databaseId": "shendeti",
+    "name": "doctor_profiles",
+    "enabled": true,
+    "rowSecurity": true,
+    "columns": [
+      { "key": "authUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "name", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 120 },
+      { "key": "email", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 255 },
+      { "key": "specialization", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 32 },
+      { "key": "department", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 120, "default": null },
+      { "key": "experienceYears", "type": "integer", "required": false, "array": false, "min": 0, "max": 100, "default": null },
+      { "key": "servicesJson", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "licenseNumber", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 255, "default": null },
+      { "key": "isActive", "type": "boolean", "required": true, "array": false },
+      { "key": "weekdayStart", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 5, "default": null },
+      { "key": "weekdayEnd", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 5, "default": null },
+      { "key": "saturdayStart", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 5, "default": null },
+      { "key": "saturdayEnd", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 5, "default": null },
+      { "key": "sundayOff", "type": "boolean", "required": true, "array": false },
+      { "key": "maxPatientsPerDay", "type": "integer", "required": true, "array": false, "min": 1, "max": 1000 },
+      { "key": "avgRating", "type": "float", "required": false, "array": false, "min": 0, "max": 5, "default": null },
+      { "key": "totalPatients", "type": "integer", "required": false, "array": false, "min": 0, "default": null },
+      { "key": "bio", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "legacyMongoId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 24, "default": null },
+      { "key": "createdAtLegacy", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "updatedAtLegacy", "type": "datetime", "required": false, "array": false, "default": null }
+    ],
+    "indexes": [
+      { "key": "uniq_auth_user", "type": "unique", "attributes": ["authUserId"], "orders": ["ASC"] },
+      { "key": "uniq_email", "type": "unique", "attributes": ["email"], "orders": ["ASC"] },
+      { "key": "idx_spec_active", "type": "key", "attributes": ["specialization", "isActive"], "orders": ["ASC", "ASC"] }
+    ]
+  },
+  {
+    "$id": "appointments",
+    "$permissions": [],
+    "databaseId": "shendeti",
+    "name": "appointments",
+    "enabled": true,
+    "rowSecurity": true,
+    "columns": [
+      { "key": "patientAuthUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "doctorProfileId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "service", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 120 },
+      { "key": "scheduledAt", "type": "datetime", "required": true, "array": false },
+      { "key": "durationMinutes", "type": "integer", "required": true, "array": false, "min": 5, "max": 480 },
+      { "key": "status", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 16 },
+      { "key": "notesEncrypted", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "cancelledByAuthUserId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 36, "default": null },
+      { "key": "cancelledByRole", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 16, "default": null },
+      { "key": "cancelledAt", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "cancellationReason", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "activeSlotKey", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 128, "default": null },
+      { "key": "migrationBatchId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 64, "default": null },
+      { "key": "legacyMongoId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 24, "default": null },
+      { "key": "createdAtLegacy", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "updatedAtLegacy", "type": "datetime", "required": false, "array": false, "default": null }
+    ],
+    "indexes": [
+      { "key": "idx_patient_time", "type": "key", "attributes": ["patientAuthUserId", "scheduledAt"], "orders": ["ASC", "DESC"] },
+      { "key": "idx_doctor_time", "type": "key", "attributes": ["doctorProfileId", "scheduledAt"], "orders": ["ASC", "ASC"] },
+      { "key": "idx_doctor_status_time", "type": "key", "attributes": ["doctorProfileId", "status", "scheduledAt"], "orders": ["ASC", "ASC", "ASC"] },
+      { "key": "idx_status", "type": "key", "attributes": ["status"], "orders": ["ASC"] }
+    ]
+  },
+  {
+    "$id": "prescriptions",
+    "$permissions": [],
+    "databaseId": "shendeti",
+    "name": "prescriptions",
+    "enabled": true,
+    "rowSecurity": true,
+    "columns": [
+      { "key": "patientAuthUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "doctorAuthUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "appointmentId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 36, "default": null },
+      { "key": "title", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 200 },
+      { "key": "encryptedBody", "type": "longtext", "required": true, "array": false, "encrypt": false },
+      { "key": "status", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 16 },
+      { "key": "encryptionVersion", "type": "integer", "required": true, "array": false, "min": 1 },
+      { "key": "migrationBatchId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 64, "default": null },
+      { "key": "legacyMongoId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 24, "default": null },
+      { "key": "createdAtLegacy", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "updatedAtLegacy", "type": "datetime", "required": false, "array": false, "default": null }
+    ],
+    "indexes": [
+      { "key": "idx_patient_created", "type": "key", "attributes": ["patientAuthUserId", "$createdAt"], "orders": ["ASC", "DESC"] },
+      { "key": "idx_doctor_created", "type": "key", "attributes": ["doctorAuthUserId", "$createdAt"], "orders": ["ASC", "DESC"] },
+      { "key": "idx_appointment", "type": "key", "attributes": ["appointmentId"], "orders": ["ASC"] }
+    ]
+  },
+  {
+    "$id": "medical_records",
+    "$permissions": [],
+    "databaseId": "shendeti",
+    "name": "medical_records",
+    "enabled": true,
+    "rowSecurity": true,
+    "columns": [
+      { "key": "patientAuthUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "storageFileId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "originalNameEncrypted", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "mimeType", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 120 },
+      { "key": "sizeBytes", "type": "integer", "required": true, "array": false, "min": 0, "max": 10485760 },
+      { "key": "sha256", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 64, "default": null },
+      { "key": "encryptedNotes", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "encryptionVersion", "type": "integer", "required": true, "array": false, "min": 1 },
+      { "key": "legacyStorageReference", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "migrationBatchId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 64, "default": null },
+      { "key": "legacyMongoId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 24, "default": null },
+      { "key": "createdAtLegacy", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "updatedAtLegacy", "type": "datetime", "required": false, "array": false, "default": null }
+    ],
+    "indexes": [
+      { "key": "idx_patient_created", "type": "key", "attributes": ["patientAuthUserId", "$createdAt"], "orders": ["ASC", "DESC"] },
+      { "key": "uniq_storage_file", "type": "unique", "attributes": ["storageFileId"], "orders": ["ASC"] }
+    ]
+  },
+  {
+    "$id": "notifications",
+    "$permissions": [],
+    "databaseId": "shendeti",
+    "name": "notifications",
+    "enabled": true,
+    "rowSecurity": true,
+    "columns": [
+      { "key": "userAuthUserId", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 36 },
+      { "key": "message", "type": "longtext", "required": true, "array": false, "encrypt": false },
+      { "key": "type", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 40 },
+      { "key": "resourceType", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 80, "default": null },
+      { "key": "resourceId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 120, "default": null },
+      { "key": "read", "type": "boolean", "required": true, "array": false },
+      { "key": "readAt", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "migrationBatchId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 64, "default": null },
+      { "key": "legacyMongoId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 24, "default": null },
+      { "key": "createdAtLegacy", "type": "datetime", "required": false, "array": false, "default": null }
+    ],
+    "indexes": [
+      { "key": "idx_user_created", "type": "key", "attributes": ["userAuthUserId", "$createdAt"], "orders": ["ASC", "DESC"] },
+      { "key": "idx_user_read", "type": "key", "attributes": ["userAuthUserId", "read"], "orders": ["ASC", "ASC"] }
+    ]
+  },
+  {
+    "$id": "audit_logs",
+    "$permissions": [],
+    "databaseId": "shendeti",
+    "name": "audit_logs",
+    "enabled": true,
+    "rowSecurity": true,
+    "columns": [
+      { "key": "userAuthUserId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 36, "default": null },
+      { "key": "role", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 16, "default": null },
+      { "key": "action", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 100 },
+      { "key": "resourceType", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 80, "default": null },
+      { "key": "resourceId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 120, "default": null },
+      { "key": "status", "type": "varchar", "required": true, "array": false, "encrypt": false, "size": 16 },
+      { "key": "ipAddressEncrypted", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "metadataSanitized", "type": "longtext", "required": false, "array": false, "encrypt": false, "default": null },
+      { "key": "timestampLegacy", "type": "datetime", "required": false, "array": false, "default": null },
+      { "key": "migrationBatchId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 64, "default": null },
+      { "key": "legacyMongoId", "type": "varchar", "required": false, "array": false, "encrypt": false, "size": 24, "default": null }
+    ],
+    "indexes": [
+      { "key": "idx_timestamp", "type": "key", "attributes": ["timestampLegacy"], "orders": ["DESC"] },
+      { "key": "idx_user_timestamp", "type": "key", "attributes": ["userAuthUserId", "timestampLegacy"], "orders": ["ASC", "DESC"] },
+      { "key": "idx_action_timestamp", "type": "key", "attributes": ["action", "timestampLegacy"], "orders": ["ASC", "DESC"] },
+      { "key": "idx_role_timestamp", "type": "key", "attributes": ["role", "timestampLegacy"], "orders": ["ASC", "DESC"] },
+      { "key": "idx_status_timestamp", "type": "key", "attributes": ["status", "timestampLegacy"], "orders": ["ASC", "DESC"] }
+    ]
+  }
+]

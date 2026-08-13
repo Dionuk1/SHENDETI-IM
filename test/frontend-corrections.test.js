@@ -30,6 +30,11 @@ test('patient navigation computes active state and keeps the symptom checker rou
     assert.doesNotMatch(mainHtml, /\/api\/ai\/chat|chat-btn|chat-box/);
 });
 
+test('local doctor appointments show approve only for pending status', () => {
+    const doctorRenderer = mainHtml.slice(mainHtml.indexOf("const approveBtn = id && String(a.status || '').toLowerCase() === 'pending'"), mainHtml.indexOf('async function loadAdminAppointments'));
+    assert.match(doctorRenderer, /js-doctor-approve[\s\S]*?: '';/);
+});
+
 test('booking UI keeps the backend ISO instant and exposes count and occupied help', () => {
     assert.match(mainHtml, /id="bookScheduledAt"/);
     assert.match(mainHtml, /id="bookSlotCount"/);
@@ -58,6 +63,18 @@ test('admin doctors view loads every protected API page instead of reusing the p
 test('admin users view loads all pages and deduplicates only by stable User id', () => {
     assert.match(mainHtml, /\/api\/admin\/users\?page=\$\{page\}&limit=100/);
     assert.match(mainHtml, /new Map\(usersList\.map\(\(u\) => \[String\(u\.id \|\| u\._id\), u\]\)\)/);
+});
+
+test('local Super Administrator is immutable while patient and doctor edits remain available', () => {
+    const modal = mainHtml.slice(mainHtml.indexOf('id="editUserModal"'), mainHtml.indexOf('id="passwordResetModal"'));
+    assert.deepEqual([...modal.matchAll(/<option value="([^"]+)">/g)].map((match) => match[1]), ['patient', 'doctor']);
+    assert.match(mainHtml, /const protectedAdmin = u\.role === 'admin'/);
+    assert.match(mainHtml, /Super Administratori nuk modifikohet/);
+    assert.match(mainHtml, /source\.role === 'admin' \|\| trustedTarget\?\.role === 'admin'/);
+    assert.match(mainHtml, /target\?\.role === 'admin'/);
+    assert.match(adminRoute, /existingUser\.role === 'admin'[^\n]+status\(403\)/);
+    assert.match(adminRoute, /!\['patient', 'doctor'\]\.includes\(String\(role\)\)/);
+    assert.equal((adminRoute.match(/user\.role === 'admin'[^\n]+status\(403\)/g) || []).length, 2);
 });
 
 test('admin users view exposes a minimal protected password reset action', () => {

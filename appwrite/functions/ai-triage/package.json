@@ -1,0 +1,10 @@
+{
+  "name": "shendeti-ai-triage-health",
+  "version": "0.1.0-development",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/main.js",
+    "test": "node --test test/*.test.js"
+  }
+}

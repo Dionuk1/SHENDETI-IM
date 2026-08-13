@@ -158,7 +158,8 @@ test('real authentication, scheduling, cancellation, notifications, audit logs, 
         const adminLogin = await request('/api/auth/admin-login', { method: 'POST', body: { email: adminEmail, password } });
         assert.equal(doctorLogin.response.status, 200);
         assert.equal(otherDoctorLogin.response.status, 200);
-        assert.equal(publicAdminLogin.response.status, 401);
+        assert.equal(publicAdminLogin.response.status, 403);
+        assert.equal(publicAdminLogin.data.error, 'Llogarite e administratorit duhet te kycen vetem ne panelin /admin.');
         assert.equal(adminLogin.response.status, 200);
         assert.equal(adminLogin.data.user.role, 'admin');
 

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/theme.js"></script>
     <title>SHËNDETI IM | Administrim</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <style>
@@ -20,8 +21,13 @@
         #notice { min-height:20px; color:var(--danger); text-align:center; margin-top:12px; font-size:.9rem; }
         a { display:block; text-align:center; margin-top:14px; color:var(--gray); text-decoration:none; }
     </style>
+    <link rel="stylesheet" href="/css/theme.css">
 </head>
 <body>
+    <button class="theme-toggle" type="button" data-theme-toggle onclick="window.ShendetiTheme.toggle()" aria-label="Aktivizo modalitetin e erret" style="position:fixed;top:16px;right:16px;z-index:10;">
+        <span class="theme-toggle-icon theme-toggle-sun"><span aria-hidden="true">☀</span></span>
+        <span class="theme-toggle-icon theme-toggle-moon"><span aria-hidden="true">☾</span></span>
+    </button>
     <main>
         <div class="brand"><img src="/favicon.svg" alt="Logoja e SHËNDETI IM"><span>SHËNDETI IM</span></div>
         <h1>Hyrja e administrimit</h1>
@@ -36,6 +42,29 @@
         <a href="/">Anulo</a>
     </main>
     <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+            const notice = document.getElementById('notice');
+            try {
+                const response = await fetch('/api/auth/me', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data?.user) throw new Error('Session required');
+                if (data.user.role === 'admin') {
+                    window.location.replace('/?admin=1');
+                    return;
+                }
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('role');
+                notice.textContent = 'Kjo hyrje lejohet vetem per administratoret.';
+            } catch {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('role');
+            }
+        });
+
         document.getElementById('adminLoginForm').addEventListener('submit', async (event) => {
             event.preventDefault();
             const form = event.currentTarget;
